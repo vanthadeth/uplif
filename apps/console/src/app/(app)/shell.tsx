@@ -1,10 +1,10 @@
 "use client";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, GitBranch, LayoutDashboard, ShieldCheck, Store, Users } from "lucide-react";
+import { Building2, ClipboardList, GitBranch, LayoutDashboard, ShieldCheck, Store, Users } from "lucide-react";
 import { AppShell, Avatar, LanguageToggle, type NavItem } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
 
-const routes: Record<string, string> = { dashboard: "/dashboard", company: "/company", branches: "/branches", users: "/users", roles: "/roles" };
+const routes: Record<string, string> = { dashboard: "/dashboard", company: "/company", branches: "/branches", users: "/users", roles: "/roles", audit: "/audit" };
 
 export function ConsoleShell({ companyName, companyNameLocal, userName, children }: {
   companyName: string; companyNameLocal: string | null; userName: string; children: React.ReactNode;
@@ -18,6 +18,7 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, children
     { id: "branches", label: t("nav.branches"), icon: <GitBranch /> },
     { id: "users", label: t("nav.users"), icon: <Users /> },
     { id: "roles", label: t("nav.roles"), icon: <ShieldCheck /> },
+    { id: "audit", label: t("nav.audit"), icon: <ClipboardList /> },
   ];
   const active = Object.keys(routes).find((k) => pathname.startsWith(routes[k])) ?? "dashboard";
   const shownName = locale === "km" && companyNameLocal ? companyNameLocal : companyName;
