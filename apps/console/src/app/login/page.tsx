@@ -7,6 +7,9 @@ import { toE164 } from "@/lib/auth/phone";
 import { safeNext } from "@/lib/auth/safe-next";
 import { useI18n } from "@/lib/i18n";
 
+// Phone sign-in is paused. Set NEXT_PUBLIC_PHONE_LOGIN=true to bring it back; the code is kept.
+const phoneEnabled = process.env.NEXT_PUBLIC_PHONE_LOGIN === "true";
+
 export default function LoginPage() {
   const { t, locale, setLocale } = useI18n();
   const router = useRouter();
@@ -58,9 +61,9 @@ export default function LoginPage() {
         <CardBody className="flex flex-col gap-4">
           <div>
             <h1 className="text-xl font-semibold">{t("auth.title")}</h1>
-            <p className="text-muted">{t("auth.subtitle")}</p>
+            <p className="text-muted">{t(phoneEnabled ? "auth.subtitle" : "auth.subtitleGoogle")}</p>
           </div>
-          {!e164 ? (
+          {phoneEnabled && (!e164 ? (
             <form onSubmit={sendCode} className="flex flex-col gap-3" noValidate>
               <Input label={t("auth.phone")} type="tel" inputMode="tel" autoComplete="tel" value={phone}
                 onChange={(e) => setPhone(e.target.value)} hint={t("auth.phoneHint")} error={error} />
@@ -75,9 +78,9 @@ export default function LoginPage() {
                 {t("auth.resend")}
               </Button>
             </form>
-          )}
-          <p className="text-center text-sm text-muted">{t("auth.or")}</p>
-          <Button onClick={google}>{t("auth.google")}</Button>
+          ))}
+          {phoneEnabled && <p className="text-center text-sm text-muted">{t("auth.or")}</p>}
+          <Button variant={phoneEnabled ? "secondary" : "primary"} onClick={google}>{t("auth.google")}</Button>
           <Button disabled title={t("auth.telegramSoon")}>{t("auth.telegram")}</Button>
         </CardBody>
       </Card>
