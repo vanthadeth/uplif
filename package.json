@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "pnpm --filter console dev",
     "build": "pnpm --filter console build",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r --if-present test"
   }
 }

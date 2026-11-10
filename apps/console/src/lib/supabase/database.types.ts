@@ -205,6 +205,44 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_log: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          company_id: string
+          created_at: string
+          details: Json
+          entity_id: string | null
+          entity_type: string
+          id: string
+          membership_id: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          full_name_local: string | null
+          locale: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          full_name: string
+          full_name_local?: string | null
+          locale?: string
+          user_id: string
+        }
+        Update: {
+          full_name?: string
+          full_name_local?: string | null
+          locale?: string
+        }
+        Relationships: []
+      }
       platform_admins: {
         Row: {
           created_at: string
@@ -276,7 +314,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_company: {
+        Args: {
+          p_branch_name: string
+          p_country_code: string
+          p_home_currency: string
+          p_name: string
+          p_name_local: string
+        }
+        Returns: Json
+      }
+      list_my_companies: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          company_id: string
+          is_active: boolean
+          membership_id: string
+          name: string
+          name_local: string | null
+        }[]
+      }
+      switch_company: {
+        Args: { p_membership_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       data_scope: "own" | "branch" | "company"

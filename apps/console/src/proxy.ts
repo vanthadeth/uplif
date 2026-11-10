@@ -19,7 +19,16 @@ export async function proxy(request: NextRequest) {
       },
     },
   });
-  await supabase.auth.getClaims();
+  const { data } = await supabase.auth.getClaims();
+  // Signed-out visitors may only see the sign-in flow and the design pages.
+  const { pathname } = request.nextUrl;
+  const open = ["/login", "/auth", "/gallery", "/shell"].some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  if (!data?.claims && !open) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
   return response;
 }
 
