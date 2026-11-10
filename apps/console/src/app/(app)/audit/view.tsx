@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button, EmptyState, Input, SidePanel, Select, Table, TBody, TD, TH, THead, TR } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
 import type { MessageKey } from "@/lib/messages";
+import { fmtDateTime } from "@/lib/format";
 import type { Json } from "@/lib/supabase/database.types";
 
 interface Row { id: string; created_at: string; membership_id: string | null; action: string; entity_type: string; entity_id: string | null; details: Json }
@@ -23,7 +24,7 @@ function isObject(v: Json | undefined): v is { [k: string]: Json | undefined } {
 const show = (v: Json | undefined) => (typeof v === "string" ? v : JSON.stringify(v));
 
 export function AuditView({ rows, hasMore, members, filters, isFirstPage }: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [open, setOpen] = useState<Row | null>(null);
   const who = (id: string | null) => (id ? members.find((m) => m.id === id)?.display_name ?? "—" : t("audit.system"));
   const typeLabel = (e: string) => (types.includes(e) ? t(`audit.type.${e}` as MessageKey) : e);
@@ -63,7 +64,7 @@ export function AuditView({ rows, hasMore, members, filters, isFirstPage }: Prop
           <TBody>
             {rows.map((r) => (
               <TR key={r.id}>
-                <TD><time dateTime={r.created_at}>{new Date(r.created_at).toLocaleString()}</time></TD>
+                <TD><time dateTime={r.created_at}>{fmtDateTime(locale, r.created_at)}</time></TD>
                 <TD>{who(r.membership_id)}</TD>
                 <TD><code className="text-xs">{r.action}</code></TD>
                 <TD>{typeLabel(r.entity_type)}</TD>
@@ -83,7 +84,7 @@ export function AuditView({ rows, hasMore, members, filters, isFirstPage }: Prop
         footer={<Button onClick={() => setOpen(null)}>{t("common.close")}</Button>}>
         {open && (
           <div className="flex flex-col gap-3">
-            <p className="text-muted">{who(open.membership_id)} · {new Date(open.created_at).toLocaleString()}</p>
+            <p className="text-muted">{who(open.membership_id)} · {fmtDateTime(locale, open.created_at)}</p>
             {changes ? (
               <Table>
                 <THead><TR><TH>{t("audit.field")}</TH><TH>{t("audit.before")}</TH><TH>{t("audit.after")}</TH></TR></THead>

@@ -5,6 +5,7 @@ import { Badge, Button, Card, CardBody, Input, Modal, Table, TBody, TD, TH, THea
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import type { MessageKey } from "@/lib/messages";
+import { pick } from "@/lib/format";
 
 type Scope = "own" | "branch" | "company";
 interface Role { id: string; name: string; name_local: string | null; is_system: boolean }
@@ -13,7 +14,7 @@ interface Props {
   companyId: string;
   roles: Role[];
   permissions: Perm[];
-  catalog: { key: string; description: string }[];
+  catalog: { key: string; description: string; description_local: string | null }[];
   counts: Record<string, number>;
 }
 
@@ -130,9 +131,9 @@ export function RolesView({ companyId, roles, permissions, catalog, counts }: Pr
             <TBody>
               {catalog.map((c) => (
                 <TR key={c.key}>
-                  <TD><div>{c.description}</div><code className="text-xs text-muted">{c.key}</code></TD>
+                  <TD><div>{pick(locale, c.description, c.description_local)}</div><code className="text-xs text-muted">{c.key}</code></TD>
                   <TD>
-                    <label className="sr-only" htmlFor={`scope-${c.key}`}>{`${c.description}: ${t("roles.scope")}`}</label>
+                    <label className="sr-only" htmlFor={`scope-${c.key}`}>{`${pick(locale, c.description, c.description_local)}: ${t("roles.scope")}`}</label>
                     <select id={`scope-${c.key}`} disabled={locked} value={scopeOf(c.key) ?? "none"}
                       onChange={(e) => setScope(c.key, e.target.value as Scope | "none")}
                       className="h-(--control-h) w-full min-w-40 rounded-control border border-line-strong bg-surface px-3 disabled:bg-ground disabled:text-muted">

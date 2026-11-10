@@ -3,15 +3,16 @@ import { loadSession } from "@/lib/auth/session";
 import { ConsoleShell } from "./shell";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const { supabase, state } = await loadSession();
+  const { supabase, state, claims } = await loadSession();
   if (!state.signedIn) redirect("/login");
   if (!state.hasProfile) redirect("/profile");
   const [{ data: company }, { data: profile }] = await Promise.all([
     supabase.from("companies").select("name, name_local").maybeSingle(),
-    supabase.from("profiles").select("full_name").maybeSingle(),
+    supabase.from("profiles").select("full_name, locale").maybeSingle(),
   ]);
   return (
-    <ConsoleShell companyName={company?.name ?? ""} companyNameLocal={company?.name_local ?? null} userName={profile?.full_name ?? ""}>
+    <ConsoleShell companyName={company?.name ?? ""} companyNameLocal={company?.name_local ?? null} userName={profile?.full_name ?? ""}
+      userId={claims?.sub ?? ""} profileLocale={profile?.locale === "km" ? "km" : "en"}>
       {children}
     </ConsoleShell>
   );

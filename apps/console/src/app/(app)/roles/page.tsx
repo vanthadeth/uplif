@@ -6,7 +6,7 @@ export default async function RolesPage() {
   const [roles, perms, catalog, assigned] = await Promise.all([
     supabase.from("roles").select("id, name, name_local, is_system").order("created_at"),
     supabase.from("role_permissions").select("role_id, permission_key, data_scope"),
-    supabase.from("permissions").select("key, description").order("key"),
+    supabase.from("permissions").select("key, description, description_local").order("key"),
     supabase.from("membership_roles").select("role_id"),
   ]);
   const counts: Record<string, number> = {};

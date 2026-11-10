@@ -5,6 +5,7 @@ import { Badge, Button, EmptyState, Input, Modal, Select, Table, TBody, TD, TH, 
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import type { MessageKey } from "@/lib/messages";
+import { fmtDate, pick } from "@/lib/format";
 
 interface Member { id: string; display_name: string | null; status: "active" | "suspended" | "removed" }
 interface Invitation { id: string; label: string | null; role_id: string; branch_id: string | null; status: "pending" | "accepted" | "revoked"; expires_at: string }
@@ -12,16 +13,16 @@ interface Props {
   myMembershipId: string;
   members: Member[];
   memberRoles: { id: string; membership_id: string; role_id: string; branch_id: string | null }[];
-  roles: { id: string; name: string }[];
-  branches: { id: string; name: string }[];
+  roles: { id: string; name: string; name_local: string | null }[];
+  branches: { id: string; name: string; name_local: string | null }[];
   invitations: Invitation[];
 }
 
 export function UsersView({ myMembershipId, members, memberRoles, roles, branches, invitations }: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const toast = useToast();
   const router = useRouter();
-  const roleName = (id: string) => roles.find((r) => r.id === id)?.name ?? "";
+  const roleName = (id: string) => { const r = roles.find((x) => x.id === id); return r ? pick(locale, r.name, r.name_local) : ""; };
   const invitable = roles.filter((r) => r.name !== "Owner");
 
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -141,7 +142,7 @@ export function UsersView({ myMembershipId, members, memberRoles, roles, branche
                     <TD>{i.label ?? "—"}</TD>
                     <TD>{roleName(i.role_id)}</TD>
                     <TD><Badge tone={st === "accepted" ? "success" : st === "pending" ? "info" : "neutral"}>{t(`invite.status.${st}` as MessageKey)}</Badge></TD>
-                    <TD>{new Date(i.expires_at).toLocaleDateString()}</TD>
+                    <TD>{fmtDate(locale, i.expires_at)}</TD>
                     <TD>{st === "pending" && <Button variant="quiet" onClick={() => revoke(i.id)}>{t("invite.revoke")}</Button>}</TD>
                   </TR>
                 );
@@ -168,11 +169,11 @@ export function UsersView({ myMembershipId, members, memberRoles, roles, branche
           <div className="flex flex-col gap-4">
             <Input label={t("invite.label")} hint={t("invite.labelHint")} value={label} onChange={(e) => setLabel(e.target.value)} />
             <Select label={t("invite.role")} value={roleId} onChange={(e) => setRoleId(e.target.value)}>
-              {invitable.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+              {invitable.map((r) => <option key={r.id} value={r.id}>{pick(locale, r.name, r.name_local)}</option>)}
             </Select>
             <Select label={t("invite.branch")} value={branchId} onChange={(e) => setBranchId(e.target.value)}>
               <option value="">{t("invite.allBranches")}</option>
-              {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+              {branches.map((b) => <option key={b.id} value={b.id}>{pick(locale, b.name, b.name_local)}</option>)}
             </Select>
           </div>
         )}
@@ -187,17 +188,17 @@ export function UsersView({ myMembershipId, members, memberRoles, roles, branche
           <ul className="flex flex-col gap-2">
             {rolesFor && memberRoles.filter((r) => r.membership_id === rolesFor.id).map((r) => (
               <li key={r.id} className="flex items-center justify-between gap-2">
-                <span><strong>{roleName(r.role_id)}</strong> <span className="text-muted">· {branches.find((b) => b.id === r.branch_id)?.name ?? t("users.roleBranchAll")}</span></span>
+                <span><strong>{roleName(r.role_id)}</strong> <span className="text-muted">· {(() => { const b = branches.find((x) => x.id === r.branch_id); return b ? pick(locale, b.name, b.name_local) : null; })() ?? t("users.roleBranchAll")}</span></span>
                 <Button variant="quiet" onClick={() => removeRole(r.id)}>{t("users.removeRole")}</Button>
               </li>
             ))}
           </ul>
           <Select label={t("invite.role")} value={addRoleId} onChange={(e) => setAddRoleId(e.target.value)}>
-            {roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+            {roles.map((r) => <option key={r.id} value={r.id}>{pick(locale, r.name, r.name_local)}</option>)}
           </Select>
           <Select label={t("invite.branch")} value={addBranchId} onChange={(e) => setAddBranchId(e.target.value)}>
             <option value="">{t("invite.allBranches")}</option>
-            {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+            {branches.map((b) => <option key={b.id} value={b.id}>{pick(locale, b.name, b.name_local)}</option>)}
           </Select>
           <div><Button variant="primary" onClick={addRole}>{t("users.addRole")}</Button></div>
         </div>

@@ -210,6 +210,7 @@ export type Database = {
       permissions: {
         Row: {
           description: string
+          description_local: string | null
           key: string
         }
         Insert: {
