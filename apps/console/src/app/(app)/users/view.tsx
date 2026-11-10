@@ -11,7 +11,7 @@ interface Invitation { id: string; label: string | null; role_id: string; branch
 interface Props {
   myMembershipId: string;
   members: Member[];
-  memberRoles: { membership_id: string; role_id: string }[];
+  memberRoles: { id: string; membership_id: string; role_id: string; branch_id: string | null }[];
   roles: { id: string; name: string }[];
   branches: { id: string; name: string }[];
   invitations: Invitation[];
@@ -30,6 +30,9 @@ export function UsersView({ myMembershipId, members, memberRoles, roles, branche
   const [branchId, setBranchId] = useState("");
   const [busy, setBusy] = useState(false);
   const [link, setLink] = useState<string>();
+  const [rolesFor, setRolesFor] = useState<Member | null>(null);
+  const [addRoleId, setAddRoleId] = useState("");
+  const [addBranchId, setAddBranchId] = useState("");
 
   function openInvite() {
     setLabel(""); setBranchId(""); setRoleId(invitable[0]?.id ?? ""); setLink(undefined); setInviteOpen(true);
@@ -66,6 +69,24 @@ export function UsersView({ myMembershipId, members, memberRoles, roles, branche
     router.refresh();
   }
 
+  async function addRole() {
+    if (!rolesFor || !addRoleId) return;
+    const { data: co } = await createClient().from("companies").select("id").maybeSingle();
+    const { error } = await createClient().from("membership_roles").insert({
+      company_id: co!.id, membership_id: rolesFor.id, role_id: addRoleId, branch_id: addBranchId || null,
+    });
+    if (error) return toast("error", error.code === "42501" ? t("common.forbidden") : error.code === "23505" ? t("common.saveError") : error.message);
+    toast("success", t("users.roleAdded"));
+    router.refresh();
+  }
+
+  async function removeRole(id: string) {
+    const { error } = await createClient().from("membership_roles").delete().eq("id", id);
+    if (error) return toast("error", error.code === "42501" ? t("common.forbidden") : error.message);
+    toast("success", t("users.roleRemoved"));
+    router.refresh();
+  }
+
   const memberTone: Record<Member["status"], BadgeTone> = { active: "success", suspended: "warning", removed: "neutral" };
   const memberLabel: Record<Member["status"], MessageKey> = { active: "status.active", suspended: "users.suspended", removed: "users.removed" };
 
@@ -94,6 +115,7 @@ export function UsersView({ myMembershipId, members, memberRoles, roles, branche
                 <TD>{memberRoles.filter((r) => r.membership_id === m.id).map((r) => roleName(r.role_id)).join(", ")}</TD>
                 <TD><Badge tone={memberTone[m.status]}>{t(memberLabel[m.status])}</Badge></TD>
                 <TD>
+                  <Button variant="quiet" onClick={() => { setRolesFor(m); setAddRoleId(roles[0]?.id ?? ""); setAddBranchId(""); }}>{t("users.manageRoles")}</Button>
                   {m.id !== myMembershipId && (m.status === "active"
                     ? <Button variant="quiet" onClick={() => setStatus(m, "suspended")}>{t("users.suspend")}</Button>
                     : m.status === "suspended" ? <Button variant="quiet" onClick={() => setStatus(m, "active")}>{t("users.reactivate")}</Button> : null)}
@@ -155,6 +177,32 @@ export function UsersView({ myMembershipId, members, memberRoles, roles, branche
           </div>
         )}
       </Modal>
+      <Modal
+        open={rolesFor !== null} onClose={() => setRolesFor(null)} closeLabel={t("common.close")}
+        title={`${t("users.rolesFor")} ${rolesFor?.display_name ?? ""}`}
+        footer={<Button onClick={() => setRolesFor(null)}>{t("common.close")}</Button>}
+      >
+        <div className="flex flex-col gap-4">
+          {rolesFor && memberRoles.filter((r) => r.membership_id === rolesFor.id).length === 0 && <p className="text-muted">{t("users.noRoles")}</p>}
+          <ul className="flex flex-col gap-2">
+            {rolesFor && memberRoles.filter((r) => r.membership_id === rolesFor.id).map((r) => (
+              <li key={r.id} className="flex items-center justify-between gap-2">
+                <span><strong>{roleName(r.role_id)}</strong> <span className="text-muted">· {branches.find((b) => b.id === r.branch_id)?.name ?? t("users.roleBranchAll")}</span></span>
+                <Button variant="quiet" onClick={() => removeRole(r.id)}>{t("users.removeRole")}</Button>
+              </li>
+            ))}
+          </ul>
+          <Select label={t("invite.role")} value={addRoleId} onChange={(e) => setAddRoleId(e.target.value)}>
+            {roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+          </Select>
+          <Select label={t("invite.branch")} value={addBranchId} onChange={(e) => setAddBranchId(e.target.value)}>
+            <option value="">{t("invite.allBranches")}</option>
+            {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+          </Select>
+          <div><Button variant="primary" onClick={addRole}>{t("users.addRole")}</Button></div>
+        </div>
+      </Modal>
     </div>
   );
 }
+
