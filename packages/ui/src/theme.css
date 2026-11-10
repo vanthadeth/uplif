@@ -1,0 +1,56 @@
+/* UPLIF design tokens. Source of truth: Design system board on the Phase 1 canvas. */
+@theme {
+  --font-sans: "Inter Variable", "Noto Sans Khmer", system-ui, sans-serif;
+
+  --color-primary: #1d5fd1;
+  --color-primary-hover: #194fb0;
+  --color-primary-soft: #e8f0fd;
+  --color-primary-ink: #164aa3;
+  --color-navy: #111a2b;
+  --color-ink: #16191f;
+  --color-ink-2: #3a414c;
+  --color-muted: #5b6472;
+  --color-line: #e3e6eb;
+  --color-line-strong: #d5dae1;
+  --color-check: #8a94a3;
+  --color-ground: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-neutral-soft: #f1f3f6;
+  --color-success: #1b7f4b;
+  --color-success-soft: #e6f4ec;
+  --color-success-ink: #146b3e;
+  --color-warning: #a15c00;
+  --color-warning-soft: #fff4e5;
+  --color-warning-ink: #7a4500;
+  --color-danger: #b42318;
+  --color-danger-hover: #961c12;
+  --color-danger-soft: #fdecea;
+  --color-danger-ink: #8c1d13;
+
+  --radius-control: 8px;
+  --radius-card: 12px;
+
+  --shadow-pop: 0 8px 24px rgb(17 26 43 / 0.16);
+  --spacing-control: 2.5rem; /* 40px; 48px on touch, see below */
+}
+
+:root { --control-h: 2.5rem; }
+@media (pointer: coarse) { :root { --control-h: 3rem; } }
+
+html { font-family: var(--font-sans); color: var(--color-ink); background: var(--color-ground); font-size: 14px; line-height: 1.5; }
+/* Khmer stacks vowels and subscripts: more line height, never uppercase */
+html:lang(km) { line-height: 1.65; }
+html:lang(km) h1, html:lang(km) h2, html:lang(km) h3 { line-height: 1.5; }
+html:lang(km) .caps { text-transform: none; letter-spacing: 0; }
+.caps { text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* Accessibility: visible keyboard focus everywhere */
+:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+
+@keyframes uplif-spin { to { transform: rotate(360deg); } }
+@keyframes uplif-pulse { 50% { opacity: 0.5; } }
+@keyframes uplif-in { from { opacity: 0; transform: translateY(8px); } }
+@keyframes uplif-slide { from { transform: translateX(100%); } }

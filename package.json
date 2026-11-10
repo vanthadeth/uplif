@@ -1,0 +1,10 @@
+{
+  "name": "uplif",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "dev": "pnpm --filter console dev",
+    "build": "pnpm --filter console build",
+    "typecheck": "pnpm -r typecheck"
+  }
+}
