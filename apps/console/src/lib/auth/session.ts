@@ -1,9 +1,13 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { nextStep, type SessionState } from "./next-step";
 
-/** Reads everything as the signed-in user, through RLS. */
-export async function loadSession() {
+/**
+ * Reads everything as the signed-in user, through RLS. Wrapped in React `cache` so the layout and
+ * the page of one request share a single read instead of repeating the database round trips.
+ */
+export const loadSession = cache(async function loadSession() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const claims = data?.claims;
@@ -11,18 +15,24 @@ export async function loadSession() {
   const companyId = (claims?.app_metadata as { company_id?: string } | undefined)?.company_id;
   let hasProfile = false;
   let companyCount = 0;
+  let profile: { full_name: string; locale: string } | null = null;
+  let company: { name: string; name_local: string | null } | null = null;
   if (signedIn) {
-    const [{ data: profile }, { data: companies }] = await Promise.all([
-      supabase.from("profiles").select("full_name").maybeSingle(),
+    // One parallel round trip for everything the shell and guards need.
+    const [p, companies, c] = await Promise.all([
+      supabase.from("profiles").select("full_name, locale").maybeSingle(),
       supabase.rpc("list_my_companies"),
+      companyId ? supabase.from("companies").select("name, name_local").maybeSingle() : Promise.resolve({ data: null }),
     ]);
+    profile = p.data;
+    company = c.data;
     hasProfile = !!profile;
-    companyCount = companies?.length ?? 0;
+    companyCount = companies.data?.length ?? 0;
   }
   const membershipId = (claims?.app_metadata as { membership_id?: string } | undefined)?.membership_id;
   const state: SessionState = { signedIn, hasProfile, hasCompanyClaim: !!companyId, companyCount };
-  return { supabase, state, companyId, membershipId, claims };
-}
+  return { supabase, state, companyId, membershipId, claims, profile, company };
+});
 
 /** Guard for a page: redirect unless the user is exactly at `step`. */
 export async function requireStep(step: ReturnType<typeof nextStep>) {

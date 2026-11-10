@@ -54,3 +54,4 @@ html:lang(km) .caps { text-transform: none; letter-spacing: 0; }
 @keyframes uplif-pulse { 50% { opacity: 0.5; } }
 @keyframes uplif-in { from { opacity: 0; transform: translateY(8px); } }
 @keyframes uplif-slide { from { transform: translateX(100%); } }
+@keyframes uplif-bar { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
