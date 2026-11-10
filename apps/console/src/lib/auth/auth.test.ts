@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { toE164 } from "./phone";
 import { nextStep } from "./next-step";
+import { safeNext } from "./safe-next";
 
 describe("toE164", () => {
   it("converts Cambodian local numbers", () => {
@@ -23,5 +24,15 @@ describe("nextStep", () => {
     expect(nextStep(base)).toBe("/companies/new");
     expect(nextStep({ ...base, companyCount: 2 })).toBe("/companies");
     expect(nextStep({ ...base, companyCount: 2, hasCompanyClaim: true })).toBe("/dashboard");
+  });
+});
+
+describe("safeNext", () => {
+  it("allows only same-site paths", () => {
+    expect(safeNext("/invite/abc")).toBe("/invite/abc");
+    expect(safeNext("//evil.com")).toBeNull();
+    expect(safeNext("https://evil.com")).toBeNull();
+    expect(safeNext("/\\evil.com")).toBeNull();
+    expect(safeNext(null)).toBeNull();
   });
 });

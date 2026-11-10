@@ -136,6 +136,23 @@ export type Database = {
         }
         Relationships: []
       }
+      invitations: {
+        Row: {
+          accepted_at: string | null
+          branch_id: string | null
+          company_id: string
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          label: string | null
+          role_id: string
+          status: Database["public"]["Enums"]["invitation_status"]
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       memberships: {
         Row: {
           company_id: string
@@ -314,6 +331,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invitation: {
+        Args: { p_token: string }
+        Returns: Json
+      }
+      create_invitation: {
+        Args: { p_branch_id: string | null; p_label: string; p_role_id: string }
+        Returns: Json
+      }
+      preview_invitation: {
+        Args: { p_token: string }
+        Returns: {
+          company_name: string
+          company_name_local: string | null
+          expires_at: string
+          role_name: string
+        }[]
+      }
+      revoke_invitation: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
       create_company: {
         Args: {
           p_branch_name: string
@@ -341,6 +379,7 @@ export type Database = {
     }
     Enums: {
       data_scope: "own" | "branch" | "company"
+      invitation_status: "pending" | "accepted" | "revoked"
       membership_status: "active" | "suspended" | "removed"
     }
     CompositeTypes: {

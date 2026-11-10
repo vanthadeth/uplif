@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, CardBody, Input } from "@uplif/ui";
+import { safeNext } from "@/lib/auth/safe-next";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 
@@ -24,7 +25,7 @@ export function ProfileForm() {
     });
     setBusy(false);
     if (err) return setError(t("auth.error.generic"));
-    router.replace("/");
+    router.replace(safeNext(new URLSearchParams(location.search).get("next")) ?? "/");
     router.refresh();
   }
 

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button, Card, CardBody, Input, LanguageToggle } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { toE164 } from "@/lib/auth/phone";
+import { safeNext } from "@/lib/auth/safe-next";
 import { useI18n } from "@/lib/i18n";
 
 export default function LoginPage() {
@@ -33,14 +34,18 @@ export default function LoginPage() {
     const { error: err } = await createClient().auth.verifyOtp({ phone: e164!, token: code, type: "sms" });
     setBusy(false);
     if (err) return setError(t("auth.error.generic"));
-    router.replace("/");
+    router.replace(nextPath());
     router.refresh();
+  }
+
+  function nextPath() {
+    return safeNext(new URLSearchParams(location.search).get("next")) ?? "/";
   }
 
   async function google() {
     await createClient().auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${location.origin}/auth/callback` },
+      options: { redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(nextPath())}` },
     });
   }
 

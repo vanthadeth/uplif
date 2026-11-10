@@ -19,8 +19,9 @@ export async function loadSession() {
     hasProfile = !!profile;
     companyCount = companies?.length ?? 0;
   }
+  const membershipId = (claims?.app_metadata as { membership_id?: string } | undefined)?.membership_id;
   const state: SessionState = { signedIn, hasProfile, hasCompanyClaim: !!companyId, companyCount };
-  return { supabase, state, companyId, claims };
+  return { supabase, state, companyId, membershipId, claims };
 }
 
 /** Guard for a page: redirect unless the user is exactly at `step`. */
