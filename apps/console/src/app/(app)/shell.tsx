@@ -1,11 +1,12 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Building2, ClipboardList, GitBranch, LayoutDashboard, ShieldCheck, Store, Users } from "lucide-react";
 import { AppShell, Avatar, LanguageToggle, type NavItem } from "@uplif/ui";
 import { useI18n, type Locale } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import { pick } from "@/lib/format";
+import { NavProgress } from "@/components/nav-progress";
 
 const routes: Record<string, string> = { dashboard: "/dashboard", company: "/company", branches: "/branches", users: "/users", roles: "/roles", audit: "/audit" };
 
@@ -24,6 +25,9 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userId, 
   }
   const pathname = usePathname();
   const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  // Fetch every section ahead of the click so the skeleton shows at once.
+  useEffect(() => { Object.values(routes).forEach((href) => router.prefetch(href)); }, [router]);
   const nav: NavItem[] = [
     { id: "dashboard", label: t("nav.dashboard"), icon: <LayoutDashboard /> },
     { id: "company", label: t("nav.company"), icon: <Building2 /> },
@@ -36,7 +40,7 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userId, 
   const shownName = pick(locale, companyName, companyNameLocal);
   return (
     <AppShell
-      appName="UPLIF" nav={nav} activeId={active} onNavigate={(id) => router.push(routes[id])}
+      appName="UPLIF" nav={nav} activeId={active} onNavigate={(id) => startTransition(() => router.push(routes[id]))}
       navLabel={t("shell.nav")} collapseLabel={t("shell.collapse")} expandLabel={t("shell.expand")}
       menuLabel={t("shell.menu")} closeLabel={t("shell.close")}
       topBar={
@@ -52,7 +56,8 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userId, 
         </>
       }
     >
-      {children}
+      <NavProgress active={pending} />
+      <div aria-busy={pending}>{children}</div>
     </AppShell>
   );
 }
