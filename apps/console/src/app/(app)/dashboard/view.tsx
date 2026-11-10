@@ -14,9 +14,9 @@ export function DashboardView({ company, hasClaim }: { company: { name: string; 
     router.refresh();
   }
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 p-4">
+    <div className="flex max-w-xl flex-col gap-4">
+      <h1 className="text-2xl font-bold">{t("dash.welcome")}</h1>
       <Card><CardBody className="flex flex-col gap-3">
-        <h1 className="text-xl font-semibold">{t("dash.welcome")}</h1>
         {company ? (
           <p><span className="text-muted">{t("dash.company")}: </span><strong>{company.name}</strong></p>
         ) : (
@@ -25,6 +25,6 @@ export function DashboardView({ company, hasClaim }: { company: { name: string; 
         <Link href="/companies" className="font-semibold text-primary">{t("dash.switch")}</Link>
         <Button onClick={signOut}>{t("auth.signOut")}</Button>
       </CardBody></Card>
-    </main>
+    </div>
   );
 }
