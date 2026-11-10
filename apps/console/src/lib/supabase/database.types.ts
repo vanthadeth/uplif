@@ -136,6 +136,23 @@ export type Database = {
         }
         Relationships: []
       }
+      invitations: {
+        Row: {
+          accepted_at: string | null
+          branch_id: string | null
+          company_id: string
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          label: string | null
+          role_id: string
+          status: Database["public"]["Enums"]["invitation_status"]
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       memberships: {
         Row: {
           company_id: string
@@ -193,6 +210,7 @@ export type Database = {
       permissions: {
         Row: {
           description: string
+          description_local: string | null
           key: string
         }
         Insert: {
@@ -202,6 +220,44 @@ export type Database = {
         Update: {
           description?: string
           key?: string
+        }
+        Relationships: []
+      }
+      audit_log: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          company_id: string
+          created_at: string
+          details: Json
+          entity_id: string | null
+          entity_type: string
+          id: string
+          membership_id: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          full_name_local: string | null
+          locale: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          full_name: string
+          full_name_local?: string | null
+          locale?: string
+          user_id: string
+        }
+        Update: {
+          full_name?: string
+          full_name_local?: string | null
+          locale?: string
         }
         Relationships: []
       }
@@ -276,10 +332,55 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      accept_invitation: {
+        Args: { p_token: string }
+        Returns: Json
+      }
+      create_invitation: {
+        Args: { p_branch_id: string | null; p_label: string; p_role_id: string }
+        Returns: Json
+      }
+      preview_invitation: {
+        Args: { p_token: string }
+        Returns: {
+          company_name: string
+          company_name_local: string | null
+          expires_at: string
+          role_name: string
+        }[]
+      }
+      revoke_invitation: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      create_company: {
+        Args: {
+          p_branch_name: string
+          p_country_code: string
+          p_home_currency: string
+          p_name: string
+          p_name_local: string
+        }
+        Returns: Json
+      }
+      list_my_companies: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          company_id: string
+          is_active: boolean
+          membership_id: string
+          name: string
+          name_local: string | null
+        }[]
+      }
+      switch_company: {
+        Args: { p_membership_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       data_scope: "own" | "branch" | "company"
+      invitation_status: "pending" | "accepted" | "revoked"
       membership_status: "active" | "suspended" | "removed"
     }
     CompositeTypes: {

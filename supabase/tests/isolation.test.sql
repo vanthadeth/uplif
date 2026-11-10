@@ -138,7 +138,7 @@ select is((select count(*)::int from public.companies), 0, 'suspended member los
 select is((select count(*)::int from public.branches), 0, 'suspended member sees no branches');
 reset role;
 
-select (select count(*) from __tresults__) as total,
-       (select count(*) from __tresults__ where ok) as passed,
-       (select string_agg(descr, ' | ') from __tresults__ where not ok) as failed;
+-- Prints the plan line (1..N) plus a diagnostic row for every failed test.
+select string_agg(t, E'
+') as result from finish() t;
 rollback;

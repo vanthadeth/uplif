@@ -1,2 +1,8 @@
 import { redirect } from "next/navigation";
-export default function Home() { redirect("/gallery"); }
+import { loadSession } from "@/lib/auth/session";
+import { nextStep } from "@/lib/auth/next-step";
+
+export default async function Home() {
+  const { state } = await loadSession();
+  redirect(nextStep(state));
+}
