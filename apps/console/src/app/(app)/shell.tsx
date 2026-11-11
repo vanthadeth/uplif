@@ -83,7 +83,7 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userEmai
       custom: (rail) => (
         <LanguagePicker
           variant={rail ? "rail" : "row"} label={t("shell.language")} value={locale} options={languageOptions}
-          onChange={(c) => isLocale(c) && changeLocale(c)} moreLabel={t("lang.more")} onMore={() => router.push("/translate")} footer={t("lang.help")}
+          onChange={(c) => isLocale(c) && changeLocale(c)} moreLabel={t("lang.more")} onMore={() => router.push("/language")} footer={t("lang.help")}
         />
       ),
     },

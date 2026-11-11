@@ -14,6 +14,9 @@ export function useLanguageOptions() {
     code: l.code, native: l.native, english: l.english, featured: l.featured,
     note: l.code === "en" || dictionaries[l.code] ? undefined : t("lang.fallback"),
   }));
-  const options = all.filter((o) => o.featured || o.code === locale);
+  // A language started in the community may not be in the static list: keep the current choice visible anyway.
+  const known = all.some((o) => o.code === locale);
+  const options = [...all, ...(known ? [] : [{ code: locale, native: locale, english: locale, featured: false, note: undefined }])]
+    .filter((o) => o.featured || o.code === locale);
   return { options, all };
 }

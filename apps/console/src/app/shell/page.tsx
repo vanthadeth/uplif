@@ -36,7 +36,7 @@ export default function ShellDemo() {
       activeId={active}
       onNavigate={setActive}
       account={{ label: t("shell.user"), name: "Sokha Chan", sub: "sokha@example.com", avatar: <Avatar name="Sokha Chan" />, menu: [] }}
-      utilities={[{ id: "lang", custom: (rail) => <LanguagePicker variant={rail ? "rail" : "row"} label={t("shell.language")} value={locale} options={languageOptions} onChange={(c) => isLocale(c) && setLocale(c)} moreLabel={t("lang.more")} onMore={() => router.push("/translate")} footer={t("lang.help")} /> }]}
+      utilities={[{ id: "lang", custom: (rail) => <LanguagePicker variant={rail ? "rail" : "row"} label={t("shell.language")} value={locale} options={languageOptions} onChange={(c) => isLocale(c) && setLocale(c)} moreLabel={t("lang.more")} onMore={() => router.push("/language")} footer={t("lang.help")} /> }]}
       navLabel={t("shell.nav")}
       collapseLabel={t("shell.collapse")}
       expandLabel={t("shell.expand")}
@@ -73,7 +73,7 @@ export default function ShellDemo() {
                 <input id="top-search" placeholder={t("shell.search")} className="h-(--control-h) w-full rounded-control border border-line-strong bg-surface ps-9 pe-3 placeholder:text-muted" />
               </div>
             </div>
-            <LanguagePicker variant="button" label={t("lang.toggle")} value={locale} options={languageOptions} onChange={(c) => isLocale(c) && setLocale(c)} moreLabel={t("lang.more")} onMore={() => router.push("/translate")} footer={t("lang.help")} />
+            <LanguagePicker variant="button" label={t("lang.toggle")} value={locale} options={languageOptions} onChange={(c) => isLocale(c) && setLocale(c)} moreLabel={t("lang.more")} onMore={() => router.push("/language")} footer={t("lang.help")} />
             <Avatar name="Sokha Chan" />
           </div>
         </>
