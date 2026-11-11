@@ -16,3 +16,6 @@ export * from "./Switcher";
 export * from "./LanguageToggle";
 export * from "./LanguagePicker";
 export * from "./AppShell";
+export * from "./TitleBar";
+export * from "./NavProgress";
+export { useTheme, themeInitScript, type Theme } from "./theme";

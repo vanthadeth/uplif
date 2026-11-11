@@ -16,7 +16,7 @@ export interface AccountMenuItem { id: string; label: string; icon?: ReactNode; 
 
 interface ShellProps {
   /** Company switcher at the top: logo (or mark), name and a line under it. */
-  company: { name: string; sub?: string; logo?: ReactNode; label: string; onSwitch: () => void };
+  company: { name: string; sub?: string; logo?: ReactNode; label: string; onSwitch?: () => void };
   groups: NavGroup[];
   activeId: string;
   onNavigate: (id: string) => void;
@@ -33,6 +33,11 @@ interface ShellProps {
   /** Title bar content, to the right of the phone menu button. */
   topBar: ReactNode;
   children: ReactNode;
+}
+
+function BrandTag({ switchable, children, ...rest }: { switchable: boolean; children: ReactNode; onClick: () => void; className: string; title?: string; "aria-label": string }) {
+  const { onClick, ...plain } = rest;
+  return switchable ? <button type="button" onClick={onClick} {...plain}>{children}</button> : <div {...plain}>{children}</div>;
 }
 
 const row = "relative flex min-h-11 w-full items-center gap-3 rounded-[10px] px-3 text-start font-medium text-(--sb-muted) transition-colors hover:bg-(--sb-hover) hover:text-(--sb-fg)";
@@ -79,10 +84,12 @@ export function AppShell(p: ShellProps) {
         </button>
 
         <div className={cn("flex h-[72px] shrink-0 items-center gap-2 border-b border-(--sb-line) px-3", rail && "justify-center px-0")}>
-          <button
-            type="button" onClick={() => { p.company.onSwitch(); setDrawer(false); }}
+          {/* Without onSwitch (one-company apps such as the super-admin app) the block is a plain label. */}
+          <BrandTag
+            switchable={!!p.company.onSwitch}
+            onClick={() => { p.company.onSwitch?.(); setDrawer(false); }}
             aria-label={`${p.company.label}: ${p.company.name}`} title={rail ? p.company.label : undefined}
-            className={cn("flex min-w-0 flex-1 items-center gap-3 rounded-[10px] p-1.5 text-start hover:bg-(--sb-hover)", rail && "flex-none p-0")}
+            className={cn("flex min-w-0 flex-1 items-center gap-3 rounded-[10px] p-1.5 text-start", p.company.onSwitch && "hover:bg-(--sb-hover)", rail && "flex-none p-0")}
           >
             <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-[11px] bg-(--sb-acc) text-lg font-bold text-(--sb-mark-fg)">
               {p.company.logo ?? <span aria-hidden="true">U</span>}
@@ -93,10 +100,10 @@ export function AppShell(p: ShellProps) {
                   <span className="block truncate font-semibold">{p.company.name}</span>
                   {p.company.sub && <span className="block truncate text-xs text-(--sb-muted)">{p.company.sub}</span>}
                 </span>
-                <ChevronsUpDown className="size-[18px] shrink-0 text-(--sb-muted)" aria-hidden="true" />
+                {p.company.onSwitch && <ChevronsUpDown className="size-[18px] shrink-0 text-(--sb-muted)" aria-hidden="true" />}
               </>
             )}
-          </button>
+          </BrandTag>
           {drawer && (
             <button type="button" aria-label={p.closeLabel} title={p.closeLabel} onClick={() => setDrawer(false)} className="inline-flex size-11 shrink-0 items-center justify-center rounded-[10px] text-(--sb-muted) hover:bg-(--sb-hover) hover:text-(--sb-fg) md:hidden">
               <X className="size-5" aria-hidden="true" />
