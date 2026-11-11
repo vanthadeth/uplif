@@ -48,7 +48,7 @@ export function BranchList({ branches, companyId }: { branches: Branch[]; compan
   }
 
   return (
-    <div className="flex max-w-3xl flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t("branches.title")}</h1>

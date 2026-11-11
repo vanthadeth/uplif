@@ -32,6 +32,7 @@
   --radius-card: 12px;
 
   --shadow-pop: 0 8px 24px rgb(17 26 43 / 0.16);
+  --content-max: 1280px; /* page content and title bar are centered up to this width */
   --spacing-control: 2.5rem; /* 40px; 48px on touch, see below */
 }
 

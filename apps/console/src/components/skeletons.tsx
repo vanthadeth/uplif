@@ -83,11 +83,13 @@ export function ShellSkeleton() {
         {Array.from({ length: 6 }, (_, i) => <div key={i} className="h-11 animate-[uplif-pulse_1.4s_ease-in-out_infinite] rounded-[10px] bg-(--sb-hover)" />)}
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header aria-hidden="true" className="flex min-h-16 items-center gap-2 border-b border-line bg-surface px-4 sm:px-6">
-          <Skeleton className="h-5 w-40" />
-          <Skeleton className="ms-auto size-9 rounded-full" />
+        <header aria-hidden="true" className="min-h-[72px] border-b border-line bg-surface px-3 py-2 sm:px-6">
+          <div className="mx-auto flex min-h-[56px] w-full max-w-(--content-max) items-center gap-2">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="ms-auto size-9 rounded-full" />
+          </div>
         </header>
-        <main className="flex-1 p-4 sm:p-6"><DashboardSkeleton /></main>
+        <main className="flex-1 p-4 sm:p-6"><div className="mx-auto w-full max-w-(--content-max)"><DashboardSkeleton /></div></main>
       </div>
     </div>
   );

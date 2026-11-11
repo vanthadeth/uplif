@@ -32,7 +32,7 @@ export function Community({ languages, stats }: { languages: LanguageRow[]; stat
   }
 
   return (
-    <div className="flex max-w-5xl flex-col gap-5">
+    <div className="flex flex-col gap-5">
       <BackLink href="/language" label={t("tl.title")} />
       <div>
         <h1 className="text-2xl font-bold">{t("tl.c.title")}</h1>

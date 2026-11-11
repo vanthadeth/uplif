@@ -165,13 +165,16 @@ export function AppShell(p: ShellProps) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex min-h-[72px] flex-wrap items-center gap-x-2 gap-y-2 border-b border-line bg-surface px-3 py-2 sm:px-6">
-          <button type="button" aria-label={p.menuLabel} aria-expanded={drawer} onClick={() => setDrawer(true)} className="inline-flex size-11 items-center justify-center rounded-control hover:bg-ground md:hidden">
-            <Menu className="size-5" aria-hidden="true" />
-          </button>
-          {p.topBar}
+        {/* The bar keeps its full-width background and border; its content and the page share one centered max width. */}
+        <header className="sticky top-0 z-20 min-h-[72px] border-b border-line bg-surface px-3 py-2 sm:px-6">
+          <div className="mx-auto flex min-h-[56px] w-full max-w-(--content-max) flex-wrap items-center gap-x-2 gap-y-2">
+            <button type="button" aria-label={p.menuLabel} aria-expanded={drawer} onClick={() => setDrawer(true)} className="inline-flex size-11 items-center justify-center rounded-control hover:bg-ground md:hidden">
+              <Menu className="size-5" aria-hidden="true" />
+            </button>
+            {p.topBar}
+          </div>
         </header>
-        <main className="flex-1 p-4 sm:p-6">{p.children}</main>
+        <main className="flex-1 p-4 sm:p-6"><div className="mx-auto w-full max-w-(--content-max)">{p.children}</div></main>
       </div>
     </div>
   );
