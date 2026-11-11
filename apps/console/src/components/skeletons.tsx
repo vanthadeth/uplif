@@ -35,17 +35,16 @@ export function TableSkeleton({ rows = 6 }: { rows?: number }) {
   );
 }
 
-/** Page title and a stack of fields: company settings. */
+/** Company page: title, then four sections each with a label column beside a card of fields. */
 export function FormSkeleton() {
   return (
     <Frame>
-      <Title />
-      <Card><CardBody className="flex max-w-xl flex-col gap-5">
-        {Array.from({ length: 4 }, (_, i) => (
-          <div key={i} className="flex flex-col gap-2"><Skeleton className="h-4 w-28" /><Skeleton className="h-(--control-h) w-full" /></div>
-        ))}
-        <Skeleton className="h-(--control-h) w-28" />
-      </CardBody></Card>
+      {Array.from({ length: 4 }, (_, i) => (
+        <div key={i} className={`grid gap-4 md:grid-cols-[minmax(0,280px)_minmax(0,1fr)] md:gap-x-8 ${i ? "border-t border-line pt-6" : ""}`}>
+          <div className="flex flex-col gap-2"><Skeleton className="h-4 w-28" /><Skeleton className="h-3 w-48" /></div>
+          <Card><CardBody className="flex flex-col gap-4"><Skeleton className="h-4 w-32" /><Skeleton className="h-(--control-h) w-full" /><Skeleton className="h-4 w-24" /></CardBody></Card>
+        </div>
+      ))}
     </Frame>
   );
 }
