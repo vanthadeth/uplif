@@ -61,3 +61,28 @@ export function CardSkeleton() {
     </Frame>
   );
 }
+
+/**
+ * The whole console frame, for the first load or a switch into it, when the layout itself is still
+ * fetching and there is no real shell to show yet. Matches AppShell so nothing jumps when it arrives.
+ */
+export function ShellSkeleton() {
+  return (
+    <div className="flex min-h-dvh">
+      <aside aria-hidden="true" className="hidden w-64 shrink-0 flex-col gap-2 bg-navy p-3 md:flex">
+        <div className="flex h-16 items-center gap-3 px-1">
+          <span className="inline-flex size-9 items-center justify-center rounded-control bg-primary font-bold text-white">U</span>
+          <span className="text-lg font-bold text-white">UPLIF</span>
+        </div>
+        {Array.from({ length: 6 }, (_, i) => <div key={i} className="h-11 animate-[uplif-pulse_1.4s_ease-in-out_infinite] rounded-control bg-white/10" />)}
+      </aside>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header aria-hidden="true" className="flex min-h-16 items-center gap-2 border-b border-line bg-surface px-4 sm:px-6">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="ms-auto size-9 rounded-full" />
+        </header>
+        <main className="flex-1 p-4 sm:p-6"><CardSkeleton /></main>
+      </div>
+    </div>
+  );
+}
