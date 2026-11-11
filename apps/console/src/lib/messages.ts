@@ -72,6 +72,10 @@ export const en = {
   "shell.nav": "Main navigation",
   "shell.group": "Menu",
   "shell.language": "Language",
+  "lang.search": "Search languages",
+  "lang.none": "No language found",
+  "lang.help": "Missing yours? Help translate UPLIF. New languages go live after a reviewer approves them.",
+  "lang.fallback": "English for now",
   "shell.darkMode": "Dark mode",
   "shell.lightMode": "Light mode",
   "shell.collapse": "Collapse sidebar",
@@ -432,6 +436,10 @@ export const km: Partial<Record<MessageKey, string>> = {
   "shell.nav": "ការរុករកមេ",
   "shell.group": "ម៉ឺនុយ",
   "shell.language": "ភាសា",
+  "lang.search": "ស្វែងរកភាសា",
+  "lang.none": "រកមិនឃើញភាសា",
+  "lang.help": "រកមិនឃើញភាសារបស់អ្នក? ជួយបកប្រែ UPLIF។ ភាសាថ្មីនឹងដំណើរការបន្ទាប់ពីអ្នកត្រួតពិនិត្យអនុម័ត។",
+  "lang.fallback": "អង់គ្លេសសិន",
   "shell.darkMode": "របៀបងងឹត",
   "shell.lightMode": "របៀបភ្លឺ",
   "shell.search": "ស្វែងរក",
@@ -550,3 +558,9 @@ export const km: Partial<Record<MessageKey, string>> = {
   "audit.type.role_permissions": "សិទ្ធិតាមតួនាទី",
   "audit.type.membership_roles": "ការកំណត់តួនាទី",
 };
+
+/**
+ * Approved strings per language. A language that is listed in languages.ts but has no entry here
+ * shows English text; a missing key in a listed dictionary also falls back to English.
+ */
+export const dictionaries: Partial<Record<string, Partial<Record<MessageKey, string>>>> = { km };

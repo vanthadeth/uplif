@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useOptimistic, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, ClipboardList, GitBranch, Languages, LayoutDashboard, LogOut, Moon, Repeat, ShieldCheck, Store, Sun, Users } from "lucide-react";
-import { AppShell, Avatar, type NavItem, type UtilityItem } from "@uplif/ui";
+import { Building2, ClipboardList, GitBranch, LayoutDashboard, LogOut, Moon, Repeat, ShieldCheck, Store, Sun, Users } from "lucide-react";
+import { AppShell, Avatar, LanguagePicker, type NavItem, type UtilityItem } from "@uplif/ui";
 import { useI18n, type Locale } from "@/lib/i18n";
+import { isLocale } from "@/lib/languages";
+import { useLanguageOptions } from "@/lib/use-language-options";
 import { useTheme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/client";
 import { pick } from "@/lib/format";
@@ -25,6 +27,7 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userId, 
 }) {
   const { t, locale, setLocale } = useI18n();
   const { theme, toggle: toggleTheme } = useTheme();
+  const languageOptions = useLanguageOptions();
   // Use the saved profile language on a new device; this browser's own choice wins once made.
   useEffect(() => {
     try { if (!localStorage.getItem("uplif.locale")) setLocale(profileLocale); } catch {}
@@ -67,7 +70,15 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userId, 
   const shownName = pick(locale, companyName, companyNameLocal);
 
   const utilities: UtilityItem[] = [
-    { id: "lang", label: t("shell.language"), icon: <Languages />, value: locale === "km" ? "ខ្មែរ" : "English", onClick: () => changeLocale(locale === "km" ? "en" : "km") },
+    {
+      id: "lang",
+      custom: (rail) => (
+        <LanguagePicker
+          variant={rail ? "rail" : "row"} label={t("shell.language")} value={locale} options={languageOptions}
+          onChange={(c) => isLocale(c) && changeLocale(c)} searchLabel={t("lang.search")} emptyLabel={t("lang.none")} footer={t("lang.help")}
+        />
+      ),
+    },
     { id: "theme", label: theme === "dark" ? t("shell.lightMode") : t("shell.darkMode"), icon: theme === "dark" ? <Sun /> : <Moon />, onClick: toggleTheme },
   ];
 

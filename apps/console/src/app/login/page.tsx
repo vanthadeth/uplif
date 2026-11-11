@@ -1,7 +1,9 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, CardBody, Input, LanguageToggle } from "@uplif/ui";
+import { Button, Card, CardBody, Input, LanguagePicker } from "@uplif/ui";
+import { isLocale } from "@/lib/languages";
+import { useLanguageOptions } from "@/lib/use-language-options";
 import { createClient } from "@/lib/supabase/client";
 import { toE164 } from "@/lib/auth/phone";
 import { safeNext } from "@/lib/auth/safe-next";
@@ -12,6 +14,7 @@ const phoneEnabled = process.env.NEXT_PUBLIC_PHONE_LOGIN === "true";
 
 export default function LoginPage() {
   const { t, locale, setLocale } = useI18n();
+  const languageOptions = useLanguageOptions();
   const router = useRouter();
   const [phone, setPhone] = useState("");
   const [e164, setE164] = useState<string | null>(null);
@@ -55,7 +58,7 @@ export default function LoginPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 p-4">
       <div className="flex justify-end">
-        <LanguageToggle label={t("lang.toggle")} value={locale} onChange={(id) => setLocale(id as "en" | "km")} options={[{ id: "en", label: "English" }, { id: "km", label: "ខ្មែរ" }]} />
+        <LanguagePicker variant="button" label={t("lang.toggle")} value={locale} options={languageOptions} onChange={(c) => isLocale(c) && setLocale(c)} searchLabel={t("lang.search")} emptyLabel={t("lang.none")} footer={t("lang.help")} />
       </div>
       <Card>
         <CardBody className="flex flex-col gap-4">

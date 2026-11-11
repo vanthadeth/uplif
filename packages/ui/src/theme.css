@@ -1,6 +1,6 @@
 /* UPLIF design tokens. Source of truth: Design system board on the Phase 1 canvas. */
 @theme {
-  --font-sans: "Inter Variable", "Noto Sans Khmer", system-ui, sans-serif;
+  --font-sans: "Inter Variable", "Noto Sans Khmer", "Noto Sans Thai", "Noto Sans Lao", "Noto Sans SC", system-ui, sans-serif;
 
   --color-primary: #1d5fd1;
   --color-primary-hover: #194fb0;

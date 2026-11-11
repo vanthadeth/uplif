@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { loadSession } from "@/lib/auth/session";
+import { isLocale } from "@/lib/languages";
 import { ConsoleShell } from "./shell";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -8,7 +9,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!state.hasProfile) redirect("/profile");
   return (
     <ConsoleShell companyName={company?.name ?? ""} companyNameLocal={company?.name_local ?? null} userName={profile?.full_name ?? ""}
-      userId={claims?.sub ?? ""} permissions={permissions} profileLocale={profile?.locale === "km" ? "km" : "en"}>
+      userId={claims?.sub ?? ""} permissions={permissions} profileLocale={isLocale(profile?.locale) ? profile.locale : "en"}>
       {children}
     </ConsoleShell>
   );
