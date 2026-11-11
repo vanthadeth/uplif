@@ -1,7 +1,8 @@
 import { loadSession } from "@/lib/auth/session";
 import { UsersView } from "./view";
 
-export default async function UsersPage() {
+export default async function UsersPage({ searchParams }: { searchParams: Promise<{ invite?: string }> }) {
+  const { invite } = await searchParams;
   const { supabase, membershipId } = await loadSession();
   const [members, memberRoles, roles, branches, invitations] = await Promise.all([
     supabase.from("memberships").select("id, display_name, status").order("created_at"),
@@ -18,6 +19,7 @@ export default async function UsersPage() {
       roles={roles.data ?? []}
       branches={branches.data ?? []}
       invitations={invitations.data ?? []}
+      openInvite={invite === "1"}
     />
   );
 }
