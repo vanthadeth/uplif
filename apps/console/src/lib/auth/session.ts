@@ -17,13 +17,16 @@ export const loadSession = cache(async function loadSession() {
   let companyCount = 0;
   let profile: { full_name: string; locale: string } | null = null;
   let company: { name: string; name_local: string | null } | null = null;
+  let permissions: string[] = [];
   if (signedIn) {
     // One parallel round trip for everything the shell and guards need.
-    const [p, companies, c] = await Promise.all([
+    const [p, companies, c, perms] = await Promise.all([
       supabase.from("profiles").select("full_name, locale").maybeSingle(),
       supabase.rpc("list_my_companies"),
       companyId ? supabase.from("companies").select("name, name_local").maybeSingle() : Promise.resolve({ data: null }),
+      companyId ? supabase.rpc("my_permissions") : Promise.resolve({ data: null }),
     ]);
+    permissions = (perms.data ?? []).map((x) => x.permission_key);
     profile = p.data;
     company = c.data;
     hasProfile = !!profile;
@@ -31,7 +34,7 @@ export const loadSession = cache(async function loadSession() {
   }
   const membershipId = (claims?.app_metadata as { membership_id?: string } | undefined)?.membership_id;
   const state: SessionState = { signedIn, hasProfile, hasCompanyClaim: !!companyId, companyCount };
-  return { supabase, state, companyId, membershipId, claims, profile, company };
+  return { supabase, state, companyId, membershipId, claims, profile, company, permissions };
 });
 
 /** Guard for a page: redirect unless the user is exactly at `step`. */

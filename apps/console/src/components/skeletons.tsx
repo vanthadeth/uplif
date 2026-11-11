@@ -69,12 +69,12 @@ export function CardSkeleton() {
 export function ShellSkeleton() {
   return (
     <div className="flex min-h-dvh">
-      <aside aria-hidden="true" className="hidden w-64 shrink-0 flex-col gap-2 bg-navy p-3 md:flex">
-        <div className="flex h-16 items-center gap-3 px-1">
-          <span className="inline-flex size-9 items-center justify-center rounded-control bg-primary font-bold text-white">U</span>
-          <span className="text-lg font-bold text-white">UPLIF</span>
+      <aside aria-hidden="true" className="hidden w-72 shrink-0 flex-col gap-2 border-e border-(--sb-line) bg-(--sb-bg) p-2 md:flex">
+        <div className="flex h-16 items-center gap-2.5 border-b border-(--sb-line) px-1">
+          <span className="inline-flex size-8 items-center justify-center rounded-[9px] bg-(--sb-acc) font-bold text-(--sb-mark-fg)">U</span>
+          <span className="text-lg font-bold text-(--sb-fg)">UPLIF</span>
         </div>
-        {Array.from({ length: 6 }, (_, i) => <div key={i} className="h-11 animate-[uplif-pulse_1.4s_ease-in-out_infinite] rounded-control bg-white/10" />)}
+        {Array.from({ length: 6 }, (_, i) => <div key={i} className="h-11 animate-[uplif-pulse_1.4s_ease-in-out_infinite] rounded-[10px] bg-(--sb-hover)" />)}
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header aria-hidden="true" className="flex min-h-16 items-center gap-2 border-b border-line bg-surface px-4 sm:px-6">

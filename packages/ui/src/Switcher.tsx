@@ -67,7 +67,7 @@ export function Switcher({ label, options, value, onChange, icon, className }: {
                   <span className="block font-medium">{o.label}</span>
                   {o.hint && <span className="block text-xs text-muted">{o.hint}</span>}
                 </span>
-                {on && <Check className="size-4 text-primary" aria-hidden="true" />}
+                {on && <Check className="size-4 text-link" aria-hidden="true" />}
               </li>
             );
           })}

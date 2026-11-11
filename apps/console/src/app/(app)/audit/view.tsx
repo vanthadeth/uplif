@@ -53,7 +53,7 @@ export function AuditView({ rows, hasMore, members, filters, isFirstPage }: Prop
         <Input label={t("audit.filter.from")} type="date" name="from" defaultValue={filters.from} />
         <Input label={t("audit.filter.to")} type="date" name="to" defaultValue={filters.to} />
         <Button type="submit" variant="primary">{t("audit.filter.apply")}</Button>
-        <Link href="/audit" className="py-2.5 font-semibold text-primary">{t("audit.filter.clear")}</Link>
+        <Link href="/audit" className="py-2.5 font-semibold text-link">{t("audit.filter.clear")}</Link>
       </form>
 
       {rows.length === 0 ? (
@@ -76,8 +76,8 @@ export function AuditView({ rows, hasMore, members, filters, isFirstPage }: Prop
       )}
 
       <div className="flex gap-4">
-        {!isFirstPage && <Link href={params.size ? `/audit?${params}` : "/audit"} className="font-semibold text-primary">{t("audit.newest")}</Link>}
-        {hasMore && <Link href={`/audit?${older}`} className="font-semibold text-primary">{t("audit.older")}</Link>}
+        {!isFirstPage && <Link href={params.size ? `/audit?${params}` : "/audit"} className="font-semibold text-link">{t("audit.newest")}</Link>}
+        {hasMore && <Link href={`/audit?${older}`} className="font-semibold text-link">{t("audit.older")}</Link>}
       </div>
 
       <SidePanel open={open !== null} onClose={() => setOpen(null)} closeLabel={t("common.close")} title={open?.action ?? ""}

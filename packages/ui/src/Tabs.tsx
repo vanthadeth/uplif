@@ -36,7 +36,7 @@ export function Tabs({ items, value, onChange, label }: { items: TabItem[]; valu
             onClick={() => onChange(t.id)}
             className={cn(
               "-mb-px min-h-(--control-h) border-b-2 px-4 font-semibold transition-colors",
-              on ? "border-primary text-primary" : "border-transparent text-muted hover:text-ink",
+              on ? "border-primary text-link" : "border-transparent text-muted hover:text-ink",
             )}
           >
             {t.label}

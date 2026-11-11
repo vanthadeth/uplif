@@ -5,7 +5,7 @@ import { cn } from "./cn";
 function Shell({ icon, title, body, action, tone }: { icon: ReactNode; title: string; body?: string; action?: ReactNode; tone?: "danger" }) {
   return (
     <div className="flex flex-col items-center gap-3 rounded-card border border-dashed border-line-strong bg-surface px-6 py-12 text-center">
-      <span className={cn("inline-flex size-12 items-center justify-center rounded-full", tone === "danger" ? "bg-danger-soft text-danger" : "bg-neutral-soft text-muted")}>{icon}</span>
+      <span className={cn("inline-flex size-12 items-center justify-center rounded-full", tone === "danger" ? "bg-danger-soft text-danger-ink" : "bg-neutral-soft text-muted")}>{icon}</span>
       <h3 className="text-base font-semibold">{title}</h3>
       {body && <p className="max-w-sm text-muted">{body}</p>}
       {action}
