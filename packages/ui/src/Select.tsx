@@ -3,6 +3,7 @@ import {
   Children, Fragment, isValidElement, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState,
   type KeyboardEvent, type ReactElement, type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import { Check, ChevronDown } from "lucide-react";
 import { cn } from "./cn";
 import { FieldShell, control } from "./Field";
@@ -84,12 +85,15 @@ export function Select({ label, hint, error, id, name, className, disabled, requ
   const btn = useRef<HTMLButtonElement>(null);
   const list = useRef<HTMLUListElement>(null);
   const typed = useRef({ s: "", t: 0 });
+  const [host, setHost] = useState<Element | null>(null);
   const [pos, setPos] = useState<{ left: number; width: number; top?: number; bottom?: number; max: number } | null>(null);
 
   const openList = () => {
     if (disabled) return;
     const i = options.findIndex((o) => o.value === current && !o.disabled);
     setActive(i >= 0 ? i : Math.max(0, options.findIndex((o) => !o.disabled)));
+    // A modal <dialog> makes everything outside it inert, so the list is rendered inside the dialog when there is one.
+    setHost(btn.current?.closest("dialog") ?? document.body);
     setOpen(true);
   };
   const close = useCallback(() => setOpen(false), []);
@@ -104,10 +108,16 @@ export function Select({ label, hint, error, id, name, className, disabled, requ
   useLayoutEffect(() => {
     if (!open || sheet || !btn.current) return;
     const r = btn.current.getBoundingClientRect();
-    const below = window.innerHeight - r.bottom - 12;
-    const above = r.top - 12;
-    const up = below < 200 && above > below;
-    setPos({ left: r.left, width: r.width, max: Math.min(300, up ? above : below), ...(up ? { bottom: window.innerHeight - r.top + 4 } : { top: r.bottom + 4 }) });
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const gap = 4;
+    const edge = 8;
+    const below = vh - r.bottom - gap - edge;
+    const above = r.top - gap - edge;
+    const up = below < 180 && above > below;
+    const width = Math.min(Math.max(r.width, 160), vw - edge * 2);
+    const left = Math.min(Math.max(edge, r.left), vw - edge - width);
+    setPos({ left, width, max: Math.max(120, Math.min(320, up ? above : below)), ...(up ? { bottom: vh - r.top + gap } : { top: r.bottom + gap }) });
   }, [open, sheet]);
 
   useEffect(() => {
@@ -204,7 +214,7 @@ export function Select({ label, hint, error, id, name, className, disabled, requ
         "overflow-y-auto py-1",
         sheet
           ? "relative max-h-[60dvh]"
-          : "fixed z-50 rounded-control border border-line bg-surface shadow-pop",
+          : "fixed z-[100] rounded-control border border-line bg-surface shadow-pop",
       )}
       style={sheet ? undefined : pos ? { left: pos.left, width: pos.width, top: pos.top, bottom: pos.bottom, maxHeight: pos.max } : { visibility: "hidden" }}
     >
@@ -240,19 +250,22 @@ export function Select({ label, hint, error, id, name, className, disabled, requ
     <div className="relative">
       {trigger}
       {name && <input type="hidden" name={name} value={current} />}
-      {open && !sheet && ul}
-      {open && sheet && (
-        <div className="fixed inset-0 z-50 flex items-end bg-navy/50" onPointerDown={(e) => { if (e.target === e.currentTarget) close(); }}>
-          <div className="w-full animate-[uplif-slide-up_0.18s_ease-out] rounded-t-card bg-surface pb-[env(safe-area-inset-bottom)] shadow-pop">
-            <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-line-strong" aria-hidden="true" />
-            <div className="px-4 pb-1 pt-3 text-[13px] font-semibold text-muted">{label}</div>
-            {ul}
-          </div>
-        </div>
-      )}
     </div>
   );
 
-  if (bare) return body;
-  return <FieldShell label={label} hint={hint} error={error} id={fid}>{body}</FieldShell>;
+  const layer = open && host ? createPortal(
+    sheet ? (
+      <div className="fixed inset-0 z-[100] flex items-end bg-navy/50" onPointerDown={(e) => { if (e.target === e.currentTarget) close(); }}>
+        <div className="w-full animate-[uplif-slide-up_0.18s_ease-out] rounded-t-card bg-surface pb-[env(safe-area-inset-bottom)] shadow-pop">
+          <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-line-strong" aria-hidden="true" />
+          <div className="px-4 pb-1 pt-3 text-[13px] font-semibold text-muted">{label}</div>
+          {ul}
+        </div>
+      </div>
+    ) : ul,
+    host,
+  ) : null;
+
+  if (bare) return <>{body}{layer}</>;
+  return <><FieldShell label={label} hint={hint} error={error} id={fid}>{body}</FieldShell>{layer}</>;
 }

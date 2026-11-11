@@ -28,8 +28,8 @@ function Overlay({ open, onClose, title, closeLabel = "Close", children, footer,
       onClick={(e) => { if (e.target === ref.current) onClose(); }}
       aria-labelledby="overlay-title"
       className={cn(
-        "m-0 max-h-none max-w-none bg-transparent p-0 backdrop:bg-navy/50",
-        side ? "ms-auto h-dvh w-full max-w-md" : "m-auto w-[calc(100%-2rem)] max-w-lg",
+        "max-h-none bg-transparent p-0 backdrop:bg-navy/50",
+        side ? "m-0 ms-auto h-dvh w-full max-w-md" : "m-auto w-[calc(100%-2rem)] max-w-lg",
       )}
     >
       <div
