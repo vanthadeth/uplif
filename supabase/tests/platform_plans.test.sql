@@ -77,7 +77,7 @@ select is((select array_agg(k order by k) from jsonb_object_keys(public.platform
   array['billing_email', 'companies', 'cycle', 'next_invoice_at', 'owner_email', 'owner_name', 'owner_user_id', 'plan_id', 'plan_name', 'started_at', 'status', 'trial_ends_at', 'usage'],
   'subscriber detail has account facts only');
 select is((select array_agg(k order by k) from jsonb_object_keys((public.platform_get_subscriber('f3000000-0000-0000-0000-000000000002') -> 'companies') -> 0) k),
-  array['country_code', 'created_at', 'name', 'name_local'], 'company entries have name, country and date only');
+  array['country_code', 'created_at', 'id', 'name', 'name_local'], 'company entries have id, name, country and date only');
 
 -- plans: create, validate, edit, archive
 select lives_ok($$select public.platform_save_plan(null, 'Harvest Co', null, 24000, 2, null, 40, array['attendance', 'inventory'])$$, 'admin creates a custom package');
