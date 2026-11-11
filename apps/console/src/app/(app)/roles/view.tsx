@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Badge, Button, Card, CardBody, Input, Modal, Table, TBody, TD, TH, THead, TR, useToast } from "@uplif/ui";
+import { Badge, Button, Card, CardBody, Input, Modal, Select, Table, TBody, TD, TH, THead, TR, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import type { MessageKey } from "@/lib/messages";
@@ -133,12 +133,10 @@ export function RolesView({ companyId, roles, permissions, catalog, counts }: Pr
                 <TR key={c.key}>
                   <TD><div>{pick(locale, c.description, c.description_local)}</div><code className="text-xs text-muted">{c.key}</code></TD>
                   <TD>
-                    <label className="sr-only" htmlFor={`scope-${c.key}`}>{`${pick(locale, c.description, c.description_local)}: ${t("roles.scope")}`}</label>
-                    <select id={`scope-${c.key}`} disabled={locked} value={scopeOf(c.key) ?? "none"}
-                      onChange={(e) => setScope(c.key, e.target.value as Scope | "none")}
-                      className="h-(--control-h) w-full min-w-40 rounded-control border border-line-strong bg-surface px-3 disabled:bg-ground disabled:text-muted">
+                    <Select bare disabled={locked} label={`${pick(locale, c.description, c.description_local)}: ${t("roles.scope")}`} className="min-w-40"
+                      value={scopeOf(c.key) ?? "none"} onChange={(e) => setScope(c.key, e.target.value as Scope | "none")}>
                       {scopes.map(([v, k]) => <option key={v} value={v}>{t(k)}</option>)}
-                    </select>
+                    </Select>
                   </TD>
                 </TR>
               ))}

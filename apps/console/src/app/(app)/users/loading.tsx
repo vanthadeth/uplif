@@ -1,5 +1,5 @@
-import { TableSkeleton } from "@/components/skeletons";
+import { UsersSkeleton } from "@/components/skeletons";
 
 export default function Loading() {
-  return <TableSkeleton />;
+  return <UsersSkeleton />;
 }
