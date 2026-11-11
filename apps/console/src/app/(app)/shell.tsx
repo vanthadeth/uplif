@@ -27,7 +27,7 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userId, 
 }) {
   const { t, locale, setLocale } = useI18n();
   const { theme, toggle: toggleTheme } = useTheme();
-  const languageOptions = useLanguageOptions();
+  const languageOptions = useLanguageOptions().options;
   // Use the saved profile language on a new device; this browser's own choice wins once made.
   useEffect(() => {
     try { if (!localStorage.getItem("uplif.locale")) setLocale(profileLocale); } catch {}
@@ -75,7 +75,7 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userId, 
       custom: (rail) => (
         <LanguagePicker
           variant={rail ? "rail" : "row"} label={t("shell.language")} value={locale} options={languageOptions}
-          onChange={(c) => isLocale(c) && changeLocale(c)} searchLabel={t("lang.search")} emptyLabel={t("lang.none")} footer={t("lang.help")}
+          onChange={(c) => isLocale(c) && changeLocale(c)} moreLabel={t("lang.more")} onMore={() => router.push("/translate")} footer={t("lang.help")}
         />
       ),
     },
