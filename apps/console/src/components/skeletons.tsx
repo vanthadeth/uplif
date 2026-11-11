@@ -35,6 +35,28 @@ export function TableSkeleton({ rows = 6 }: { rows?: number }) {
   );
 }
 
+/** Users page: title, seat card, tabs, then rows. */
+export function UsersSkeleton() {
+  return (
+    <Frame>
+      <div className="flex items-center justify-between gap-3"><Title /><Skeleton className="h-(--control-h) w-36" /></div>
+      <Skeleton className="h-24 w-full rounded-card" />
+      <Skeleton className="h-10 w-56" />
+      <Card>
+        <div className="flex flex-col divide-y divide-line">
+          {Array.from({ length: 5 }, (_, i) => (
+            <div key={i} className="flex items-center gap-4 px-5 py-4">
+              <Skeleton className="size-9 shrink-0 rounded-full" />
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="ms-auto h-8 w-24" />
+            </div>
+          ))}
+        </div>
+      </Card>
+    </Frame>
+  );
+}
+
 /** Company page: title, then four sections each with a label column beside a card of fields. */
 export function FormSkeleton() {
   return (
