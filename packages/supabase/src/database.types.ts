@@ -363,6 +363,60 @@ export type Database = {
         }
         Returns: Json
       }
+      platform_list_plans: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          archived: boolean
+          code: string
+          id: string
+          kind: string
+          max_branches: number | null
+          max_companies: number
+          max_users: number
+          modules: string[]
+          name: string
+          price_month_cents: number | null
+          price_year_cents: number
+          subscribers: number
+        }[]
+      }
+      platform_save_plan: {
+        Args: {
+          p_id: string | null
+          p_max_branches: number | null
+          p_max_companies: number
+          p_max_users: number
+          p_modules: string[]
+          p_name: string
+          p_price_month_cents: number | null
+          p_price_year_cents: number
+        }
+        Returns: string
+      }
+      platform_archive_plan: { Args: { p_id: string }; Returns: undefined }
+      platform_assign_plan: { Args: { p_cycle: string; p_owner: string; p_plan: string }; Returns: undefined }
+      platform_get_subscriber: { Args: { p_owner: string }; Returns: Json }
+      platform_list_subscribers: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          billing_email: string | null
+          branches_max: number
+          companies: number
+          country_codes: string[]
+          cycle: string
+          next_invoice_at: string | null
+          owner_email: string | null
+          owner_name: string | null
+          owner_user_id: string
+          plan_id: string
+          plan_name: string
+          started_at: string
+          status: string
+          trial_ends_at: string | null
+          users_active: number
+          users_pending: number
+        }[]
+      }
       is_platform_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
