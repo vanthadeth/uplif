@@ -1,5 +1,5 @@
-import { CardSkeleton } from "@/components/skeletons";
+import { DashboardSkeleton } from "@/components/skeletons";
 
 export default function Loading() {
-  return <CardSkeleton />;
+  return <DashboardSkeleton />;
 }

@@ -50,14 +50,20 @@ export function FormSkeleton() {
   );
 }
 
-/** Dashboard: welcome title and one card. */
-export function CardSkeleton() {
+/** Dashboard: four summary cards, the activity list, then invitations beside the plan card. */
+export function DashboardSkeleton() {
   return (
     <Frame>
-      <Skeleton className="h-8 w-64" />
-      <Card className="max-w-xl"><CardBody className="flex flex-col gap-3">
-        <Skeleton className="h-4 w-2/3" /><Skeleton className="h-4 w-24" /><Skeleton className="h-(--control-h) w-28" />
-      </CardBody></Card>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {Array.from({ length: 4 }, (_, i) => (
+          <Card key={i}><CardBody className="flex flex-col gap-3"><Skeleton className="h-4 w-24" /><Skeleton className="h-8 w-20" /><Skeleton className="h-3 w-3/4" /></CardBody></Card>
+        ))}
+      </div>
+      <Card><CardBody className="flex flex-col gap-3">{Array.from({ length: 5 }, (_, i) => <Skeleton key={i} className="h-8 w-full" />)}</CardBody></Card>
+      <div className="grid gap-4 lg:grid-cols-[2.2fr_1fr]">
+        <Card><CardBody className="flex flex-col gap-3"><Skeleton className="h-4 w-40" /><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /></CardBody></Card>
+        <Card><CardBody className="flex flex-col gap-3"><Skeleton className="h-4 w-20" /><Skeleton className="h-6 w-32" /><Skeleton className="h-2 w-full" /></CardBody></Card>
+      </div>
     </Frame>
   );
 }
@@ -81,7 +87,7 @@ export function ShellSkeleton() {
           <Skeleton className="h-5 w-40" />
           <Skeleton className="ms-auto size-9 rounded-full" />
         </header>
-        <main className="flex-1 p-4 sm:p-6"><CardSkeleton /></main>
+        <main className="flex-1 p-4 sm:p-6"><DashboardSkeleton /></main>
       </div>
     </div>
   );
