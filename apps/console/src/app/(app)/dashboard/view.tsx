@@ -104,7 +104,7 @@ export function DashboardView({ company, hasClaim, data }: { company: { name: st
   const label = "flex items-center gap-2 text-[13px] font-medium text-muted";
 
   return (
-    <div className="flex max-w-6xl flex-col gap-5">
+    <div className="flex flex-col gap-5">
       <h1 className="sr-only">{t("nav.dashboard")}</h1>
 
       {showStart && (

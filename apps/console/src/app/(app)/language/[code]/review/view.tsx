@@ -27,7 +27,7 @@ export function Review({ language, initial }: { language: LanguageRow; initial: 
   const chips: [Filter, "tl.r.all" | "tl.r.tied" | "tl.r.differs" | "tl.r.mac"][] = [["all", "tl.r.all"], ["tied", "tl.r.tied"], ["differs", "tl.r.differs"], ["mac", "tl.r.mac"]];
 
   return (
-    <div className="flex max-w-6xl flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <BackLink href={`/language/${language.code}`} label={f("tl.w.title", { lang: language.english_name })} />
       <div>
         <h1 className="text-2xl font-bold">{f("tl.r.title", { lang: language.english_name })}</h1>

@@ -35,7 +35,7 @@ export function Workspace({ language, initial }: { language: LanguageRow; initia
   const chips: [Filter, "tl.f.all" | "tl.f.mac" | "tl.f.vote" | "tl.f.pin"][] = [["all", "tl.f.all"], ["mac", "tl.f.mac"], ["vote", "tl.f.vote"], ["pin", "tl.f.pin"]];
 
   return (
-    <div className="flex max-w-6xl flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <BackLink href="/language/community" label={t("tl.community")} />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>

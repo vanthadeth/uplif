@@ -40,7 +40,7 @@ export function AuditView({ rows, hasMore, members, filters, isFirstPage }: Prop
   const changes = isObject(d) && isObject(d.old) && isObject(d.new) ? { old: d.old, new: d.new } : null;
 
   return (
-    <div className="flex max-w-5xl flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <div>
         <h1 className="text-2xl font-bold">{t("audit.title")}</h1>
         <p className="text-muted">{t("audit.subtitle")}</p>

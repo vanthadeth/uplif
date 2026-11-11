@@ -36,7 +36,7 @@ export function LanguageSelect({ languages, userId }: { languages: LanguageRow[]
   const name = (l: LanguageRow) => l.native_name;
 
   return (
-    <div className="flex max-w-5xl flex-col gap-5">
+    <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t("tl.title")}</h1>
