@@ -444,6 +444,52 @@ export type Database = {
         Returns: undefined
       }
       platform_void_invoice: { Args: { p_id: string }; Returns: undefined }
+      platform_request_support_access: { Args: { p_company: string; p_hours: number; p_reason: string }; Returns: string }
+      platform_cancel_support_request: { Args: { p_id: string }; Returns: undefined }
+      platform_end_support_access: { Args: { p_id: string }; Returns: undefined }
+      platform_list_support_grants: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          company_id: string
+          company_name: string
+          company_name_local: string | null
+          decided_at: string | null
+          expires_at: string | null
+          hours: number
+          id: string
+          owner_name: string | null
+          reason: string
+          requested_at: string
+          requested_by_name: string | null
+          status: string
+        }[]
+      }
+      platform_list_log: {
+        Args: { p_before?: number | null; p_limit?: number }
+        Returns: {
+          action: string
+          admin_name: string | null
+          created_at: string
+          details: Json
+          id: number
+          subject_name: string | null
+          subject_user_id: string | null
+        }[]
+      }
+      my_support_grants: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          decided_at: string | null
+          expires_at: string | null
+          hours: number
+          id: string
+          reason: string
+          requested_at: string
+          status: string
+        }[]
+      }
+      respond_support_access: { Args: { p_approve: boolean; p_id: string }; Returns: undefined }
+      end_support_access: { Args: { p_id: string }; Returns: undefined }
       is_platform_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean

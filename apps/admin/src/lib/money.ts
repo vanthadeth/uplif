@@ -38,3 +38,13 @@ export const PAY_METHODS = [
   { id: "other", label: "Other" },
 ] as const;
 export const methodLabel = (id: string | null) => PAY_METHODS.find((m) => m.id === id)?.label ?? "—";
+
+export const GRANT_STATUS = {
+  requested: { label: "Waiting for the owner", tone: "warning" },
+  approved: { label: "Approved", tone: "success" },
+  declined: { label: "Declined", tone: "neutral" },
+  cancelled: { label: "Withdrawn", tone: "neutral" },
+  ended: { label: "Ended", tone: "neutral" },
+  expired: { label: "Expired", tone: "neutral" },
+} as const;
+export type GrantStatus = keyof typeof GRANT_STATUS;

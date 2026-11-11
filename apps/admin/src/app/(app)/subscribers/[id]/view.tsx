@@ -3,21 +3,22 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
-import { Avatar, Badge, Button, Card, CardBody, CardHeader, ErrorState, Modal, Select, useToast } from "@uplif/ui";
+import { Avatar, Badge, Button, Card, CardBody, CardHeader, ErrorState, Input, Modal, Select, useToast } from "@uplif/ui";
 import { createClient } from "@uplif/supabase/client";
 import { INVOICE_STATUS, STATUS, methodLabel, money, moduleLabel, type InvoiceStatus, type Status } from "@/lib/money";
 import { UsageBar, fmtDate, fmtDay } from "@/components/bits";
 import { PayModal, VoidModal } from "@/components/invoice-actions";
-import type { Invoice, Plan } from "@/lib/types";
+import type { Invoice, Plan, SupportGrant } from "@/lib/types";
+import { GRANT_STATUS, type GrantStatus } from "@/lib/money";
 
 interface Data {
   owner_name: string | null; owner_email: string | null; plan_id: string; plan_name: string; cycle: "month" | "year"; status: Status;
   started_at: string; trial_ends_at: string | null; next_invoice_at: string | null; billing_email: string | null;
-  companies: { name: string; name_local: string | null; country_code: string; created_at: string }[];
+  companies: { id: string; name: string; name_local: string | null; country_code: string; created_at: string }[];
   usage: { companies: number; users_active: number; users_pending: number; branches_max: number };
 }
 
-export function SubscriberView({ data, plans, invoices, ownerId, failed }: { data: Data | null; plans: Plan[]; invoices: Invoice[]; ownerId: string; failed: boolean }) {
+export function SubscriberView({ data, plans, invoices, grants, ownerId, failed }: { data: Data | null; plans: Plan[]; invoices: Invoice[]; grants: SupportGrant[]; ownerId: string; failed: boolean }) {
   const router = useRouter();
   const toast = useToast();
   const [open, setOpen] = useState(false);
@@ -25,6 +26,9 @@ export function SubscriberView({ data, plans, invoices, ownerId, failed }: { dat
   const [cycle, setCycle] = useState<"month" | "year">("month");
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
+  const [askCo, setAskCo] = useState<{ id: string; name: string } | null>(null);
+  const [why, setWhy] = useState("");
+  const [hours, setHours] = useState("2");
   const [paying, setPaying] = useState<Invoice | null>(null);
   const [voiding, setVoiding] = useState<Invoice | null>(null);
   const back = <Link href="/subscribers" className="inline-flex min-h-9 items-center gap-1 font-semibold text-link"><ChevronLeft className="size-4 rtl:rotate-180" aria-hidden="true" />Subscribers</Link>;
@@ -55,6 +59,16 @@ export function SubscriberView({ data, plans, invoices, ownerId, failed }: { dat
   }
 
   const hasOpen = invoices.some((i) => i.status === "open" || i.status === "overdue");
+  async function ask() {
+    if (!askCo) return;
+    setBusy(true); setError(undefined);
+    const { error: err } = await createClient().rpc("platform_request_support_access", { p_company: askCo.id, p_reason: why, p_hours: Number(hours) });
+    setBusy(false);
+    if (err) return setError(err.message.includes("open request") ? "This company already has an open request." : err.message.includes("suspended") ? "This account is suspended." : err.message.includes("reason") ? "Give a reason of 5 to 300 characters." : "Could not send the request. Try again.");
+    toast("success", "Request sent to the owner. You cannot see anything until they approve.");
+    setAskCo(null); setWhy("");
+    router.refresh();
+  }
   async function issue() {
     setBusy(true);
     const { error: err } = await createClient().rpc("platform_issue_invoice", { p_owner: ownerId, p_due_days: 7 });
@@ -140,13 +154,31 @@ export function SubscriberView({ data, plans, invoices, ownerId, failed }: { dat
           {data.companies.map((c) => (
             <li key={c.name + c.created_at} className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3 last:border-b-0">
               <span><b className="font-semibold">{c.name}</b>{c.name_local && <span className="text-muted"> · {c.name_local}</span>}</span>
-              <span className="text-muted">{c.country_code} · since {fmtDate(c.created_at)}</span>
+              <span className="flex flex-wrap items-center gap-3">
+                <span className="text-muted">{c.country_code} · since {fmtDate(c.created_at)}</span>
+                {(() => {
+                  const g = grants.find((x) => x.company_id === c.id && (x.status === "requested" || x.status === "approved"));
+                  if (g) { const t = GRANT_STATUS[g.status as GrantStatus]; return <Badge tone={t.tone}>{t.label}</Badge>; }
+                  return <Button onClick={() => { setError(undefined); setAskCo({ id: c.id, name: c.name }); }}>Request support access</Button>;
+                })()}
+              </span>
             </li>
           ))}
         </ul>
         <p className="border-t border-line px-5 py-3 text-sm text-muted">Only the company name, country and start date are visible here. Team, customers, sales and stock are never shown to the platform.</p>
       </Card>
 
+      <Modal open={!!askCo} onClose={() => setAskCo(null)} closeLabel="Close" title="Request support access"
+        footer={<><Button onClick={() => setAskCo(null)}>Cancel</Button><Button variant="primary" loading={busy} disabled={why.trim().length < 5} onClick={ask}>Send request</Button></>}>
+        <div className="flex flex-col gap-4">
+          <p className="text-muted">{askCo?.name}. The owner must approve before you can see anything. Access is read only, every record you open is logged, and the owner can end it at any time.</p>
+          <Input label="Why do you need access?" value={why} maxLength={300} onChange={(e) => setWhy(e.target.value)} hint="The owner sees this. For example: invoice total looks wrong, ticket 214." />
+          <Select label="For how long" value={hours} onChange={(e) => setHours(e.target.value)}>
+            {[1, 2, 4, 8, 24].map((h) => <option key={h} value={h}>{h} {h === 1 ? "hour" : "hours"}</option>)}
+          </Select>
+          {error && <p role="alert" className="text-danger-ink">{error}</p>}
+        </div>
+      </Modal>
       <PayModal invoice={paying} onClose={() => setPaying(null)} />
       <VoidModal invoice={voiding} onClose={() => setVoiding(null)} />
       <Modal open={open} onClose={() => setOpen(false)} closeLabel="Close" title="Change plan"
