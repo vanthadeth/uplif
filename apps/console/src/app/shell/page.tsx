@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Building2, ClipboardList, CreditCard, GitBranch, LayoutDashboard, Search, ShieldCheck, Store, Users } from "lucide-react";
-import { AppShell, Avatar, Card, CardBody, CardHeader, Input, LanguageToggle, Switcher, type NavItem } from "@uplif/ui";
+import { Building2, ClipboardList, CreditCard, GitBranch, Languages, LayoutDashboard, Search, ShieldCheck, Store, Users } from "lucide-react";
+import { AppShell, Avatar, Card, CardBody, CardHeader, LanguageToggle, Switcher, type NavItem } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
 
 export default function ShellDemo() {
@@ -24,8 +24,11 @@ export default function ShellDemo() {
     <AppShell
       appName="UPLIF"
       nav={nav}
+      groupLabel={t("shell.group")}
       activeId={active}
       onNavigate={setActive}
+      account={{ label: t("shell.user"), name: "Sokha Chan", sub: "Sokha Mart", avatar: <Avatar name="Sokha Chan" />, menu: [] }}
+      utilities={[{ id: "lang", label: t("shell.language"), icon: <Languages />, value: locale === "km" ? "ខ្មែរ" : "English", onClick: () => setLocale(locale === "km" ? "en" : "km") }]}
       navLabel={t("shell.nav")}
       collapseLabel={t("shell.collapse")}
       expandLabel={t("shell.expand")}
@@ -35,7 +38,7 @@ export default function ShellDemo() {
         <>
           <Switcher
             label={t("shell.company")}
-            icon={<Store className="size-4 text-primary" aria-hidden="true" />}
+            icon={<Store className="size-4 text-link" aria-hidden="true" />}
             value={company}
             onChange={setCompany}
             options={[

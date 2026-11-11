@@ -42,7 +42,7 @@ export function Picker({ companies }: { companies: Company[] }) {
             <li key={c.membership_id}>
               <Card><CardBody className="flex items-center justify-between gap-3">
                 <span className="flex items-center gap-3">
-                  <Building2 className="size-5 text-primary" aria-hidden="true" />
+                  <Building2 className="size-5 text-link" aria-hidden="true" />
                   <span className="font-semibold">{locale === "km" && c.name_local ? c.name_local : c.name}</span>
                 </span>
                 <Button variant="primary" loading={busy === c.membership_id} onClick={() => open(c.membership_id)}>
@@ -53,7 +53,7 @@ export function Picker({ companies }: { companies: Company[] }) {
           ))}
         </ul>
       )}
-      <Link href="/companies/new" className="text-center font-semibold text-primary">{t("picker.new")}</Link>
+      <Link href="/companies/new" className="text-center font-semibold text-link">{t("picker.new")}</Link>
     </main>
   );
 }

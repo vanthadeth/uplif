@@ -42,7 +42,7 @@ export function InviteView({ token, preview }: { token: string; preview: Preview
         ) : (
           <>
             <p role="alert">{t("invite.accept.invalid")}</p>
-            <Link href="/" className="font-semibold text-primary">{t("invite.accept.home")}</Link>
+            <Link href="/" className="font-semibold text-link">{t("invite.accept.home")}</Link>
           </>
         )}
       </CardBody></Card>

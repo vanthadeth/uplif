@@ -363,6 +363,13 @@ export type Database = {
         }
         Returns: Json
       }
+      my_permissions: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          data_scope: Database["public"]["Enums"]["data_scope"]
+          permission_key: string
+        }[]
+      }
       list_my_companies: {
         Args: Record<PropertyKey, never>
         Returns: {

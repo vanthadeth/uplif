@@ -22,7 +22,7 @@ export function DashboardView({ company, hasClaim }: { company: { name: string; 
         ) : (
           <p role="alert" className="text-danger-ink">{hasClaim ? t("auth.error.generic") : t("dash.noClaim")}</p>
         )}
-        <Link href="/companies" className="font-semibold text-primary">{t("dash.switch")}</Link>
+        <Link href="/companies" className="font-semibold text-link">{t("dash.switch")}</Link>
         <Button onClick={signOut}>{t("auth.signOut")}</Button>
       </CardBody></Card>
     </div>

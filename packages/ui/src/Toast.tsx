@@ -9,7 +9,7 @@ const Ctx = createContext<(tone: ToastTone, text: string) => void>(() => {});
 export const useToast = () => useContext(Ctx);
 
 const icon = { success: CheckCircle2, error: AlertCircle, info: Info };
-const color = { success: "text-success", error: "text-danger", info: "text-primary" };
+const color = { success: "text-success-ink", error: "text-danger-ink", info: "text-link" };
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([]);
