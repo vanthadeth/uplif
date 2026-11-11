@@ -6,6 +6,8 @@
     "dev": "pnpm --filter console dev",
     "build": "pnpm --filter console build",
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r --if-present test"
+    "test": "pnpm -r --if-present test",
+    "dev:admin": "pnpm --filter admin dev",
+    "build:admin": "pnpm --filter admin build"
   }
 }
