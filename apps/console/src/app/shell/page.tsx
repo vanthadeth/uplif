@@ -27,12 +27,15 @@ export default function ShellDemo() {
 
   return (
     <AppShell
-      appName="UPLIF"
-      nav={nav}
-      groupLabel={t("shell.group")}
+      company={{ name: "Sokha Mart", sub: t("dash.switch"), label: t("dash.switch"), onSwitch: () => {} }}
+      groups={[
+        { id: "workspace", label: t("shell.group.workspace"), items: nav.slice(0, 3) },
+        { id: "people", label: t("shell.group.people"), items: nav.slice(3, 5) },
+        { id: "records", label: t("shell.group.records"), items: nav.slice(5) },
+      ]}
       activeId={active}
       onNavigate={setActive}
-      account={{ label: t("shell.user"), name: "Sokha Chan", sub: "Sokha Mart", avatar: <Avatar name="Sokha Chan" />, menu: [] }}
+      account={{ label: t("shell.user"), name: "Sokha Chan", sub: "sokha@example.com", avatar: <Avatar name="Sokha Chan" />, menu: [] }}
       utilities={[{ id: "lang", custom: (rail) => <LanguagePicker variant={rail ? "rail" : "row"} label={t("shell.language")} value={locale} options={languageOptions} onChange={(c) => isLocale(c) && setLocale(c)} moreLabel={t("lang.more")} onMore={() => router.push("/translate")} footer={t("lang.help")} /> }]}
       navLabel={t("shell.nav")}
       collapseLabel={t("shell.collapse")}

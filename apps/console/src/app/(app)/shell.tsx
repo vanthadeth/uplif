@@ -1,15 +1,17 @@
 "use client";
 import { useEffect, useOptimistic, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, ClipboardList, GitBranch, LayoutDashboard, LogOut, Moon, Repeat, ShieldCheck, Store, Sun, Users } from "lucide-react";
-import { AppShell, Avatar, LanguagePicker, type NavItem, type UtilityItem } from "@uplif/ui";
+import { Building2, ClipboardList, GitBranch, LayoutDashboard, LogOut, Moon, Repeat, ShieldCheck, Sun, Users } from "lucide-react";
+import { AppShell, Avatar, LanguagePicker, type NavGroup, type NavItem, type UtilityItem } from "@uplif/ui";
 import { useI18n, type Locale } from "@/lib/i18n";
 import { isLocale } from "@/lib/languages";
 import { useLanguageOptions } from "@/lib/use-language-options";
+import type { MessageKey } from "@/lib/messages";
 import { useTheme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/client";
 import { pick } from "@/lib/format";
 import { NavProgress } from "@/components/nav-progress";
+import { TitleBar } from "@/components/title-bar";
 
 const routes: Record<string, string> = { dashboard: "/dashboard", company: "/company", branches: "/branches", users: "/users", roles: "/roles", audit: "/audit" };
 // A section shows in the menu when the user holds any of these permissions. This only tidies the menu:
@@ -22,8 +24,8 @@ const needs: Record<string, string[] | undefined> = {
   audit: ["org.audit.read"],
 };
 
-export function ConsoleShell({ companyName, companyNameLocal, userName, userId, profileLocale, permissions, children }: {
-  companyName: string; companyNameLocal: string | null; userName: string; userId: string; profileLocale: Locale; permissions: string[]; children: React.ReactNode;
+export function ConsoleShell({ companyName, companyNameLocal, userName, userEmail, userId, profileLocale, permissions, children }: {
+  companyName: string; companyNameLocal: string | null; userName: string; userEmail: string; userId: string; profileLocale: Locale; permissions: string[]; children: React.ReactNode;
 }) {
   const { t, locale, setLocale } = useI18n();
   const { theme, toggle: toggleTheme } = useTheme();
@@ -56,6 +58,12 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userId, 
   ];
   const nav = allNav.filter((n) => !needs[n.id] || needs[n.id]!.some((k) => permissions.includes(k)));
   const visible = nav.map((n) => routes[n.id]);
+  const groupIds: [string, MessageKey, string[]][] = [
+    ["workspace", "shell.group.workspace", ["dashboard", "company", "branches"]],
+    ["people", "shell.group.people", ["users", "roles"]],
+    ["records", "shell.group.records", ["audit"]],
+  ];
+  const groups: NavGroup[] = groupIds.map(([id, label, ids]) => ({ id, label: t(label), items: nav.filter((n) => ids.includes(n.id)) }));
 
   // Warm up every other visible section after each page change. The page you are on cannot be prefetched, so
   // without this the section you landed on (usually Dashboard) waited on the server for its first click back.
@@ -84,12 +92,13 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userId, 
 
   return (
     <AppShell
-      appName="UPLIF" nav={nav} groupLabel={t("shell.group")} activeId={active}
+      company={{ name: shownName || "UPLIF", sub: t("dash.switch"), label: t("dash.switch"), onSwitch: () => router.push("/companies") }}
+      groups={groups} activeId={active}
       onNavigate={(id) => startTransition(() => { setShownPath(routes[id]); router.push(routes[id]); })}
       onPrefetch={(id) => { if (!pathname.startsWith(routes[id])) router.prefetch(routes[id]); }}
       utilities={utilities}
       account={{
-        label: t("shell.user"), name: userName || "?", sub: shownName, avatar: <Avatar name={userName || "?"} />,
+        label: t("shell.user"), name: userName || "?", sub: userEmail || undefined, avatar: <Avatar name={userName || "?"} />,
         menu: [
           { id: "switch", label: t("dash.switch"), icon: <Repeat />, onClick: () => router.push("/companies") },
           { id: "out", label: t("auth.signOut"), icon: <LogOut />, onClick: signOut },
@@ -98,9 +107,11 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userId, 
       navLabel={t("shell.nav")} collapseLabel={t("shell.collapse")} expandLabel={t("shell.expand")}
       menuLabel={t("shell.menu")} closeLabel={t("shell.close")}
       topBar={
-        <span className="flex items-center gap-2 font-semibold">
-          <Store className="size-4 text-link" aria-hidden="true" />{shownName}
-        </span>
+        <TitleBar
+          name={userName} greeting={t("tb.welcome").replace("{company}", shownName)}
+          searchLabel={t("shell.search")} notifLabel={t("tb.notif")} soonLabel={t("tb.soon")}
+          action={permissions.includes("org.invitation.manage") ? { label: t("users.invite"), onClick: () => router.push("/users?invite=1") } : undefined}
+        />
       }
     >
       <NavProgress active={pending} />

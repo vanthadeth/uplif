@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Button, EmptyState, Input, Modal, Select, Table, TBody, TD, TH, THead, TR, useToast, type BadgeTone } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
@@ -16,9 +16,11 @@ interface Props {
   roles: { id: string; name: string; name_local: string | null }[];
   branches: { id: string; name: string; name_local: string | null }[];
   invitations: Invitation[];
+  /** Open the invite dialog on arrival (the title bar action links here with ?invite=1). */
+  openInvite?: boolean;
 }
 
-export function UsersView({ myMembershipId, members, memberRoles, roles, branches, invitations }: Props) {
+export function UsersView({ myMembershipId, members, memberRoles, roles, branches, invitations, openInvite: autoInvite }: Props) {
   const { t, locale } = useI18n();
   const toast = useToast();
   const router = useRouter();
@@ -38,6 +40,13 @@ export function UsersView({ myMembershipId, members, memberRoles, roles, branche
   function openInvite() {
     setLabel(""); setBranchId(""); setRoleId(invitable[0]?.id ?? ""); setLink(undefined); setInviteOpen(true);
   }
+
+  useEffect(() => {
+    if (!autoInvite) return;
+    if (invitable.length > 0) openInvite();
+    router.replace("/users");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoInvite]);
 
   async function createInvite() {
     setBusy(true);
