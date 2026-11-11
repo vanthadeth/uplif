@@ -13,7 +13,7 @@ interface OverlayProps {
 }
 
 /** Native <dialog>: focus trap, Esc to close and focus return come from the browser. */
-function Overlay({ open, onClose, title, closeLabel = "Close", children, footer, side }: OverlayProps & { side?: boolean }) {
+function Overlay({ open, onClose, title, closeLabel = "Close", children, footer, side, sheet }: OverlayProps & { side?: boolean; sheet?: boolean }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const d = ref.current;
@@ -30,12 +30,14 @@ function Overlay({ open, onClose, title, closeLabel = "Close", children, footer,
       className={cn(
         "max-h-none bg-transparent p-0 backdrop:bg-navy/50",
         side ? "m-0 ms-auto h-dvh w-full max-w-md" : "m-auto w-[calc(100%-2rem)] max-w-lg",
+        side && sheet && "max-sm:mt-auto max-sm:h-fit max-sm:max-w-none",
       )}
     >
       <div
         className={cn(
           "flex flex-col bg-surface shadow-pop",
           side ? "h-dvh animate-[uplif-slide_0.2s_ease-out]" : "max-h-[85dvh] rounded-card animate-[uplif-in_0.15s_ease-out]",
+          side && sheet && "max-sm:h-auto max-sm:max-h-[85dvh] max-sm:rounded-t-card max-sm:animate-[uplif-slide-up_0.2s_ease-out]",
         )}
       >
         <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
@@ -52,4 +54,5 @@ function Overlay({ open, onClose, title, closeLabel = "Close", children, footer,
 }
 
 export const Modal = (p: OverlayProps) => <Overlay {...p} />;
-export const SidePanel = (p: OverlayProps) => <Overlay {...p} side />;
+/** Right-hand panel; with `sheet` it becomes a bottom sheet on phones. */
+export const SidePanel = (p: OverlayProps & { sheet?: boolean }) => <Overlay {...p} side />;
