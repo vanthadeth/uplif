@@ -417,6 +417,33 @@ export type Database = {
           users_pending: number
         }[]
       }
+      platform_list_invoices: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          amount_cents: number
+          cycle: string
+          due_date: string
+          id: string
+          issued_at: string
+          number: string
+          owner_email: string | null
+          owner_name: string | null
+          owner_user_id: string
+          paid_at: string | null
+          payment_method: string | null
+          payment_ref: string | null
+          period_end: string
+          period_start: string
+          plan_name: string
+          status: string
+        }[]
+      }
+      platform_issue_invoice: { Args: { p_due_days?: number; p_owner: string }; Returns: string }
+      platform_mark_invoice_paid: {
+        Args: { p_id: string; p_method: string; p_paid_on?: string | null; p_ref?: string | null }
+        Returns: undefined
+      }
+      platform_void_invoice: { Args: { p_id: string }; Returns: undefined }
       is_platform_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
