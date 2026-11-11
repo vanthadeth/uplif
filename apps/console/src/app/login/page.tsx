@@ -58,7 +58,7 @@ export default function LoginPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 p-4">
       <div className="flex justify-end">
-        <LanguagePicker variant="button" label={t("lang.toggle")} value={locale} options={languageOptions} onChange={(c) => isLocale(c) && setLocale(c)} moreLabel={t("lang.more")} onMore={() => router.push("/translate")} footer={t("lang.help")} />
+        <LanguagePicker variant="button" label={t("lang.toggle")} value={locale} options={languageOptions} onChange={(c) => isLocale(c) && setLocale(c)} />
       </div>
       <Card>
         <CardBody className="flex flex-col gap-4">

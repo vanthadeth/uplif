@@ -19,8 +19,8 @@ interface Props {
   options: LanguageOption[];
   onChange: (code: string) => void;
   /** The "More languages" call to action under the list, and what it does (for example open the translation community). */
-  moreLabel: string;
-  onMore: () => void;
+  moreLabel?: string;
+  onMore?: () => void;
   /** Short help line under the call to action. */
   footer?: ReactNode;
   /** row: sidebar row (menu opens above). rail: icon only (menu opens to the side). button: compact bordered button (menu opens below). */
@@ -118,7 +118,7 @@ export function LanguagePicker({ label, value, options, onChange, moreLabel, onM
             })}
           </div>
           <div className={cn("mt-0.5 flex flex-col gap-0.5 border-t pt-1.5", variant === "button" ? "border-line" : "border-(--sb-line)")}>
-            <button
+            {moreLabel && onMore && <button
               type="button"
               data-more
               onClick={() => { onMore(); close(false); }}
@@ -127,7 +127,7 @@ export function LanguagePicker({ label, value, options, onChange, moreLabel, onM
               <Users className="size-[18px] shrink-0" aria-hidden="true" />
               <span className="min-w-0 flex-1">{moreLabel}</span>
               <ArrowRight className="size-[18px] shrink-0 rtl:rotate-180" aria-hidden="true" />
-            </button>
+            </button>}
             {footer && <p className={cn("m-0 px-2.5 pb-1 pt-1 text-xs leading-snug", variant === "button" ? "text-muted" : "text-(--sb-muted)")}>{footer}</p>}
           </div>
         </div>

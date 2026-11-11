@@ -14,7 +14,8 @@ export const languages = [
   { code: "lo", native: "ລາວ", english: "Lao", dateTag: "lo-LA", featured: false },
 ] as const;
 
-export type Locale = (typeof languages)[number]["code"];
+/** Any language code. Languages started in the translation community are added in the database, not in this list. */
+export type Locale = string;
 
-export const isLocale = (v: unknown): v is Locale => languages.some((l) => l.code === v);
+export const isLocale = (v: unknown): v is Locale => typeof v === "string" && /^[a-z]{2,3}(-[a-z0-9]{2,8})?$/.test(v);
 export const languageOf = (code: string) => languages.find((l) => l.code === code) ?? languages[0];
