@@ -10,6 +10,8 @@ interface ShellProps {
   nav: NavItem[];
   activeId: string;
   onNavigate: (id: string) => void;
+  /** Optional: warm up a section when the pointer or keyboard reaches its item. */
+  onPrefetch?: (id: string) => void;
   navLabel: string;
   collapseLabel: string;
   expandLabel: string;
@@ -67,6 +69,8 @@ export function AppShell(p: ShellProps) {
                     aria-label={rail ? n.label : undefined}
                     title={rail ? n.label : undefined}
                     onClick={() => { p.onNavigate(n.id); setDrawer(false); }}
+                    onPointerEnter={() => p.onPrefetch?.(n.id)}
+                    onFocus={() => p.onPrefetch?.(n.id)}
                     className={cn(
                       "flex min-h-11 w-full items-center gap-3 rounded-control px-3 font-medium transition-colors",
                       rail && "justify-center px-0",

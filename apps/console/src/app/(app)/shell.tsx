@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useTransition } from "react";
+import { useEffect, useOptimistic, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Building2, ClipboardList, GitBranch, LayoutDashboard, ShieldCheck, Store, Users } from "lucide-react";
 import { AppShell, Avatar, LanguageToggle, type NavItem } from "@uplif/ui";
@@ -26,8 +26,13 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userId, 
   const pathname = usePathname();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  // Fetch every section ahead of the click so the skeleton shows at once.
-  useEffect(() => { Object.values(routes).forEach((href) => router.prefetch(href)); }, [router]);
+  // Warm up every other section after each page change. The page you are on cannot be prefetched, so
+  // without this the section you landed on (usually Dashboard) waited on the server for its first click back.
+  useEffect(() => {
+    Object.values(routes).forEach((href) => { if (!pathname.startsWith(href)) router.prefetch(href); });
+  }, [router, pathname]);
+  // Highlight the clicked item at once instead of after the server answers.
+  const [shownPath, setShownPath] = useOptimistic(pathname);
   const nav: NavItem[] = [
     { id: "dashboard", label: t("nav.dashboard"), icon: <LayoutDashboard /> },
     { id: "company", label: t("nav.company"), icon: <Building2 /> },
@@ -36,11 +41,12 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userId, 
     { id: "roles", label: t("nav.roles"), icon: <ShieldCheck /> },
     { id: "audit", label: t("nav.audit"), icon: <ClipboardList /> },
   ];
-  const active = Object.keys(routes).find((k) => pathname.startsWith(routes[k])) ?? "dashboard";
+  const active = Object.keys(routes).find((k) => shownPath.startsWith(routes[k])) ?? "dashboard";
   const shownName = pick(locale, companyName, companyNameLocal);
   return (
     <AppShell
-      appName="UPLIF" nav={nav} activeId={active} onNavigate={(id) => startTransition(() => router.push(routes[id]))}
+      appName="UPLIF" nav={nav} activeId={active} onNavigate={(id) => startTransition(() => { setShownPath(routes[id]); router.push(routes[id]); })}
+      onPrefetch={(id) => { if (!pathname.startsWith(routes[id])) router.prefetch(routes[id]); }}
       navLabel={t("shell.nav")} collapseLabel={t("shell.collapse")} expandLabel={t("shell.expand")}
       menuLabel={t("shell.menu")} closeLabel={t("shell.close")}
       topBar={
@@ -57,7 +63,7 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userId, 
       }
     >
       <NavProgress active={pending} />
-      <div aria-busy={pending}>{children}</div>
+      <div aria-busy={pending} className={pending ? "opacity-60 transition-opacity duration-150" : "transition-opacity duration-150"}>{children}</div>
     </AppShell>
   );
 }
