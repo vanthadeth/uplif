@@ -2,7 +2,8 @@ import { loadSession } from "@/lib/auth/session";
 import { RolesView } from "./view";
 
 export default async function RolesPage() {
-  const { supabase, companyId } = await loadSession();
+  const { supabase, companyId, permissions } = await loadSession();
+  // Everything is read as the signed-in user through row-level security. Permissions only decide what the page offers.
   const [roles, perms, catalog, assigned] = await Promise.all([
     supabase.from("roles").select("id, name, name_local, is_system").order("created_at"),
     supabase.from("role_permissions").select("role_id, permission_key, data_scope"),
@@ -18,6 +19,7 @@ export default async function RolesPage() {
       permissions={perms.data ?? []}
       catalog={catalog.data ?? []}
       counts={counts}
+      canManage={permissions.includes("org.role.manage")}
     />
   );
 }
