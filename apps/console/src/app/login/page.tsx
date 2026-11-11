@@ -14,7 +14,7 @@ const phoneEnabled = process.env.NEXT_PUBLIC_PHONE_LOGIN === "true";
 
 export default function LoginPage() {
   const { t, locale, setLocale } = useI18n();
-  const languageOptions = useLanguageOptions();
+  const languageOptions = useLanguageOptions().options;
   const router = useRouter();
   const [phone, setPhone] = useState("");
   const [e164, setE164] = useState<string | null>(null);
@@ -58,7 +58,7 @@ export default function LoginPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 p-4">
       <div className="flex justify-end">
-        <LanguagePicker variant="button" label={t("lang.toggle")} value={locale} options={languageOptions} onChange={(c) => isLocale(c) && setLocale(c)} searchLabel={t("lang.search")} emptyLabel={t("lang.none")} footer={t("lang.help")} />
+        <LanguagePicker variant="button" label={t("lang.toggle")} value={locale} options={languageOptions} onChange={(c) => isLocale(c) && setLocale(c)} moreLabel={t("lang.more")} onMore={() => router.push("/translate")} footer={t("lang.help")} />
       </div>
       <Card>
         <CardBody className="flex flex-col gap-4">

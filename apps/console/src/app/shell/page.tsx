@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Building2, ClipboardList, CreditCard, GitBranch, LayoutDashboard, Search, ShieldCheck, Store, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { AppShell, Avatar, Card, CardBody, CardHeader, LanguagePicker, Switcher, type NavItem } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
 import { isLocale } from "@/lib/languages";
@@ -8,7 +9,8 @@ import { useLanguageOptions } from "@/lib/use-language-options";
 
 export default function ShellDemo() {
   const { t, locale, setLocale } = useI18n();
-  const languageOptions = useLanguageOptions();
+  const languageOptions = useLanguageOptions().options;
+  const router = useRouter();
   const [active, setActive] = useState("dashboard");
   const [company, setCompany] = useState("sokha");
   const [branch, setBranch] = useState("all");
@@ -31,7 +33,7 @@ export default function ShellDemo() {
       activeId={active}
       onNavigate={setActive}
       account={{ label: t("shell.user"), name: "Sokha Chan", sub: "Sokha Mart", avatar: <Avatar name="Sokha Chan" />, menu: [] }}
-      utilities={[{ id: "lang", custom: (rail) => <LanguagePicker variant={rail ? "rail" : "row"} label={t("shell.language")} value={locale} options={languageOptions} onChange={(c) => isLocale(c) && setLocale(c)} searchLabel={t("lang.search")} emptyLabel={t("lang.none")} footer={t("lang.help")} /> }]}
+      utilities={[{ id: "lang", custom: (rail) => <LanguagePicker variant={rail ? "rail" : "row"} label={t("shell.language")} value={locale} options={languageOptions} onChange={(c) => isLocale(c) && setLocale(c)} moreLabel={t("lang.more")} onMore={() => router.push("/translate")} footer={t("lang.help")} /> }]}
       navLabel={t("shell.nav")}
       collapseLabel={t("shell.collapse")}
       expandLabel={t("shell.expand")}
@@ -68,7 +70,7 @@ export default function ShellDemo() {
                 <input id="top-search" placeholder={t("shell.search")} className="h-(--control-h) w-full rounded-control border border-line-strong bg-surface ps-9 pe-3 placeholder:text-muted" />
               </div>
             </div>
-            <LanguagePicker variant="button" label={t("lang.toggle")} value={locale} options={languageOptions} onChange={(c) => isLocale(c) && setLocale(c)} searchLabel={t("lang.search")} emptyLabel={t("lang.none")} footer={t("lang.help")} />
+            <LanguagePicker variant="button" label={t("lang.toggle")} value={locale} options={languageOptions} onChange={(c) => isLocale(c) && setLocale(c)} moreLabel={t("lang.more")} onMore={() => router.push("/translate")} footer={t("lang.help")} />
             <Avatar name="Sokha Chan" />
           </div>
         </>

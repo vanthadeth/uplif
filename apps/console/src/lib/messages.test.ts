@@ -31,4 +31,9 @@ describe("messages", () => {
   it("gives every listed language a native name, an English name and a date tag", () => {
     for (const l of languages) expect([l.native, l.english, l.dateTag].every((v) => v.trim().length > 0)).toBe(true);
   });
+  it("features English and at most five languages in the popup", () => {
+    const featured = languages.filter((l) => l.featured);
+    expect(featured.length).toBeLessThanOrEqual(5);
+    expect(featured[0].code).toBe("en");
+  });
 });
