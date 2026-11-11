@@ -22,3 +22,19 @@ export const STATUS = {
   suspended: { label: "Suspended", tone: "danger" },
 } as const;
 export type Status = keyof typeof STATUS;
+
+export const INVOICE_STATUS = {
+  open: { label: "Due", tone: "info" },
+  overdue: { label: "Overdue", tone: "warning" },
+  paid: { label: "Paid", tone: "success" },
+  void: { label: "Void", tone: "neutral" },
+} as const;
+export type InvoiceStatus = keyof typeof INVOICE_STATUS;
+
+export const PAY_METHODS = [
+  { id: "bank_transfer", label: "Bank transfer" },
+  { id: "khqr", label: "KHQR" },
+  { id: "cash", label: "Cash" },
+  { id: "other", label: "Other" },
+] as const;
+export const methodLabel = (id: string | null) => PAY_METHODS.find((m) => m.id === id)?.label ?? "—";

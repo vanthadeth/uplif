@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { Avatar, Badge, Button, Card, CardBody, CardHeader, ErrorState, Modal, Select, useToast } from "@uplif/ui";
 import { createClient } from "@uplif/supabase/client";
-import { STATUS, money, moduleLabel, type Status } from "@/lib/money";
-import { UsageBar, fmtDate } from "@/components/bits";
-import type { Plan } from "@/lib/types";
+import { INVOICE_STATUS, STATUS, methodLabel, money, moduleLabel, type InvoiceStatus, type Status } from "@/lib/money";
+import { UsageBar, fmtDate, fmtDay } from "@/components/bits";
+import { PayModal, VoidModal } from "@/components/invoice-actions";
+import type { Invoice, Plan } from "@/lib/types";
 
 interface Data {
   owner_name: string | null; owner_email: string | null; plan_id: string; plan_name: string; cycle: "month" | "year"; status: Status;
@@ -16,7 +17,7 @@ interface Data {
   usage: { companies: number; users_active: number; users_pending: number; branches_max: number };
 }
 
-export function SubscriberView({ data, plans, ownerId, failed }: { data: Data | null; plans: Plan[]; ownerId: string; failed: boolean }) {
+export function SubscriberView({ data, plans, invoices, ownerId, failed }: { data: Data | null; plans: Plan[]; invoices: Invoice[]; ownerId: string; failed: boolean }) {
   const router = useRouter();
   const toast = useToast();
   const [open, setOpen] = useState(false);
@@ -24,6 +25,8 @@ export function SubscriberView({ data, plans, ownerId, failed }: { data: Data | 
   const [cycle, setCycle] = useState<"month" | "year">("month");
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
+  const [paying, setPaying] = useState<Invoice | null>(null);
+  const [voiding, setVoiding] = useState<Invoice | null>(null);
   const back = <Link href="/subscribers" className="inline-flex min-h-9 items-center gap-1 font-semibold text-link"><ChevronLeft className="size-4 rtl:rotate-180" aria-hidden="true" />Subscribers</Link>;
   if (failed || !data) return <div className="mx-auto flex w-full max-w-(--content-max) flex-col gap-4">{back}<ErrorState title="This subscriber could not be loaded" body="Reload, or go back to the list." /></div>;
 
@@ -51,6 +54,16 @@ export function SubscriberView({ data, plans, ownerId, failed }: { data: Data | 
     router.refresh();
   }
 
+  const hasOpen = invoices.some((i) => i.status === "open" || i.status === "overdue");
+  async function issue() {
+    setBusy(true);
+    const { error: err } = await createClient().rpc("platform_issue_invoice", { p_owner: ownerId, p_due_days: 7 });
+    setBusy(false);
+    if (err) return toast("error", err.message.includes("open invoice") ? "Settle or void the open invoice first." : err.message.includes("suspended") ? "This account is suspended." : "Could not issue the invoice. Try again.");
+    toast("success", "Invoice issued. It is due in 7 days.");
+    router.refresh();
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-(--content-max) flex-col gap-4">
       {back}
@@ -62,7 +75,10 @@ export function SubscriberView({ data, plans, ownerId, failed }: { data: Data | 
             <p className="flex flex-wrap items-center gap-2 text-muted">{data.owner_email}<Badge tone={st.tone}>{st.label}</Badge></p>
           </div>
         </div>
-        <Button variant="primary" onClick={show}>Change plan</Button>
+        <div className="flex gap-2">
+          <Button onClick={issue} loading={busy} disabled={hasOpen || data.status === "suspended"}>Issue invoice</Button>
+          <Button variant="primary" onClick={show}>Change plan</Button>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -99,6 +115,26 @@ export function SubscriberView({ data, plans, ownerId, failed }: { data: Data | 
       </div>
 
       <Card>
+        <CardHeader title="Invoices" />
+        {invoices.length === 0 ? <p className="px-5 pb-5 text-muted">No invoices yet. Issue one when this account is due to pay.</p> : (
+          <ul>
+            {invoices.map((i) => {
+              const t = INVOICE_STATUS[i.status as InvoiceStatus] ?? INVOICE_STATUS.open;
+              const live = i.status === "open" || i.status === "overdue";
+              return (
+                <li key={i.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3 last:border-b-0">
+                  <span><b className="font-semibold">{i.number}</b><small className="block text-muted">{i.status === "paid" ? `Paid ${fmtDay(i.paid_at!)} · ${methodLabel(i.payment_method)}` : `Due ${fmtDay(i.due_date)}`}</small></span>
+                  <span className="flex items-center gap-3"><b className="tabular-nums">{money(i.amount_cents)}</b><Badge tone={t.tone}>{t.label}</Badge>
+                    {live && <><Button onClick={() => setVoiding(i)}>Void</Button><Button variant="primary" onClick={() => setPaying(i)}>Mark as paid</Button></>}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </Card>
+
+      <Card>
         <CardHeader title="Companies" />
         <ul>
           {data.companies.map((c) => (
@@ -111,6 +147,8 @@ export function SubscriberView({ data, plans, ownerId, failed }: { data: Data | 
         <p className="border-t border-line px-5 py-3 text-sm text-muted">Only the company name, country and start date are visible here. Team, customers, sales and stock are never shown to the platform.</p>
       </Card>
 
+      <PayModal invoice={paying} onClose={() => setPaying(null)} />
+      <VoidModal invoice={voiding} onClose={() => setVoiding(null)} />
       <Modal open={open} onClose={() => setOpen(false)} closeLabel="Close" title="Change plan"
         footer={<><Button onClick={() => setOpen(false)}>Cancel</Button><Button variant="primary" loading={busy} disabled={!planId || (planId === data.plan_id && cycle === data.cycle)} onClick={assign}>Change plan</Button></>}>
         <div className="flex flex-col gap-4">

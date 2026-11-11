@@ -10,3 +10,6 @@ export function UsageBar({ used, limit, label }: { used: number; limit: number |
     </div>
   );
 }
+
+/** "2026-11-08" (a date with no time) as "8 Nov 2026", without time-zone shifts. */
+export const fmtDay = (day: string) => new Date(`${day}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
