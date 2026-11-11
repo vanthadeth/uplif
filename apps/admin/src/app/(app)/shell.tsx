@@ -1,13 +1,15 @@
 "use client";
 import { useEffect, useOptimistic, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, LogOut, Moon, Sun } from "lucide-react";
+import { Building2, LayoutDashboard, LogOut, Moon, Package, Sun } from "lucide-react";
 import { AppShell, Avatar, NavProgress, TitleBar, useTheme, type NavGroup, type NavItem, type UtilityItem } from "@uplif/ui";
 import { createClient } from "@uplif/supabase/client";
 
 // Add a page here as each slice is built. Pages that are not built yet are not shown.
 const items: (NavItem & { href: string; group: "platform" | "safety" })[] = [
   { id: "overview", label: "Overview", icon: <LayoutDashboard />, href: "/overview", group: "platform" },
+  { id: "subscribers", label: "Subscribers", icon: <Building2 />, href: "/subscribers", group: "platform" },
+  { id: "plans", label: "Plans", icon: <Package />, href: "/plans", group: "platform" },
 ];
 
 export function AdminShell({ userName, userEmail, children }: { userName: string; userEmail: string; children: React.ReactNode }) {
