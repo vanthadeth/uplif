@@ -32,6 +32,22 @@ select is((select count(*)::int from public.list_my_companies() where name = 'Sh
 select throws_ok($$select public.switch_company((select id from public.memberships where company_id = (select id from public.companies where name = 'Shop A' limit 1)))$$, null, null, 'cannot switch into another company');
 reset role;
 
+-- User 1 already has Shop A and calls with Shop A's membership in the token: a second company must work
+select set_config('request.jwt.claims', json_build_object('sub', 'dddddddd-0000-0000-0000-0000000000d1', 'role', 'authenticated',
+  'app_metadata', json_build_object('company_id', (select id from public.companies where name = 'Shop A'),
+  'membership_id', (select m.id from public.memberships m join public.companies c on c.id = m.company_id where c.name = 'Shop A')))::text, true);
+set local role authenticated;
+select lives_ok($$select public.create_company('Shop C', null, 'KH', 'USD', 'Main')$$, 'user with a company can create a second one');
+select is((select count(*)::int from public.list_my_companies()), 2, 'picker lists both companies');
+reset role;
+select is((select count(*)::int from public.membership_roles mr join public.roles r on r.id = mr.role_id
+  where r.name = 'Owner' and r.company_id = (select id from public.companies where name = 'Shop C')), 1, 'creator is Owner of the second company');
+select is((select count(*)::int from public.audit_log where company_id = (select id from public.companies where name = 'Shop C')
+  and membership_id is distinct from (select m.id from public.memberships m join public.companies c on c.id = m.company_id where c.name = 'Shop C')), 0,
+  'second company audit rows are never filed under the first company membership');
+select is((select count(*)::int from public.audit_log where company_id = (select id from public.companies where name = 'Shop A')), 1,
+  'creating the second company adds nothing to the first company audit log');
+
 -- Audit log: tenant scoped and append-only
 select set_config('request.jwt.claims', json_build_object('sub', 'dddddddd-0000-0000-0000-0000000000d1', 'role', 'authenticated',
   'app_metadata', json_build_object('company_id', (select id from public.companies where name = 'Shop A'),
