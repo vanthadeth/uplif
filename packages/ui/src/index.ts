@@ -12,4 +12,5 @@ export * from "./Toast";
 export * from "./States";
 export * from "./Switcher";
 export * from "./LanguageToggle";
+export * from "./LanguagePicker";
 export * from "./AppShell";

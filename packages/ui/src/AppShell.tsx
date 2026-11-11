@@ -4,7 +4,12 @@ import { ChevronsUpDown, Menu, PanelLeftClose, X } from "lucide-react";
 import { cn } from "./cn";
 
 export interface NavItem { id: string; label: string; icon: ReactNode }
-export interface UtilityItem { id: string; label: string; icon: ReactNode; onClick: () => void; value?: string }
+export interface UtilityItem {
+  id: string;
+  /** A fully custom row (for example the language menu); receives whether the rail is collapsed. */
+  custom?: (rail: boolean) => ReactNode;
+  label?: string; icon?: ReactNode; onClick?: () => void; value?: string;
+}
 export interface AccountMenuItem { id: string; label: string; icon?: ReactNode; onClick: () => void }
 
 interface ShellProps {
@@ -113,7 +118,7 @@ export function AppShell(p: ShellProps) {
 
         {p.utilities && p.utilities.length > 0 && (
           <div className={cn("flex shrink-0 flex-col gap-0.5 border-t border-(--sb-line) p-2", rail && "items-center")}>
-            {p.utilities.map((u) => (
+            {p.utilities.map((u) => u.custom ? <div key={u.id}>{u.custom(rail)}</div> : (
               <button
                 key={u.id}
                 type="button"
