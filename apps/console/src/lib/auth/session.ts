@@ -18,14 +18,20 @@ export const loadSession = cache(async function loadSession() {
   let profile: { full_name: string; locale: string } | null = null;
   let company: { name: string; name_local: string | null } | null = null;
   let permissions: string[] = [];
+  let isOwner = false;
+  let pendingSupport = 0;
   if (signedIn) {
     // One parallel round trip for everything the shell and guards need.
-    const [p, companies, c, perms] = await Promise.all([
+    const [p, companies, c, perms, support] = await Promise.all([
       supabase.from("profiles").select("full_name, locale").maybeSingle(),
       supabase.rpc("list_my_companies"),
       companyId ? supabase.from("companies").select("name, name_local").maybeSingle() : Promise.resolve({ data: null }),
       companyId ? supabase.rpc("my_permissions") : Promise.resolve({ data: null }),
+      // Only the company Owner may call this; anyone else gets an error, which is how we know to hide the menu item.
+      companyId ? supabase.rpc("my_support_grants") : Promise.resolve({ data: null, error: { message: "no company" } }),
     ]);
+    isOwner = !support.error;
+    pendingSupport = (support.data ?? []).filter((g) => g.status === "requested").length;
     permissions = (perms.data ?? []).map((x) => x.permission_key);
     profile = p.data;
     company = c.data;
@@ -34,7 +40,7 @@ export const loadSession = cache(async function loadSession() {
   }
   const membershipId = (claims?.app_metadata as { membership_id?: string } | undefined)?.membership_id;
   const state: SessionState = { signedIn, hasProfile, hasCompanyClaim: !!companyId, companyCount };
-  return { supabase, state, companyId, membershipId, claims, profile, company, permissions };
+  return { supabase, state, companyId, membershipId, claims, profile, company, permissions, isOwner, pendingSupport };
 });
 
 /** Guard for a page: redirect unless the user is exactly at `step`. */

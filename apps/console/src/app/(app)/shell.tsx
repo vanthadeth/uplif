@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useOptimistic, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, ClipboardList, GitBranch, LayoutDashboard, LogOut, Moon, Repeat, ShieldCheck, Sun, Users } from "lucide-react";
+import { Building2, ClipboardList, GitBranch, LayoutDashboard, LogOut, Moon, Repeat, ShieldCheck, LifeBuoy, Sun, Users } from "lucide-react";
 import { AppShell, Avatar, LanguagePicker, type NavGroup, type NavItem, type UtilityItem } from "@uplif/ui";
 import { useI18n, type Locale } from "@/lib/i18n";
 import { isLocale } from "@/lib/languages";
@@ -13,7 +13,7 @@ import { pick } from "@/lib/format";
 import { NavProgress } from "@/components/nav-progress";
 import { TitleBar } from "@/components/title-bar";
 
-const routes: Record<string, string> = { dashboard: "/dashboard", company: "/company", branches: "/branches", users: "/users", roles: "/roles", audit: "/audit" };
+const routes: Record<string, string> = { dashboard: "/dashboard", company: "/company", branches: "/branches", users: "/users", roles: "/roles", audit: "/audit", support: "/support" };
 // A section shows in the menu when the user holds any of these permissions. This only tidies the menu:
 // the database enforces access on every read and write regardless.
 const needs: Record<string, string[] | undefined> = {
@@ -24,8 +24,8 @@ const needs: Record<string, string[] | undefined> = {
   audit: ["org.audit.read"],
 };
 
-export function ConsoleShell({ companyName, companyNameLocal, userName, userEmail, userId, profileLocale, permissions, children }: {
-  companyName: string; companyNameLocal: string | null; userName: string; userEmail: string; userId: string; profileLocale: Locale; permissions: string[]; children: React.ReactNode;
+export function ConsoleShell({ companyName, companyNameLocal, userName, userEmail, userId, profileLocale, permissions, isOwner, pendingSupport, children }: {
+  companyName: string; companyNameLocal: string | null; userName: string; userEmail: string; userId: string; profileLocale: Locale; permissions: string[]; isOwner: boolean; pendingSupport: number; children: React.ReactNode;
 }) {
   const { t, locale, setLocale } = useI18n();
   const { theme, toggle: toggleTheme } = useTheme();
@@ -55,13 +55,15 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userEmai
     { id: "users", label: t("nav.users"), icon: <Users /> },
     { id: "roles", label: t("nav.roles"), icon: <ShieldCheck /> },
     { id: "audit", label: t("nav.audit"), icon: <ClipboardList /> },
+    { id: "support", label: pendingSupport > 0 ? `${t("nav.support")} (${pendingSupport})` : t("nav.support"), icon: <LifeBuoy /> },
   ];
-  const nav = allNav.filter((n) => !needs[n.id] || needs[n.id]!.some((k) => permissions.includes(k)));
+  // Support requests are for the company Owner only (the database checks it again on every call).
+  const nav = allNav.filter((n) => (n.id === "support" ? isOwner : !needs[n.id] || needs[n.id]!.some((k) => permissions.includes(k))));
   const visible = nav.map((n) => routes[n.id]);
   const groupIds: [string, MessageKey, string[]][] = [
     ["workspace", "shell.group.workspace", ["dashboard", "company", "branches"]],
     ["people", "shell.group.people", ["users", "roles"]],
-    ["records", "shell.group.records", ["audit"]],
+    ["records", "shell.group.records", ["audit", "support"]],
   ];
   const groups: NavGroup[] = groupIds.map(([id, label, ids]) => ({ id, label: t(label), items: nav.filter((n) => ids.includes(n.id)) }));
 

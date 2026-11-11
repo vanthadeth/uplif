@@ -22,7 +22,7 @@ interface Props {
 }
 type Obj = { [k: string]: Json | undefined };
 
-const types = ["company", "companies", "company_settings", "branches", "memberships", "invitation", "roles", "role_permissions", "membership_roles"];
+const types = ["company", "companies", "company_settings", "branches", "memberships", "invitation", "roles", "role_permissions", "membership_roles", "support_grant"];
 const isObject = (v: Json | undefined): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const dayKey = (iso: string) => { const d = new Date(iso); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
