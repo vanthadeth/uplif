@@ -3,7 +3,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, ChevronRight, ClipboardList, Info, Lock, Pencil, Plus } from "lucide-react";
-import { Badge, Button, Card, Input, useToast } from "@uplif/ui";
+import { Badge, Button, Card, FloatingBar, Input, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 
@@ -276,7 +276,7 @@ export function CompanyForm({ company, settings, currencies, canProfile, canSett
       </div>
 
       {!readOnly && (
-        <div className="sticky bottom-0 z-10 -mx-4 -mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-t border-line bg-surface px-4 py-3 shadow-[0_-6px_16px_rgba(8,14,28,.06)] sm:-mx-6 sm:-mb-6 sm:px-6">
+        <FloatingBar>
           <div role="status" aria-live="polite" className={`flex min-w-0 items-center gap-2 font-semibold ${statusTone}`}>
             <StatusIcon className="size-[18px] shrink-0" aria-hidden /><span>{statusText}</span>
           </div>
@@ -284,7 +284,7 @@ export function CompanyForm({ company, settings, currencies, canProfile, canSett
             <Button type="button" className="flex-1 sm:flex-none" disabled={!dirty || busy} onClick={discard}>{t("company.discard")}</Button>
             <Button type="button" variant="primary" className="flex-1 sm:flex-none" loading={busy} disabled={!dirty} onClick={save}>{t("company.save")}</Button>
           </div>
-        </div>
+        </FloatingBar>
       )}
     </div>
   );
