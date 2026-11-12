@@ -679,6 +679,24 @@ export type Database = {
         }
         Relationships: []
       }
+      company_policies: {
+        Row: { archived: boolean; company_id: string; created_at: string; created_by: string | null; id: string; title: string; title_local: string | null; updated_at: string }
+        Insert: { archived?: boolean; company_id?: string; created_at?: string; created_by?: string | null; id?: string; title?: string; title_local?: string | null; updated_at?: string }
+        Update: { archived?: boolean; company_id?: string; created_at?: string; created_by?: string | null; id?: string; title?: string; title_local?: string | null; updated_at?: string }
+        Relationships: []
+      }
+      policy_versions: {
+        Row: { body: string; body_local: string | null; company_id: string; id: string; policy_id: string; published_at: string; published_by: string | null; version: number }
+        Insert: { body?: string; body_local?: string | null; company_id?: string; id?: string; policy_id?: string; published_at?: string; published_by?: string | null; version?: number }
+        Update: { body?: string; body_local?: string | null; company_id?: string; id?: string; policy_id?: string; published_at?: string; published_by?: string | null; version?: number }
+        Relationships: []
+      }
+      policy_acknowledgements: {
+        Row: { acknowledged_at: string; company_id: string; employee_id: string; version_id: string }
+        Insert: { acknowledged_at?: string; company_id?: string; employee_id?: string; version_id?: string }
+        Update: { acknowledged_at?: string; company_id?: string; employee_id?: string; version_id?: string }
+        Relationships: []
+      }
       work_schedule_assignments: {
         Row: { company_id: string; created_at: string; created_by: string | null; effective_from: string; id: string; schedule_id: string | null; scope: Database["public"]["Enums"]["assignment_scope"]; target_id: string | null; updated_at: string }
         Insert: { company_id: string; created_at?: string; created_by?: string | null; effective_from: string; id?: string; schedule_id?: string | null; scope: Database["public"]["Enums"]["assignment_scope"]; target_id?: string | null; updated_at?: string }
@@ -754,6 +772,26 @@ export type Database = {
       holiday_notice: {
         Args: Record<string, never>
         Returns: { year: number; holiday_count: number; provisional: boolean }[]
+      }
+      save_policy: {
+        Args: { p_id: string | null; p_title: string; p_title_local: string | null; p_body: string; p_body_local: string | null }
+        Returns: string
+      }
+      archive_policy: {
+        Args: { p_id: string; p_archived: boolean }
+        Returns: undefined
+      }
+      my_policies: {
+        Args: Record<string, never>
+        Returns: { policy_id: string; version_id: string; version: number; title: string; title_local: string | null; body: string; body_local: string | null; published_at: string; acknowledged_at: string | null; confirmed_earlier: boolean }[]
+      }
+      acknowledge_policy: {
+        Args: { p_version_id: string }
+        Returns: undefined
+      }
+      policy_ack_status: {
+        Args: { p_policy_id: string }
+        Returns: { employee_id: string; name: string; name_local: string | null; acknowledged_at: string | null }[]
       }
       work_schedule_week_hours: {
         Args: Record<string, never>

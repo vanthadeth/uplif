@@ -1,4 +1,4 @@
-import { forwardRef, useId, type InputHTMLAttributes, type ReactNode } from "react";
+import { forwardRef, useId, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from "react";
 import { cn } from "./cn";
 
 export interface FieldShellProps {
@@ -47,6 +47,33 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         aria-invalid={error ? true : undefined}
         aria-describedby={error || hint ? `${fid}-msg` : undefined}
         className={cn(control, error ? "border-danger" : "border-line-strong", className)}
+        {...rest}
+      />
+    </FieldShell>
+  );
+});
+
+export interface TextareaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "id"> {
+  label: string;
+  hint?: ReactNode;
+  error?: string;
+  id?: string;
+}
+
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
+  { label, hint, error, id, className, ...rest },
+  ref,
+) {
+  const auto = useId();
+  const fid = id ?? auto;
+  return (
+    <FieldShell label={label} hint={hint} error={error} id={fid}>
+      <textarea
+        ref={ref}
+        id={fid}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error || hint ? `${fid}-msg` : undefined}
+        className={cn(control, "h-auto min-h-24 py-2 leading-relaxed", error ? "border-danger" : "border-line-strong", className)}
         {...rest}
       />
     </FieldShell>
