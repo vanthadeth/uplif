@@ -7,7 +7,7 @@ set local search_path = public, extensions;
 select no_plan();
 
 create function pg_temp.claims(p_uid uuid) returns void language sql as $f$
-  select set_config('request.jwt.claims', json_build_object('sub', p_uid, 'role', 'authenticated', 'app_metadata', json_build_object())::text, true)
+  select set_config('request.jwt.claims', json_build_object('sub', p_uid, 'role', 'authenticated', 'aal', 'aal2', 'app_metadata', json_build_object())::text, true)
 $f$;
 create function pg_temp.iid(p_number text) returns uuid language sql security definer as $f$
   select id from public.invoices where number = p_number

@@ -9,7 +9,7 @@ select no_plan();
 
 create function pg_temp.oid_of(p_owner uuid) returns uuid language sql security definer as $f$ select id from public.invoices where owner_user_id = p_owner and status = 'open' $f$;
 create function pg_temp.claims(p_uid uuid) returns void language sql as $f$
-  select set_config('request.jwt.claims', json_build_object('sub', p_uid, 'role', 'authenticated', 'app_metadata', json_build_object())::text, true)
+  select set_config('request.jwt.claims', json_build_object('sub', p_uid, 'role', 'authenticated', 'aal', 'aal2', 'app_metadata', json_build_object())::text, true)
 $f$;
 
 insert into auth.users (id, aud, role, email) values
