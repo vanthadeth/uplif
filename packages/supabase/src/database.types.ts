@@ -178,9 +178,51 @@ export type Database = {
         }
         Relationships: []
       }
+      attendance_settings: {
+        Row: {
+          company_id: string
+          geofence_mode: Database["public"]["Enums"]["geofence_mode"]
+          default_radius_m: number
+          day_start_hour: number
+          selfie_required: boolean
+          allow_without_selfie: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      attendance_events: {
+        Row: {
+          id: string
+          company_id: string
+          employee_id: string
+          branch_id: string | null
+          kind: Database["public"]["Enums"]["attendance_kind"]
+          client_event_id: string
+          device_time: string
+          server_time: string
+          occurred_at: string
+          latitude: number | null
+          longitude: number | null
+          accuracy_m: number | null
+          distance_m: number | null
+          inside_geofence: boolean | null
+          selfie_path: string | null
+          device_id: string | null
+          flags: string[]
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       branches: {
         Row: {
           timezone: string | null
+          latitude: number | null
+          longitude: number | null
+          geofence_radius_m: number | null
           company_id: string
           created_at: string
           id: string
@@ -191,6 +233,9 @@ export type Database = {
         }
         Insert: {
           timezone?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          geofence_radius_m?: number | null
           company_id: string
           created_at?: string
           id?: string
@@ -201,6 +246,9 @@ export type Database = {
         }
         Update: {
           timezone?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          geofence_radius_m?: number | null
           company_id?: string
           created_at?: string
           id?: string
@@ -662,6 +710,27 @@ export type Database = {
         Args: { p_pattern: string }
         Returns: string
       }
+      get_attendance_settings: {
+        Args: Record<string, never>
+        Returns: { geofence_mode: Database["public"]["Enums"]["geofence_mode"]; default_radius_m: number; day_start_hour: number; selfie_required: boolean; allow_without_selfie: boolean; selfie_retention_days: number; plan_retention_days: number }
+      }
+      save_attendance_settings: {
+        Args: { p_geofence_mode: Database["public"]["Enums"]["geofence_mode"]; p_default_radius_m: number; p_day_start_hour: number; p_allow_without_selfie: boolean }
+        Returns: undefined
+      }
+      attendance_my_state: {
+        Args: Record<string, never>
+        Returns: {
+          linked: boolean; module?: boolean; employee_id?: string; employee_name?: string; employee_name_local?: string | null; active?: boolean; company_id?: string; now?: string
+          branch?: { id: string; name: string; name_local: string | null; latitude: number | null; longitude: number | null; radius_m: number } | null
+          geofence_mode?: Database["public"]["Enums"]["geofence_mode"]; selfie_required?: boolean; allow_without_selfie?: boolean
+          last?: { kind: Database["public"]["Enums"]["attendance_kind"]; occurred_at: string; flags: string[] } | null
+        }
+      }
+      attendance_clock: {
+        Args: { p_kind: Database["public"]["Enums"]["attendance_kind"]; p_client_event_id: string; p_device_time: string; p_latitude: number | null; p_longitude: number | null; p_accuracy_m: number | null; p_selfie_path: string | null; p_device_id: string | null }
+        Returns: { id: string; kind: Database["public"]["Enums"]["attendance_kind"]; occurred_at: string; flags: string[]; repeat: boolean }
+      }
       employee_work_days: {
         Args: { p_employee_id: string; p_from: string; p_days?: number }
         Returns: { day: string; day_kind: string; schedule_id: string | null; source: Database["public"]["Enums"]["assignment_scope"] | null; start_time: string | null; end_time: string | null; break_min: number | null; hours: number; holiday_name: string | null; holiday_name_local: string | null }[]
@@ -946,6 +1015,8 @@ export type Database = {
       }
     }
     Enums: {
+      geofence_mode: "off" | "flag" | "block"
+      attendance_kind: "in" | "out"
       data_scope: "own" | "team" | "branch" | "company"
       employee_status: "active" | "on_leave" | "left"
       override_effect: "grant" | "deny"

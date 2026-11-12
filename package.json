@@ -8,6 +8,8 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r --if-present test",
     "dev:admin": "pnpm --filter admin dev",
-    "build:admin": "pnpm --filter admin build"
+    "build:admin": "pnpm --filter admin build",
+    "dev:staff": "pnpm --filter staff dev",
+    "build:staff": "pnpm --filter staff build"
   }
 }
