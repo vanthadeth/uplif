@@ -2,7 +2,7 @@
 import { useState, type ReactNode } from "react";
 import {
   Avatar, Badge, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Input, Modal, ScopePill, Select,
-  SidePanel, Skeleton, Spinner, TabPanel, Table, TBody, TD, TH, THead, Tabs, Toggle, TR, useToast,
+  SidePanel, Skeleton, Spinner, Switch, TabPanel, Table, TBody, TD, TH, THead, Tabs, Toggle, TR, useToast,
 } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
 
@@ -164,7 +164,13 @@ export default function Gallery() {
         <Tabs items={tabs} value={tab} onChange={setTab} label={t("tabs.label")} />
         {tabs.map((x) => (
           <TabPanel key={x.id} id={x.id} active={tab === x.id}>
-            <Toggle checked={approval} onChange={setApproval} label={t("toggle.label")} />
+            <div className="flex flex-col gap-3">
+              <Toggle checked={approval} onChange={setApproval} label={t("toggle.label")} />
+              <Toggle checked={!approval} onChange={(v) => setApproval(!v)} label={t("toggle.label")} />
+              <Toggle checked onChange={() => {}} disabled label={t("toggle.label")} />
+              <Toggle checked={false} onChange={() => {}} disabled label={t("toggle.label")} />
+              <Switch checked={approval} onChange={setApproval} label={t("toggle.label")} />
+            </div>
           </TabPanel>
         ))}
       </Section>
