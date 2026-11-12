@@ -14,6 +14,7 @@
   --color-line: #e3e6eb;
   --color-line-strong: #d5dae1;
   --color-check: #8a94a3;
+  --color-switch-off: #768296; /* off-state track, 3:1+ against white */
   --color-ground: #f5f6f8;
   --color-surface: #ffffff;
   --color-neutral-soft: #f1f3f6;
@@ -71,7 +72,7 @@ html:lang(km) .caps { text-transform: none; letter-spacing: 0; }
   :root:not([data-theme="light"]) {
     color-scheme: dark;
     --color-ink: #e6ebf5; --color-ink-2: #c3ccdd; --color-muted: #9aa6bc; --color-line: #243049; --color-line-strong: #33415c;
-    --color-check: #6b7891; --color-ground: #0b1220; --color-surface: #141c2e; --color-neutral-soft: #1a2540;
+    --color-check: #6b7891; --color-switch-off: #667593; --color-ground: #0b1220; --color-surface: #141c2e; --color-neutral-soft: #1a2540;
     --color-primary-soft: #1e2d52; --color-primary-ink: #9dbdff; --color-link: #7fa9ff;
     --color-success-soft: #12301f; --color-success-ink: #6fd39a; --color-warning-soft: #33260f; --color-warning-ink: #f0b866;
     --color-danger-soft: #3a1714; --color-danger-ink: #ff9a90;
@@ -84,7 +85,7 @@ html:lang(km) .caps { text-transform: none; letter-spacing: 0; }
 :root[data-theme="dark"] {
   color-scheme: dark;
   --color-ink: #e6ebf5; --color-ink-2: #c3ccdd; --color-muted: #9aa6bc; --color-line: #243049; --color-line-strong: #33415c;
-  --color-check: #6b7891; --color-ground: #0b1220; --color-surface: #141c2e; --color-neutral-soft: #1a2540;
+  --color-check: #6b7891; --color-switch-off: #667593; --color-ground: #0b1220; --color-surface: #141c2e; --color-neutral-soft: #1a2540;
   --color-primary-soft: #1e2d52; --color-primary-ink: #9dbdff; --color-link: #7fa9ff;
   --color-success-soft: #12301f; --color-success-ink: #6fd39a; --color-warning-soft: #33260f; --color-warning-ink: #f0b866;
   --color-danger-soft: #3a1714; --color-danger-ink: #ff9a90;

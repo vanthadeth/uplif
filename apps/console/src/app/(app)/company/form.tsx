@@ -3,7 +3,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, ChevronRight, ClipboardList, Info, Lock, Pencil, Plus } from "lucide-react";
-import { Badge, Button, Card, FloatingBar, Input, useToast } from "@uplif/ui";
+import { Badge, Button, Card, FloatingBar, Input, Switch, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 
@@ -33,17 +33,6 @@ function Section({ first, title, description, children }: { first?: boolean; tit
       </div>
       <Card className="flex flex-col gap-5 p-4 sm:p-5">{children}</Card>
     </section>
-  );
-}
-
-function Switch({ checked, onChange, label, disabled }: { checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) {
-  return (
-    <button type="button" role="switch" aria-checked={checked} aria-label={label} disabled={disabled} onClick={() => onChange(!checked)}
-      className="grid h-11 w-[52px] shrink-0 place-items-center rounded-control disabled:opacity-50">
-      <span className={`relative block h-[26px] w-11 rounded-full ${checked ? "bg-primary" : "bg-surface shadow-[inset_0_0_0_1.5px_var(--color-muted)]"}`}>
-        <span className={`absolute top-1 size-[18px] rounded-full transition-[inset-inline-start] motion-reduce:transition-none ${checked ? "start-[22px] bg-white" : "start-1 bg-muted"}`} />
-      </span>
-    </button>
   );
 }
 
