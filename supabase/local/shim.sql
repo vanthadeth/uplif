@@ -10,6 +10,7 @@ create schema extensions; grant usage on schema extensions to public;
 create extension pgcrypto with schema extensions;
 create schema auth;
 create table auth.users (id uuid primary key default gen_random_uuid(), aud text, role text, email text, phone text, raw_app_meta_data jsonb default '{}', raw_user_meta_data jsonb default '{}', created_at timestamptz default now());
+create table auth.identities (id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users on delete cascade, provider text not null, identity_data jsonb default '{}', created_at timestamptz default now());
 create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb $$;
 create function auth.uid() returns uuid language sql stable as $$ select nullif(auth.jwt() ->> 'sub', '')::uuid $$;
 create function auth.role() returns text language sql stable as $$ select auth.jwt() ->> 'role' $$;

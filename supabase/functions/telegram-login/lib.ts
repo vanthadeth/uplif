@@ -18,6 +18,10 @@ export function randomToken(bytes = 32): string {
   return b64urlEncode(crypto.getRandomValues(new Uint8Array(bytes)));
 }
 
+export async function sha256Hex(text: string): Promise<string> {
+  return [...new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(text)))].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export async function pkceChallenge(verifier: string): Promise<string> {
   return b64urlEncode(new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(verifier))));
 }
@@ -54,6 +58,14 @@ export function readCookie(header: string | null, name: string): string | undefi
 export function safeNext(value: string | null | undefined): string | null {
   if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) return null;
   return value;
+}
+
+/** Picks the app to return to: the requested origin only if it is on the allowed list, else the first allowed one. */
+export function pickOrigin(requested: string | null | undefined, allowed: string[]): string | null {
+  const clean = allowed.map((a) => a.trim().replace(/\/$/, "")).filter(Boolean);
+  const want = (requested ?? "").trim().replace(/\/$/, "");
+  if (want && clean.includes(want)) return want;
+  return clean[0] ?? null;
 }
 
 /** Telegram gives no email address, and Supabase needs one, so each Telegram user gets a placeholder address. */

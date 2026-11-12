@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useOptimistic, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, ClipboardList, GitBranch, LayoutDashboard, LogOut, Moon, Repeat, ShieldCheck, LifeBuoy, Sun, Users } from "lucide-react";
+import { Building2, ClipboardList, GitBranch, LayoutDashboard, LogOut, Moon, Repeat, ShieldCheck, LifeBuoy, KeyRound, Sun, Users } from "lucide-react";
 import { AppShell, Avatar, LanguagePicker, type NavGroup, type NavItem, type UtilityItem } from "@uplif/ui";
 import { useI18n, type Locale } from "@/lib/i18n";
 import { isLocale } from "@/lib/languages";
@@ -102,6 +102,7 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userEmai
       account={{
         label: t("shell.user"), name: userName || "?", sub: userEmail || undefined, avatar: <Avatar name={userName || "?"} />,
         menu: [
+          { id: "account", label: t("nav.account"), icon: <KeyRound />, onClick: () => router.push("/account") },
           { id: "switch", label: t("dash.switch"), icon: <Repeat />, onClick: () => router.push("/companies") },
           { id: "out", label: t("auth.signOut"), icon: <LogOut />, onClick: signOut },
         ],
