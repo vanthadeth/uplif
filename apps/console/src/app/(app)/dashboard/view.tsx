@@ -12,6 +12,7 @@ import { describeAction } from "@/lib/activity";
 import { GROWTH, STARTER, TRIAL_DAYS, seatsUsed, trialDaysLeft } from "@/lib/plan";
 import type { MessageKey } from "@/lib/messages";
 import type { Json } from "@/lib/supabase/database.types";
+import { planLimitKey } from "@/lib/plan-limit";
 
 export interface DashboardData {
   can: { members: boolean; invites: boolean; branches: boolean; roles: boolean; audit: boolean; plan: boolean; createBranch: boolean };
@@ -69,7 +70,7 @@ export function DashboardView({ company, hasClaim, data }: { company: { name: st
     setBusy(i.id);
     const supabase = createClient();
     const made = await supabase.rpc("create_invitation", { p_role_id: i.role_id, p_branch_id: i.branch_id, p_label: i.label ?? "" });
-    if (made.error) { setBusy(""); return toast("error", made.error.code === "42501" ? t("common.forbidden") : t("common.saveError")); }
+    if (made.error) { setBusy(""); return toast("error", planLimitKey(made.error) ? t(planLimitKey(made.error)!) : made.error.code === "42501" ? t("common.forbidden") : t("common.saveError")); }
     await supabase.rpc("revoke_invitation", { p_id: i.id });
     setBusy("");
     setLink(`${location.origin}/invite/${(made.data as { token: string }).token}`);

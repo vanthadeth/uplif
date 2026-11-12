@@ -8,6 +8,7 @@ import { useI18n } from "@/lib/i18n";
 import type { MessageKey } from "@/lib/messages";
 import { fmtDate, pick } from "@/lib/format";
 import { GROWTH, seatsUsed } from "@/lib/plan";
+import { planLimitKey } from "@/lib/plan-limit";
 
 interface Member { id: string; display_name: string | null; status: "active" | "suspended" | "removed" }
 interface MemberRole { id: string; membership_id: string; role_id: string; branch_id: string | null }
@@ -87,7 +88,7 @@ export function UsersView({ myMembershipId, members, memberRoles, roles, branche
     setBusy(true);
     const { data, error } = await createClient().rpc("create_invitation", { p_role_id: roleId, p_branch_id: branchId || null, p_label: label });
     setBusy(false);
-    if (error) return toast("error", error.code === "42501" ? t("common.forbidden") : t("common.saveError"));
+    if (error) return toast("error", planLimitKey(error) ? t(planLimitKey(error)!) : error.code === "42501" ? t("common.forbidden") : t("common.saveError"));
     setLink(`${location.origin}/invite/${(data as { token: string }).token}`);
     router.refresh();
   }

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button, Card, CardBody, Input, Select } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
+import { planLimitKey } from "@/lib/plan-limit";
 
 const countries = [["KH", "Cambodia", "KHR"], ["TH", "Thailand", "THB"], ["VN", "Vietnam", "VND"], ["US", "United States", "USD"]] as const;
 const currencies = ["KHR", "USD", "THB", "VND"];
@@ -34,7 +35,7 @@ export function Wizard() {
     });
     const refreshed = err ? { error: err } : await supabase.auth.refreshSession();
     setBusy(false);
-    if (refreshed.error) return setError(t("wizard.error.create"));
+    if (refreshed.error) return setError(t(planLimitKey(err) ?? "wizard.error.create"));
     router.replace("/dashboard");
     router.refresh();
   }
