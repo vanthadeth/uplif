@@ -33,6 +33,12 @@ export const loadSession = cache(async function loadSession() {
       // Works even when the company is locked (suspended account), which is how the screen knows to explain it.
       companyId ? supabase.rpc("my_account_lock") : Promise.resolve({ data: null }),
     ]);
+    // No profile can also mean the user was deleted while this browser still holds a valid token (the token is
+    // checked locally). Ask the server once; if the user is gone, clear the session instead of showing registration.
+    if (!p.data) {
+      const { error: gone } = await supabase.auth.getUser();
+      if (gone) redirect("/auth/signout");
+    }
     lock = lockRes.data?.[0] ?? null;
     isOwner = !support.error;
     pendingSupport = (support.data ?? []).filter((g) => g.status === "requested").length;
