@@ -8,10 +8,10 @@ set local search_path = public, extensions;
 select no_plan();
 
 create function pg_temp.claims(p_uid uuid) returns void language sql as $f$
-  select set_config('request.jwt.claims', json_build_object('sub', p_uid, 'role', 'authenticated', 'app_metadata', json_build_object())::text, true)
+  select set_config('request.jwt.claims', json_build_object('sub', p_uid, 'role', 'authenticated', 'aal', 'aal2', 'app_metadata', json_build_object())::text, true)
 $f$;
 create function pg_temp.member_claims(p_uid uuid, p_cid uuid, p_mid uuid) returns void language sql as $f$
-  select set_config('request.jwt.claims', json_build_object('sub', p_uid, 'role', 'authenticated',
+  select set_config('request.jwt.claims', json_build_object('sub', p_uid, 'role', 'authenticated', 'aal', 'aal2',
     'app_metadata', json_build_object('company_id', p_cid, 'membership_id', p_mid))::text, true)
 $f$;
 create function pg_temp.pid(p_code text) returns uuid language sql security definer as $f$ select id from public.plans where code = p_code $f$;

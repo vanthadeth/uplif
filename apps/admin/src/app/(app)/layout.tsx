@@ -14,5 +14,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </main>
     );
   }
+  // Second sign-in step: a Google-only session (aal1) is sent to the code screen. The database refuses it too.
+  const { data: aal } = await p.supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aal?.currentLevel !== "aal2") redirect("/mfa");
   return <AdminShell userName={p.name} userEmail={p.email}>{children}</AdminShell>;
 }
