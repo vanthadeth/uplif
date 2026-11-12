@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useOptimistic, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Briefcase, Building2, CalendarCheck, CalendarClock, CalendarDays, CalendarOff, ClipboardList, GitBranch, IdCard, LayoutDashboard, LogOut, Network, Moon, Repeat, ShieldCheck, LifeBuoy, KeyRound, ScrollText, Sun, Users } from "lucide-react";
+import { Briefcase, Building2, CalendarCheck, CalendarClock, CalendarDays, CalendarOff, ClipboardList, GraduationCap, GitBranch, IdCard, LayoutDashboard, LogOut, Network, Moon, Repeat, ShieldCheck, LifeBuoy, KeyRound, ScrollText, Sun, Users } from "lucide-react";
 import { AppShell, Avatar, LanguagePicker, type NavGroup, type NavItem, type UtilityItem } from "@uplif/ui";
 import { useI18n, type Locale } from "@/lib/i18n";
 import { isLocale } from "@/lib/languages";
@@ -29,6 +29,7 @@ const needs: Record<string, string[] | undefined> = {
   attendance: ["attendance.settings.manage"],
   leave: ["leave.request.review", "leave.type.manage"],
   policies: ["learn.policy.manage"],
+  "learn-tests": ["learn.test.manage", "learn.result.read"],
   audit: ["org.audit.read"],
 };
 
@@ -70,6 +71,7 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userEmai
     { id: "attendance", label: t("nav.attendance"), icon: <CalendarCheck /> },
     { id: "leave", label: t("nav.leave"), icon: <CalendarOff /> },
     { id: "policies", label: t("nav.policies"), icon: <ScrollText /> },
+    { id: "learn-tests", label: t("nav.tests"), icon: <GraduationCap /> },
     { id: "audit", label: t("nav.audit"), icon: <ClipboardList /> },
     { id: "support", label: pendingSupport > 0 ? `${t("nav.support")} (${pendingSupport})` : t("nav.support"), icon: <LifeBuoy /> },
   ];
@@ -79,7 +81,7 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userEmai
   const groupIds: [string, MessageKey, string[]][] = [
     ["workspace", "shell.group.workspace", ["dashboard", "company", "branches"]],
     ["people", "shell.group.people", ["users", "roles", "employees", "departments", "positions", "working-time", "holidays", "attendance", "leave"]],
-    ["records", "shell.group.records", ["policies", "audit", "support"]],
+    ["records", "shell.group.records", ["policies", "learn-tests", "audit", "support"]],
   ];
   const groups: NavGroup[] = groupIds.map(([id, label, ids]) => ({ id, label: t(label), items: nav.filter((n) => ids.includes(n.id)) }));
 
