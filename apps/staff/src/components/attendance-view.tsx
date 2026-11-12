@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Badge, Button, Card, ErrorState, Skeleton, type BadgeTone } from "@uplif/ui";
+import { Badge, Button, Card, ErrorState, ProgressBar, Skeleton, type BadgeTone } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill, type MessageKey } from "@/lib/messages";
@@ -106,9 +106,7 @@ export function AttendanceView() {
           <Button aria-label={t("st.att.next")} disabled={week >= 0} onClick={() => setWeek(week + 1)} className="w-11 px-0"><ChevronRight className="size-5 rtl:rotate-180" aria-hidden /></Button>
         </div>
       </div>
-      {totalPlanned > 0 && (
-        <div className="h-2 overflow-hidden rounded-full bg-neutral-soft" aria-hidden><div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, Math.round((totalWorked / totalPlanned) * 100))}%` }} /></div>
-      )}
+      {totalPlanned > 0 && <ProgressBar value={(totalWorked / totalPlanned) * 100} label={fill(t("st.att.hours"), { worked: dur(totalWorked), total: dur(totalPlanned) })} />}
       <ol className="grid grid-cols-7 gap-1.5" aria-hidden>
         {rows.map((r) => (
           <li key={r.key} className={`flex flex-col items-center gap-1 rounded-xl border py-2 text-xs text-muted ${r.isToday ? "border-primary bg-primary-soft" : "border-line bg-surface"}`}>
