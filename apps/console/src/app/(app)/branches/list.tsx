@@ -5,6 +5,7 @@ import { Check, Info, Lock, Pencil, Plus, Search, X } from "lucide-react";
 import { Badge, Button, Input, Modal, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
+import { planLimitKey } from "@/lib/plan-limit";
 
 interface Branch { id: string; name: string; name_local: string | null; is_active: boolean; created_at: string }
 type Filter = "all" | "active" | "inactive";
@@ -63,7 +64,7 @@ export function BranchList({ branches, people, companyId, canCreate, canUpdate }
       ? await supabase.from("branches").insert({ company_id: companyId, ...values }).select("id")
       : await supabase.from("branches").update(values).eq("id", (editing as Branch).id).select("id");
     setBusy(false);
-    if (res.error) return toast("error", res.error.code === "42501" ? t("common.forbidden") : t("common.saveError"));
+    if (res.error) return toast("error", planLimitKey(res.error) ? t(planLimitKey(res.error)!) : res.error.code === "42501" ? t("common.forbidden") : t("common.saveError"));
     if (!res.data?.length) return toast("error", t("common.forbidden"));
     toast("success", editing === "new" ? t("branches.added") : t("branches.saved"));
     setEditing(null);
