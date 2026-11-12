@@ -798,6 +798,7 @@ export type Database = {
           full_name: string
           full_name_local: string | null
           locale: string
+          picture_path: string | null
           updated_at: string
           user_id: string
         }
@@ -805,12 +806,14 @@ export type Database = {
           full_name: string
           full_name_local?: string | null
           locale?: string
+          picture_path?: string | null
           user_id: string
         }
         Update: {
           full_name?: string
           full_name_local?: string | null
           locale?: string
+          picture_path?: string | null
         }
         Relationships: []
       }

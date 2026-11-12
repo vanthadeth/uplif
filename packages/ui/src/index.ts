@@ -5,6 +5,8 @@ export * from "./FloatingBar";
 export * from "./Select";
 export * from "./Badge";
 export * from "./Avatar";
+export * from "./AvatarEdit";
+export * from "./image";
 export * from "./Card";
 export * from "./Table";
 export * from "./Toggle";
