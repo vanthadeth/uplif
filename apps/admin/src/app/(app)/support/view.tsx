@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Badge, Button, Card, EmptyState, ErrorState, Modal, Tabs, useToast } from "@uplif/ui";
 import { createClient } from "@uplif/supabase/client";
 import { GRANT_STATUS, type GrantStatus } from "@/lib/money";
@@ -61,6 +62,7 @@ export function SupportView({ grants, failed }: { grants: SupportGrant[]; failed
                         </small>
                       </span>
                       <span className="flex items-center gap-3"><Badge tone={s.tone}>{s.label}</Badge>
+                        {g.status === "approved" && <Link href={`/support/${g.id}`} className="inline-flex h-10 items-center rounded-md border border-line px-3 font-semibold hover:bg-neutral-soft">View company</Link>}
                         {live(g) && <Button onClick={() => setTarget(g)}>{g.status === "approved" ? "End access" : "Withdraw"}</Button>}
                       </span>
                     </li>

@@ -447,6 +447,7 @@ export type Database = {
       platform_request_support_access: { Args: { p_company: string; p_hours: number; p_reason: string }; Returns: string }
       platform_cancel_support_request: { Args: { p_id: string }; Returns: undefined }
       platform_end_support_access: { Args: { p_id: string }; Returns: undefined }
+      platform_support_view: { Args: { p_grant: string }; Returns: Json }
       platform_list_support_grants: {
         Args: Record<PropertyKey, never>
         Returns: {
