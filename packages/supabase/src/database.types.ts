@@ -13,6 +13,171 @@ export type Database = {
   }
   public: {
     Tables: {
+      departments: {
+        Row: {
+          company_id: string
+          created_at: string
+          head_employee_id: string | null
+          id: string
+          is_active: boolean
+          name: string
+          name_local: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          head_employee_id?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          name_local?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          head_employee_id?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_local?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      positions: {
+        Row: {
+          company_id: string
+          created_at: string
+          default_role_id: string | null
+          department_id: string | null
+          id: string
+          is_active: boolean
+          name: string
+          name_local: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          default_role_id?: string | null
+          department_id?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          name_local?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          default_role_id?: string | null
+          department_id?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_local?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      employees: {
+        Row: {
+          branch_id: string | null
+          company_id: string
+          created_at: string
+          department_id: string | null
+          employee_no: string | null
+          employment_date: string | null
+          end_date: string | null
+          id: string
+          membership_id: string | null
+          name: string
+          name_local: string | null
+          position_id: string | null
+          reports_to_id: string | null
+          status: Database["public"]["Enums"]["employee_status"]
+          updated_at: string
+        }
+        Insert: {
+          branch_id?: string | null
+          company_id: string
+          created_at?: string
+          department_id?: string | null
+          employee_no?: string | null
+          employment_date?: string | null
+          end_date?: string | null
+          id?: string
+          membership_id?: string | null
+          name: string
+          name_local?: string | null
+          position_id?: string | null
+          reports_to_id?: string | null
+          status?: Database["public"]["Enums"]["employee_status"]
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string | null
+          company_id?: string
+          created_at?: string
+          department_id?: string | null
+          employee_no?: string | null
+          employment_date?: string | null
+          end_date?: string | null
+          id?: string
+          membership_id?: string | null
+          name?: string
+          name_local?: string | null
+          position_id?: string | null
+          reports_to_id?: string | null
+          status?: Database["public"]["Enums"]["employee_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      membership_permission_overrides: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          data_scope: Database["public"]["Enums"]["data_scope"] | null
+          effect: Database["public"]["Enums"]["override_effect"]
+          expires_at: string | null
+          id: string
+          membership_id: string
+          permission_key: string
+          reason: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          data_scope?: Database["public"]["Enums"]["data_scope"] | null
+          effect: Database["public"]["Enums"]["override_effect"]
+          expires_at?: string | null
+          id?: string
+          membership_id: string
+          permission_key: string
+          reason: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          data_scope?: Database["public"]["Enums"]["data_scope"] | null
+          effect?: Database["public"]["Enums"]["override_effect"]
+          expires_at?: string | null
+          id?: string
+          membership_id?: string
+          permission_key?: string
+          reason?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       branches: {
         Row: {
           company_id: string
@@ -143,10 +308,14 @@ export type Database = {
           company_id: string
           created_at: string
           created_by: string
+          employee_record_id: string | null
           expires_at: string
           id: string
           label: string | null
+          note: string | null
+          overrides: Json
           role_id: string
+          roles: Json
           status: Database["public"]["Enums"]["invitation_status"]
         }
         Insert: never
@@ -332,21 +501,48 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      link_employee: {
+        Args: { p_employee_id: string; p_membership_id: string | null }
+        Returns: undefined
+      }
+      set_permission_override: {
+        Args: { p_expires_at?: string | null; p_membership_id: string; p_permission_key: string; p_effect: string; p_reason: string; p_scope: Database["public"]["Enums"]["data_scope"] | null }
+        Returns: string
+      }
+      clear_permission_override: {
+        Args: { p_membership_id: string; p_permission_key: string }
+        Returns: undefined
+      }
       accept_invitation: {
         Args: { p_token: string }
         Returns: Json
       }
-      create_invitation: {
-        Args: { p_branch_id: string | null; p_label: string; p_role_id: string }
+      create_invite: {
+        Args: { p_days?: number; p_employee_id: string; p_note?: string | null; p_overrides?: Json; p_roles: Json }
+        Returns: Json
+      }
+      replace_invite: {
+        Args: { p_days?: number; p_id: string }
+        Returns: Json
+      }
+      invite_seats: {
+        Args: Record<PropertyKey, never>
         Returns: Json
       }
       preview_invitation: {
         Args: { p_token: string }
         Returns: {
+          state: string
           company_name: string
           company_name_local: string | null
-          expires_at: string
-          role_name: string
+          employee_name: string | null
+          employee_name_local: string | null
+          position_name: string | null
+          position_name_local: string | null
+          access: Json | null
+          invited_by: string | null
+          note: string | null
+          expires_at: string | null
         }[]
       }
       revoke_invitation: {
@@ -559,7 +755,9 @@ export type Database = {
       }
     }
     Enums: {
-      data_scope: "own" | "branch" | "company"
+      data_scope: "own" | "team" | "branch" | "company"
+      employee_status: "active" | "on_leave" | "left"
+      override_effect: "grant" | "deny"
       invitation_status: "pending" | "accepted" | "revoked"
       membership_status: "active" | "suspended" | "removed"
     }

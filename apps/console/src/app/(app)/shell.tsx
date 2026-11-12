@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useOptimistic, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, ClipboardList, GitBranch, LayoutDashboard, LogOut, Moon, Repeat, ShieldCheck, LifeBuoy, KeyRound, Sun, Users } from "lucide-react";
+import { Briefcase, Building2, ClipboardList, GitBranch, IdCard, LayoutDashboard, LogOut, Network, Moon, Repeat, ShieldCheck, LifeBuoy, KeyRound, Sun, Users } from "lucide-react";
 import { AppShell, Avatar, LanguagePicker, type NavGroup, type NavItem, type UtilityItem } from "@uplif/ui";
 import { useI18n, type Locale } from "@/lib/i18n";
 import { isLocale } from "@/lib/languages";
@@ -13,7 +13,7 @@ import { pick } from "@/lib/format";
 import { NavProgress } from "@/components/nav-progress";
 import { TitleBar } from "@/components/title-bar";
 
-const routes: Record<string, string> = { dashboard: "/dashboard", company: "/company", branches: "/branches", users: "/users", roles: "/roles", audit: "/audit", support: "/support" };
+const routes: Record<string, string> = { dashboard: "/dashboard", company: "/company", branches: "/branches", users: "/users", roles: "/roles", employees: "/employees", departments: "/departments", positions: "/positions", audit: "/audit", support: "/support" };
 // A section shows in the menu when the user holds any of these permissions. This only tidies the menu:
 // the database enforces access on every read and write regardless.
 const needs: Record<string, string[] | undefined> = {
@@ -21,6 +21,9 @@ const needs: Record<string, string[] | undefined> = {
   branches: ["org.branch.read"],
   users: ["org.member.read"],
   roles: ["org.role.read"],
+  employees: ["org.employee.read"],
+  departments: ["org.employee.read", "org.department.manage"],
+  positions: ["org.employee.read", "org.position.manage"],
   audit: ["org.audit.read"],
 };
 
@@ -54,6 +57,9 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userEmai
     { id: "branches", label: t("nav.branches"), icon: <GitBranch /> },
     { id: "users", label: t("nav.users"), icon: <Users /> },
     { id: "roles", label: t("nav.roles"), icon: <ShieldCheck /> },
+    { id: "employees", label: t("nav.employees"), icon: <IdCard /> },
+    { id: "departments", label: t("nav.departments"), icon: <Network /> },
+    { id: "positions", label: t("nav.positions"), icon: <Briefcase /> },
     { id: "audit", label: t("nav.audit"), icon: <ClipboardList /> },
     { id: "support", label: pendingSupport > 0 ? `${t("nav.support")} (${pendingSupport})` : t("nav.support"), icon: <LifeBuoy /> },
   ];
@@ -62,7 +68,7 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userEmai
   const visible = nav.map((n) => routes[n.id]);
   const groupIds: [string, MessageKey, string[]][] = [
     ["workspace", "shell.group.workspace", ["dashboard", "company", "branches"]],
-    ["people", "shell.group.people", ["users", "roles"]],
+    ["people", "shell.group.people", ["users", "roles", "employees", "departments", "positions"]],
     ["records", "shell.group.records", ["audit", "support"]],
   ];
   const groups: NavGroup[] = groupIds.map(([id, label, ids]) => ({ id, label: t(label), items: nav.filter((n) => ids.includes(n.id)) }));

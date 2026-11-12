@@ -39,10 +39,6 @@ set local role authenticated;
 select lives_ok($$update public.memberships set employee_id = 'E-001', job_title = 'Founder', employment_date = '2024-01-02' where user_id = 'ffffffff-0000-0000-0000-0000000000a1'$$, 'owner sets own company record');
 select lives_ok($$update public.memberships set employee_id = 'E-002' where user_id = 'ffffffff-0000-0000-0000-0000000000a3'$$, 'owner sets staff employee id');
 select throws_ok($$update public.memberships set employee_id = 'e-002' where user_id = 'ffffffff-0000-0000-0000-0000000000a1'$$, '23505', null, 'employee id is unique per company, ignoring case');
-insert into tk select public.create_invitation((select id from public.roles where name = 'Staff'), null, 'new hire', 'E-010', 'Cashier', '2026-12-01') ->> 'token';
-select is((select count(*)::int from public.invitations where employee_id = 'E-010' and job_title = 'Cashier'), 1, 'invite carries the company record');
-select throws_ok($$select public.create_invitation((select id from public.roles where name = 'Staff'), null, 'dup', 'E-010')$$, '23505', null, 'pending invitation holds the employee id');
-select throws_ok($$select public.create_invitation((select id from public.roles where name = 'Staff'), null, 'dup', 'E-001')$$, '23505', null, 'member holds the employee id');
 -- Owner one: own personal profile and sharing
 select lives_ok($$update public.profiles set gender = 'M', date_of_birth = '1990-05-20', address_line1 = 'Street 51', address_line2 = 'Phnom Penh', emergency_name = 'Sokha', emergency_phone = '+855 12 555 222' where user_id = 'ffffffff-0000-0000-0000-0000000000a1'$$, 'person edits own profile');
 select lives_ok($$insert into public.profile_phones (user_id, label, number) values ('ffffffff-0000-0000-0000-0000000000a1', 'mobile', '+855 12 000 111'), ('ffffffff-0000-0000-0000-0000000000a1', 'work', '023 123 456'), ('ffffffff-0000-0000-0000-0000000000a1', 'home', '012 345 678')$$, 'three phone numbers');
@@ -114,13 +110,5 @@ select lives_ok($$update public.memberships set employee_id = 'X-1' where user_i
 reset role;
 select is((select employee_id from public.memberships where user_id = 'ffffffff-0000-0000-0000-0000000000a3'), 'E-002', 'company record untouched by other company');
 
--- Accepting an invitation copies the company record
-insert into auth.users (id, aud, role, email) values ('ffffffff-0000-0000-0000-0000000000a4', 'authenticated', 'authenticated', 'up-4@test.local');
-insert into public.profiles (user_id, full_name) values ('ffffffff-0000-0000-0000-0000000000a4', 'Newcomer Four');
-select set_config('request.jwt.claims', json_build_object('sub', 'ffffffff-0000-0000-0000-0000000000a4', 'role', 'authenticated', 'app_metadata', json_build_object())::text, true);
-set local role authenticated;
-select lives_ok($$select public.accept_invitation((select t from tk))$$, 'newcomer accepts');
-reset role;
-select is((select employee_id || '/' || job_title || '/' || employment_date::text from public.memberships where user_id = 'ffffffff-0000-0000-0000-0000000000a4'), 'E-010/Cashier/2026-12-01', 'accepting copies the company record');
 select * from finish();
 rollback;

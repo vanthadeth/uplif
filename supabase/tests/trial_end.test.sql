@@ -53,7 +53,7 @@ select is((select (app.run_billing() ->> 'trials_ended')::int), 0, 'it is suspen
 select pg_temp.member_claims('f9000000-0000-0000-0000-000000000002', (select cid from ctx), (select owner_m from ctx));
 set local role authenticated;
 select is((select count(*)::int from public.my_permissions()), 0, 'the owner has no permissions while locked');
-select throws_ok($$select public.create_invitation((select id from public.roles where company_id = (select cid from ctx) and name = 'Manager'), null, 'x')$$, '42501', 'not allowed', 'the owner cannot invite while locked');
+select throws_ok($$select public.create_invite(gen_random_uuid(), '[]'::jsonb)$$, '42501', 'not allowed', 'the owner cannot invite while locked');
 select is((select count(*)::int from public.branches), 0, 'branches cannot be read while locked');
 select throws_ok($$select public.create_company('Third Co', null, 'KH', 'KHR', 'Main')$$, 'P0001', 'account suspended', 'a suspended account cannot open another company');
 select is((select locked from public.my_account_lock()), true, 'the owner is told the account is locked');
