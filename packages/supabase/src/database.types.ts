@@ -745,6 +745,17 @@ export type Database = {
           last?: { kind: Database["public"]["Enums"]["attendance_kind"]; occurred_at: string; flags: string[] } | null
         }
       }
+      my_profile: {
+        Args: Record<string, never>
+        Returns: {
+          linked: boolean
+          company?: { name: string; name_local: string | null }
+          position?: { name: string; name_local: string | null } | null
+          department?: { name: string; name_local: string | null } | null
+          reports_to?: { name: string; name_local: string | null } | null
+          employment_date?: string | null
+        }
+      }
       attendance_clock: {
         Args: { p_kind: Database["public"]["Enums"]["attendance_kind"]; p_client_event_id: string; p_device_time: string; p_latitude: number | null; p_longitude: number | null; p_accuracy_m: number | null; p_selfie_path: string | null; p_device_id: string | null }
         Returns: { id: string; kind: Database["public"]["Enums"]["attendance_kind"]; occurred_at: string; flags: string[]; repeat: boolean }

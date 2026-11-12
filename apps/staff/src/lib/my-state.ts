@@ -11,3 +11,13 @@ export const getMyState = cache(async (): Promise<MyState | null> => {
   if (error || !data) return null;
   return data;
 });
+
+export type MyProfile = Database["public"]["Functions"]["my_profile"]["Returns"];
+
+/** Work details for the top bar and Profile. A failure returns null so the app still opens. */
+export const getMyProfile = cache(async (): Promise<MyProfile | null> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("my_profile");
+  if (error || !data || !data.linked) return null;
+  return data;
+});
