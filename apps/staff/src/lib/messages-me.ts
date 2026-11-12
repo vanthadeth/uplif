@@ -173,6 +173,14 @@ export const enMe = {
   "st.locate.denied.body": "Location is off or blocked. You can still clock in. Your manager may review this clock.",
   "st.locate.continue": "Continue to selfie",
   "st.locate.retry": "Try again",
+  "st.mon.prev": "Previous month",
+  "st.mon.next": "Next month",
+  "st.mon.present": "Present",
+  "st.mon.absent": "Absent",
+  "st.mon.late": "Late",
+  "st.mon.of": "{n} of {total}",
+  "st.mon.holidays": "Holidays in {month}",
+  "st.mon.noHolidays": "No holidays this month.",
 } as const;
 
 export const kmMe: Partial<Record<keyof typeof enMe, string>> = {
@@ -348,4 +356,12 @@ export const kmMe: Partial<Record<keyof typeof enMe, string>> = {
   "st.locate.denied.body": "ទីតាំងត្រូវបានបិទ ឬរារាំង។ អ្នកនៅតែអាចកត់ម៉ោងបាន។ អ្នកគ្រប់គ្រងរបស់អ្នកអាចពិនិត្យការកត់ម៉ោងនេះ។",
   "st.locate.continue": "បន្តទៅថតសែលហ្វី",
   "st.locate.retry": "ព្យាយាមម្តងទៀត",
+  "st.mon.prev": "ខែមុន",
+  "st.mon.next": "ខែបន្ទាប់",
+  "st.mon.present": "មានវត្តមាន",
+  "st.mon.absent": "អវត្តមាន",
+  "st.mon.late": "យឺត",
+  "st.mon.of": "{n} ក្នុងចំណោម {total}",
+  "st.mon.holidays": "ថ្ងៃឈប់សម្រាកក្នុងខែ{month}",
+  "st.mon.noHolidays": "គ្មានថ្ងៃឈប់សម្រាកក្នុងខែនេះទេ។",
 };
