@@ -52,6 +52,141 @@ export type Database = {
         }
         Relationships: []
       }
+      learn_tests: {
+        Row: {
+          id: string
+          company_id: string
+          title: string
+          title_local: string | null
+          pass_percent: number
+          retake_days: number
+          archived: boolean
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id?: string
+          title?: string
+          title_local?: string | null
+          pass_percent?: number
+          retake_days?: number
+          archived?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          title?: string
+          title_local?: string | null
+          pass_percent?: number
+          retake_days?: number
+          archived?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      learn_questions: {
+        Row: {
+          id: string
+          company_id: string
+          test_id: string
+          position: number
+          prompt: string
+          prompt_local: string | null
+        }
+        Insert: {
+          id?: string
+          company_id?: string
+          test_id?: string
+          position?: number
+          prompt?: string
+          prompt_local?: string | null
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          test_id?: string
+          position?: number
+          prompt?: string
+          prompt_local?: string | null
+        }
+        Relationships: []
+      }
+      learn_options: {
+        Row: {
+          id: string
+          company_id: string
+          question_id: string
+          position: number
+          label: string
+          label_local: string | null
+          is_correct: boolean
+        }
+        Insert: {
+          id?: string
+          company_id?: string
+          question_id?: string
+          position?: number
+          label?: string
+          label_local?: string | null
+          is_correct?: boolean
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          question_id?: string
+          position?: number
+          label?: string
+          label_local?: string | null
+          is_correct?: boolean
+        }
+        Relationships: []
+      }
+      learn_attempts: {
+        Row: {
+          id: string
+          company_id: string
+          test_id: string
+          employee_id: string
+          correct: number
+          total: number
+          score_percent: number
+          passed: boolean
+          is_retake: boolean
+          taken_at: string
+        }
+        Insert: {
+          id?: string
+          company_id?: string
+          test_id?: string
+          employee_id?: string
+          correct?: number
+          total?: number
+          score_percent?: number
+          passed?: boolean
+          is_retake?: boolean
+          taken_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          test_id?: string
+          employee_id?: string
+          correct?: number
+          total?: number
+          score_percent?: number
+          passed?: boolean
+          is_retake?: boolean
+          taken_at?: string
+        }
+        Relationships: []
+      }
       leave_requests: {
         Row: {
           company_id: string
@@ -906,6 +1041,30 @@ export type Database = {
       archive_policy: {
         Args: { p_id: string; p_archived: boolean }
         Returns: undefined
+      }
+      save_learn_test: {
+        Args: { p_id: string | null; p_title: string; p_title_local: string | null; p_pass_percent: number; p_retake_days: number; p_questions: unknown }
+        Returns: string
+      }
+      archive_learn_test: {
+        Args: { p_id: string; p_archived: boolean }
+        Returns: undefined
+      }
+      my_learn_tests: {
+        Args: Record<string, never>
+        Returns: { test_id: string; title: string; title_local: string | null; question_count: number; pass_percent: number; retake_days: number; status: "new" | "failed" | "passed" | "due_soon" | "overdue"; last_score: number | null; last_taken_at: string | null; passed_on: string | null; due_on: string | null }[]
+      }
+      learn_questions_for: {
+        Args: { p_test_id: string }
+        Returns: { question_id: string; position: number; prompt: string; prompt_local: string | null; options: { id: string; label: string; label_local: string | null }[] }[]
+      }
+      submit_learn_attempt: {
+        Args: { p_test_id: string; p_answers: unknown }
+        Returns: { score_percent: number; correct: number; total: number; passed: boolean }[]
+      }
+      learn_results: {
+        Args: { p_test_id?: string | null }
+        Returns: { attempt_id: string; employee_id: string; name: string; name_local: string | null; test_id: string; title: string; score_percent: number; passed: boolean; is_retake: boolean; failed_retake: boolean; taken_at: string }[]
       }
       my_policies: {
         Args: Record<string, never>
