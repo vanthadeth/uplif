@@ -89,6 +89,13 @@ export const enMe = {
   "st.policy.saved": "Thanks, your confirmation is saved.",
   "st.policy.error": "Could not save your confirmation. Try again.",
   "st.policy.stale": "This policy was just updated. Open it again to read the new version.",
+  "st.att.late": "Late {m}",
+  "st.att.early": "Left early {m}",
+  "st.att.incomplete": "No clock-out",
+  "st.att.absent": "Absent",
+  "st.att.extra": "Extra day",
+  "st.att.ontime": "On time",
+  "st.att.overtime": "{m} overtime",
 } as const;
 
 export const kmMe: Partial<Record<keyof typeof enMe, string>> = {
@@ -180,4 +187,11 @@ export const kmMe: Partial<Record<keyof typeof enMe, string>> = {
   "st.policy.saved": "អរគុណ ការបញ្ជាក់របស់អ្នកត្រូវបានរក្សាទុក។",
   "st.policy.error": "មិនអាចរក្សាទុកការបញ្ជាក់របស់អ្នកបានទេ។ សូមព្យាយាមម្តងទៀត។",
   "st.policy.stale": "គោលនយោបាយនេះទើបតែត្រូវបានកែប្រែ។ សូមបើកម្តងទៀតដើម្បីអានកំណែថ្មី។",
+  "st.att.late": "យឺត {m}",
+  "st.att.early": "ចេញមុន {m}",
+  "st.att.incomplete": "មិនបានកត់ម៉ោងចេញ",
+  "st.att.absent": "អវត្តមាន",
+  "st.att.extra": "ថ្ងៃបន្ថែម",
+  "st.att.ontime": "ទាន់ពេល",
+  "st.att.overtime": "ថែមម៉ោង {m}",
 };

@@ -10,6 +10,7 @@ import { addDays, parseYmd, startOfDay, startOfWeek, workedMinutes, ymd, type Ev
 import { useMe } from "./me-context";
 
 interface Ev extends EventLite { id?: string }
+interface DayResult { day: string; status: string; late_min: number; early_min: number; overtime_min: number }
 interface WorkDay { day: string; day_kind: string; hours: number; holiday_name: string | null; holiday_name_local: string | null }
 
 const WEEKS = 4;
@@ -25,6 +26,7 @@ export function AttendanceView() {
   const { time, duration: dur, tag } = useFormat();
   const [events, setEvents] = useState<Ev[] | null>(null);
   const [days, setDays] = useState<WorkDay[]>([]);
+  const [results, setResults] = useState<DayResult[]>([]);
   const [failed, setFailed] = useState(false);
   const [week, setWeek] = useState(0); // 0 = this week, -1 = last week, ...
   const [now, setNow] = useState<Date | null>(null);
@@ -36,14 +38,16 @@ export function AttendanceView() {
     const today = new Date();
     const from = addDays(startOfWeek(today), -7 * (WEEKS - 1));
     const supabase = createClient();
-    const [ev, wd] = await Promise.all([
+    const [ev, wd, rs] = await Promise.all([
       supabase.from("attendance_events").select("kind, occurred_at, flags").eq("employee_id", employeeId)
         .gte("occurred_at", from.toISOString()).order("occurred_at", { ascending: true }).limit(1000),
       supabase.rpc("employee_work_days", { p_employee_id: employeeId, p_from: ymd(from), p_days: WEEKS * 7 }),
+      supabase.rpc("employee_attendance_days", { p_employee_id: employeeId, p_from: ymd(from), p_days: WEEKS * 7 }),
     ]);
     if (ev.error) { setFailed(true); return; }
     setEvents(ev.data as Ev[]);
     setDays(!wd.error && wd.data ? (wd.data as WorkDay[]) : []);
+    setResults(!rs.error && rs.data ? (rs.data as DayResult[]) : []);
     setNow(today);
   }, [employeeId]);
   useEffect(() => { void load(); }, [load]);
@@ -57,6 +61,7 @@ export function AttendanceView() {
     return m;
   }, [events]);
   const schedule = useMemo(() => new Map(days.map((d) => [d.day, d])), [days]);
+  const result = useMemo(() => new Map(results.map((r) => [r.day, r])), [results]);
 
 
   if (failed) {
@@ -79,13 +84,15 @@ export function AttendanceView() {
     const worked = workedMinutes(evs, now, isToday);
     const open = isToday && evs.length > 0 && evs[evs.length - 1].kind === "in";
     const flagged = evs.some((e) => e.flags.length > 0);
+    const res = result.get(key);
     const dayOff = !!sched && !holiday && (sched.day_kind === "off" || sched.day_kind === "none" || sched.day_kind === "not_employed");
     const planned = sched && !holiday && !dayOff ? Number(sched.hours) : 0;
-    return { d, key, evs, worked, open, flagged, holiday, dayOff, planned, isToday, future };
+    return { d, key, evs, worked, open, flagged, holiday, dayOff, planned, isToday, future, res };
   });
   const totalWorked = rows.reduce((s, r) => s + r.worked, 0);
   const totalPlanned = Math.round(rows.reduce((s, r) => s + r.planned, 0) * 60);
-  const dot = (r: (typeof rows)[number]) => r.flagged ? "bg-warning" : r.holiday ? "bg-primary" : r.evs.length > 0 ? "bg-success" : "border-[1.5px] border-line-strong";
+  const problem = (r: (typeof rows)[number]) => ["late", "early_leave", "incomplete"].includes(r.res?.status ?? "");
+  const dot = (r: (typeof rows)[number]) => r.res?.status === "absent" ? "bg-danger" : r.flagged || problem(r) ? "bg-warning" : r.holiday ? "bg-primary" : r.evs.length > 0 ? "bg-success" : "border-[1.5px] border-line-strong";
   const label = (d: Date, opts: Intl.DateTimeFormatOptions) => d.toLocaleDateString(tag, opts);
   const list = rows.filter((r) => !r.future || r.holiday).slice().reverse();
 
@@ -112,8 +119,16 @@ export function AttendanceView() {
       <Card className="overflow-hidden">
         <ul className="divide-y divide-line">
           {list.map((r) => {
-            const tone: BadgeTone = r.open ? "success" : r.flagged ? "warning" : r.holiday ? "info" : "neutral";
-            const text = r.open ? t("st.att.inprogress") : r.flagged ? t("st.att.review") : r.holiday ? t("st.att.holiday") : r.evs.length > 0 ? t("st.att.ok") : r.dayOff ? t("st.att.off") : t("st.att.none");
+            const st = r.res?.status;
+            const tone: BadgeTone = r.open ? "success" : st === "absent" ? "danger" : r.flagged || problem(r) ? "warning" : r.holiday ? "info" : st === "extra" ? "info" : st === "on_time" ? "success" : "neutral";
+            const text = r.open ? t("st.att.inprogress")
+              : st === "late" ? fill(t("st.att.late"), { m: dur(r.res!.late_min) })
+              : st === "early_leave" ? fill(t("st.att.early"), { m: dur(r.res!.early_min) })
+              : st === "incomplete" ? t("st.att.incomplete")
+              : st === "absent" ? t("st.att.absent")
+              : st === "extra" ? t("st.att.extra")
+              : r.flagged ? t("st.att.review") : r.holiday ? t("st.att.holiday")
+              : r.evs.length > 0 ? t(st === "on_time" ? "st.att.ontime" : "st.att.ok") : r.dayOff ? t("st.att.off") : t("st.att.none");
             const first = r.evs[0], last = r.evs[r.evs.length - 1];
             const range = first ? `${time(first.occurred_at)} – ${r.open ? "…" : last.kind === "out" ? time(last.occurred_at) : ""}` : r.holiday ?? "";
             const flags = Array.from(new Set(r.evs.flatMap((e) => e.flags)));
@@ -121,7 +136,7 @@ export function AttendanceView() {
               <li key={r.key} className={`flex flex-col gap-2 p-4 ${r.flagged ? "bg-warning-soft" : ""}`}>
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0"><b className="block">{label(r.d, { weekday: "short", day: "numeric", month: "short" })}</b>
-                    <span className="text-sm text-muted">{range}{r.worked > 0 ? ` · ${dur(r.worked)}` : ""}</span></div>
+                    <span className="text-sm text-muted">{range}{r.worked > 0 ? ` · ${dur(r.worked)}` : ""}{r.res && r.res.overtime_min > 0 ? ` · ${fill(t("st.att.overtime"), { m: dur(r.res.overtime_min) })}` : ""}</span></div>
                   <Badge tone={tone}>{text}</Badge>
                 </div>
                 {r.flagged && <ul className="list-disc ps-5 text-sm">{flags.map((f) => <li key={f}>{FLAG_KEYS[f] ? t(FLAG_KEYS[f]) : f}</li>)}</ul>}

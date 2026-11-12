@@ -793,6 +793,10 @@ export type Database = {
         Args: { p_policy_id: string }
         Returns: { employee_id: string; name: string; name_local: string | null; acknowledged_at: string | null }[]
       }
+      employee_attendance_days: {
+        Args: { p_employee_id: string; p_from: string; p_days?: number }
+        Returns: { day: string; status: string; first_in: string | null; last_out: string | null; late_min: number; early_min: number; worked_min: number; overtime_min: number; half_day: boolean; flagged: boolean }[]
+      }
       work_schedule_week_hours: {
         Args: Record<string, never>
         Returns: { version_id: string; hours: number }[]
