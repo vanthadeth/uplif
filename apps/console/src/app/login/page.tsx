@@ -5,13 +5,14 @@ import { Button, Card, CardBody, Input, LanguagePicker } from "@uplif/ui";
 import { isLocale } from "@/lib/languages";
 import { useLanguageOptions } from "@/lib/use-language-options";
 import { createClient } from "@/lib/supabase/client";
+import { supabaseUrl } from "@uplif/supabase/env";
 import { toE164 } from "@/lib/auth/phone";
 import { safeNext } from "@/lib/auth/safe-next";
 import { useI18n } from "@/lib/i18n";
 
 // Phone sign-in is paused. Set NEXT_PUBLIC_PHONE_LOGIN=true to bring it back; the code is kept.
 const phoneEnabled = process.env.NEXT_PUBLIC_PHONE_LOGIN === "true";
-// Telegram sign-in needs the custom provider "custom:telegram" set up in Supabase Auth first.
+// Telegram sign-in needs the telegram-login Edge Function deployed in Supabase.
 // Set NEXT_PUBLIC_TELEGRAM_LOGIN=true once it is; until then the button stays disabled.
 const telegramEnabled = process.env.NEXT_PUBLIC_TELEGRAM_LOGIN === "true";
 
@@ -58,13 +59,9 @@ export default function LoginPage() {
     });
   }
 
-  async function telegram() {
-    setError(undefined);
-    const { error: err } = await createClient().auth.signInWithOAuth({
-      provider: "custom:telegram" as never,
-      options: { redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(nextPath())}`, scopes: "openid profile" },
-    });
-    if (err) setError(t("auth.error.generic"));
+  // Telegram sign-in runs in a Supabase Edge Function (telegram-login), which sends the person to Telegram and back.
+  function telegram() {
+    location.href = `${supabaseUrl}/functions/v1/telegram-login?next=${encodeURIComponent(nextPath())}`;
   }
 
   return (
