@@ -9,7 +9,7 @@ import { useI18n } from "@/lib/i18n";
 import type { MessageKey } from "@/lib/messages";
 import { pick } from "@/lib/format";
 
-type Scope = "own" | "branch" | "company";
+type Scope = "own" | "team" | "branch" | "company";
 interface Role { id: string; name: string; name_local: string | null; is_system: boolean }
 interface Perm { role_id: string; permission_key: string; data_scope: Scope }
 interface Props {
@@ -22,7 +22,7 @@ interface Props {
 }
 
 /** Read permissions can be limited to your own records or branches; every other permission is all or nothing. */
-const READ_KEYS = new Set(["org.branch.read", "org.member.read", "org.role.read"]);
+const READ_KEYS = new Set(["org.branch.read", "org.member.read", "org.role.read", "org.employee.read"]);
 const GROUPS: [string, MessageKey, string[]][] = [
   ["company", "roles.group.company", ["company", "settings", "currency", "payment_term"]],
   ["branch", "roles.group.branch", ["branch"]],
@@ -127,7 +127,7 @@ export function RolesView({ companyId, roles, permissions, catalog, counts, canM
   }
 
   const scopesFor = (key: string): [Scope | "none", MessageKey][] => READ_KEYS.has(key)
-    ? [["none", "roles.scope.none"], ["own", "roles.scope.own"], ["branch", "roles.scope.branch"], ["company", "roles.scope.company"]]
+    ? [["none", "roles.scope.none"], ["own", "roles.scope.own"], ["team", "roles.scope.team"], ["branch", "roles.scope.branch"], ["company", "roles.scope.company"]]
     : [["none", "roles.scope.none"], ["company", "roles.scope.company"]];
 
   const pickRole = (id: string) => { setSelectedId(id); setName(undefined); setNameLocal(undefined); setNameError(undefined); };

@@ -9,6 +9,7 @@ import type { MessageKey } from "@/lib/messages";
 import { fmtDate, pick } from "@/lib/format";
 import { GROWTH, seatsUsed } from "@/lib/plan";
 import { planLimitKey } from "@/lib/plan-limit";
+import { OverridesDialog, type Override, type PermissionDef } from "./overrides";
 
 interface Member { id: string; display_name: string | null; status: "active" | "suspended" | "removed" }
 interface MemberRole { id: string; membership_id: string; role_id: string; branch_id: string | null }
@@ -29,13 +30,15 @@ interface Props {
   canInvite: boolean;
   canEdit: boolean;
   canRoles: boolean;
+  overrides: Override[];
+  catalog: PermissionDef[];
   /** Open the invite dialog on arrival (the title bar action links here with ?invite=1). */
   openInvite?: boolean;
 }
 
 const inviteTone: Record<InviteStatus, BadgeTone> = { pending: "info", accepted: "success", revoked: "neutral", expired: "neutral" };
 
-export function UsersView({ myMembershipId, members, memberRoles, roles, branches, invitations, canInvite, canEdit, canRoles, openInvite: autoInvite }: Props) {
+export function UsersView({ myMembershipId, members, memberRoles, roles, branches, invitations, canInvite, canEdit, canRoles, overrides, catalog, openInvite: autoInvite }: Props) {
   const { t, locale } = useI18n();
   const toast = useToast();
   const router = useRouter();
@@ -72,6 +75,7 @@ export function UsersView({ myMembershipId, members, memberRoles, roles, branche
   const [addRoleId, setAddRoleId] = useState("");
   const [addBranchId, setAddBranchId] = useState("");
   const [suspending, setSuspending] = useState<Member | null>(null);
+  const [permsFor, setPermsFor] = useState<string | null>(null);
 
   function openInvite() {
     setLabel(""); setBranchId(""); setRoleId(invitable[0]?.id ?? ""); setLink(undefined); setInviteOpen(true);
@@ -181,6 +185,7 @@ export function UsersView({ myMembershipId, members, memberRoles, roles, branche
         {!readOnly && (canRoles || (canEdit && !me)) && (
           <div className="col-span-2 mt-1 flex gap-2 md:col-span-1 md:mt-0 md:justify-end">
             {canRoles && <Button className="flex-1 md:flex-none" onClick={() => { setRolesFor(m.id); setAddRoleId(roles[0]?.id ?? ""); setAddBranchId(""); }}><Shield className="size-4" aria-hidden />{t("users.manageRoles")}</Button>}
+            {canRoles && !me && <Button className="flex-1 md:flex-none" onClick={() => setPermsFor(m.id)}><Lock className="size-4" aria-hidden />{t("ovr.btn")}</Button>}
             {canEdit && !me && (m.status === "active"
               ? <Button className="flex-1 md:flex-none" onClick={() => setSuspending(m)}>{t("users.suspend")}</Button>
               : <Button className="flex-1 md:flex-none" disabled={full} title={full ? t("users.noSeat") : undefined} onClick={() => setStatus(m, "active")}>{t("users.reactivate")}</Button>)}
@@ -378,6 +383,8 @@ export function UsersView({ myMembershipId, members, memberRoles, roles, branche
           </div>
         )}
       </Modal>
+
+      {permsFor && <OverridesDialog memberId={permsFor} memberName={members.find((m) => m.id === permsFor)?.display_name ?? ""} overrides={overrides} catalog={catalog} onClose={() => setPermsFor(null)} />}
 
       <Modal open={suspending !== null} onClose={() => setSuspending(null)} closeLabel={t("common.close")} title={t("users.suspendTitle")}
         footer={<><Button onClick={() => setSuspending(null)}>{t("common.cancel")}</Button><Button variant="danger" loading={busy} onClick={() => suspending && setStatus(suspending, "suspended")}>{t("users.suspend")}</Button></>}>
