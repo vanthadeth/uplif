@@ -13,6 +13,99 @@ export type Database = {
   }
   public: {
     Tables: {
+      leave_types: {
+        Row: {
+          active: boolean
+          annual_days: number | null
+          code: string
+          company_id: string
+          created_at: string
+          id: string
+          name: string
+          name_local: string | null
+          paid: boolean
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          annual_days?: number | null
+          code: string
+          company_id: string
+          created_at?: string
+          id?: string
+          name: string
+          name_local?: string | null
+          paid?: boolean
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          annual_days?: number | null
+          code?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          name_local?: string | null
+          paid?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      leave_requests: {
+        Row: {
+          company_id: string
+          created_at: string
+          days: number
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          employee_id: string
+          end_date: string
+          half: string
+          id: string
+          reason: string | null
+          start_date: string
+          status: string
+          type_id: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          days: number
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          employee_id: string
+          end_date: string
+          half?: string
+          id?: string
+          reason?: string | null
+          start_date: string
+          status?: string
+          type_id: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          days?: number
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          employee_id?: string
+          end_date?: string
+          half?: string
+          id?: string
+          reason?: string | null
+          start_date?: string
+          status?: string
+          type_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       departments: {
         Row: {
           company_id: string

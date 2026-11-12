@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useOptimistic, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Briefcase, Building2, CalendarCheck, CalendarClock, CalendarDays, ClipboardList, GitBranch, IdCard, LayoutDashboard, LogOut, Network, Moon, Repeat, ShieldCheck, LifeBuoy, KeyRound, ScrollText, Sun, Users } from "lucide-react";
+import { Briefcase, Building2, CalendarCheck, CalendarClock, CalendarDays, CalendarOff, ClipboardList, GitBranch, IdCard, LayoutDashboard, LogOut, Network, Moon, Repeat, ShieldCheck, LifeBuoy, KeyRound, ScrollText, Sun, Users } from "lucide-react";
 import { AppShell, Avatar, LanguagePicker, type NavGroup, type NavItem, type UtilityItem } from "@uplif/ui";
 import { useI18n, type Locale } from "@/lib/i18n";
 import { isLocale } from "@/lib/languages";
@@ -13,7 +13,7 @@ import { pick } from "@/lib/format";
 import { NavProgress } from "@/components/nav-progress";
 import { TitleBar } from "@/components/title-bar";
 
-const routes: Record<string, string> = { dashboard: "/dashboard", company: "/company", branches: "/branches", users: "/users", roles: "/roles", employees: "/employees", departments: "/departments", positions: "/positions", "working-time": "/working-time", attendance: "/attendance", holidays: "/holidays", policies: "/policies", audit: "/audit", support: "/support" };
+const routes: Record<string, string> = { dashboard: "/dashboard", company: "/company", branches: "/branches", users: "/users", roles: "/roles", employees: "/employees", departments: "/departments", positions: "/positions", "working-time": "/working-time", attendance: "/attendance", holidays: "/holidays", leave: "/leave", policies: "/policies", audit: "/audit", support: "/support" };
 // A section shows in the menu when the user holds any of these permissions. This only tidies the menu:
 // the database enforces access on every read and write regardless.
 const needs: Record<string, string[] | undefined> = {
@@ -27,6 +27,7 @@ const needs: Record<string, string[] | undefined> = {
   "working-time": ["attendance.schedule.read", "attendance.schedule.manage"],
   holidays: ["attendance.holiday.read", "attendance.holiday.manage"],
   attendance: ["attendance.settings.manage"],
+  leave: ["leave.request.review", "leave.type.manage"],
   policies: ["learn.policy.manage"],
   audit: ["org.audit.read"],
 };
@@ -67,6 +68,7 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userEmai
     { id: "working-time", label: t("nav.workingTime"), icon: <CalendarClock /> },
     { id: "holidays", label: t("nav.holidays"), icon: <CalendarDays /> },
     { id: "attendance", label: t("nav.attendance"), icon: <CalendarCheck /> },
+    { id: "leave", label: t("nav.leave"), icon: <CalendarOff /> },
     { id: "policies", label: t("nav.policies"), icon: <ScrollText /> },
     { id: "audit", label: t("nav.audit"), icon: <ClipboardList /> },
     { id: "support", label: pendingSupport > 0 ? `${t("nav.support")} (${pendingSupport})` : t("nav.support"), icon: <LifeBuoy /> },
@@ -76,7 +78,7 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userEmai
   const visible = nav.map((n) => routes[n.id]);
   const groupIds: [string, MessageKey, string[]][] = [
     ["workspace", "shell.group.workspace", ["dashboard", "company", "branches"]],
-    ["people", "shell.group.people", ["users", "roles", "employees", "departments", "positions", "working-time", "holidays", "attendance"]],
+    ["people", "shell.group.people", ["users", "roles", "employees", "departments", "positions", "working-time", "holidays", "attendance", "leave"]],
     ["records", "shell.group.records", ["policies", "audit", "support"]],
   ];
   const groups: NavGroup[] = groupIds.map(([id, label, ids]) => ({ id, label: t(label), items: nav.filter((n) => ids.includes(n.id)) }));
