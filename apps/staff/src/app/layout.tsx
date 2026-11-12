@@ -10,12 +10,12 @@ import { RegisterServiceWorker } from "@/components/register-sw";
 import { themeInitScript } from "@/lib/theme";
 
 export const metadata: Metadata = {
-  title: "UPLIF Staff",
-  description: "Clock in and out",
-  applicationName: "UPLIF Staff",
+  title: "UPLIF Me",
+  description: "Your attendance and working record",
+  applicationName: "UPLIF Me",
   robots: { index: false, follow: false },
   icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
-  appleWebApp: { capable: true, title: "UPLIF Staff", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "UPLIF Me", statusBarStyle: "default" },
 };
 export const viewport: Viewport = {
   themeColor: [{ media: "(prefers-color-scheme: light)", color: "#1D5FD1" }, { media: "(prefers-color-scheme: dark)", color: "#111A2B" }],
