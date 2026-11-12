@@ -180,6 +180,7 @@ export type Database = {
       }
       branches: {
         Row: {
+          timezone: string | null
           company_id: string
           created_at: string
           id: string
@@ -189,6 +190,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          timezone?: string | null
           company_id: string
           created_at?: string
           id?: string
@@ -198,6 +200,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          timezone?: string | null
           company_id?: string
           created_at?: string
           id?: string
@@ -255,18 +258,24 @@ export type Database = {
       }
       company_settings: {
         Row: {
+          timezone: string
+          work_setup_done: boolean
           attendance_selfie_retention_days: number
           company_id: string
           cross_branch_stock_visibility: boolean
           updated_at: string
         }
         Insert: {
+          timezone?: string
+          work_setup_done?: boolean
           attendance_selfie_retention_days?: number
           company_id: string
           cross_branch_stock_visibility?: boolean
           updated_at?: string
         }
         Update: {
+          timezone?: string
+          work_setup_done?: boolean
           attendance_selfie_retention_days?: number
           company_id?: string
           cross_branch_stock_visibility?: boolean
@@ -496,11 +505,63 @@ export type Database = {
         }
         Relationships: []
       }
+      work_schedules: {
+        Row: { company_id: string; created_at: string; id: string; is_active: boolean; name: string; name_local: string | null; updated_at: string }
+        Insert: { company_id: string; created_at?: string; id?: string; is_active?: boolean; name: string; name_local?: string | null; updated_at?: string }
+        Update: { company_id?: string; created_at?: string; id?: string; is_active?: boolean; name?: string; name_local?: string | null; updated_at?: string }
+        Relationships: []
+      }
+      work_schedule_versions: {
+        Row: { company_id: string; created_at: string; earliest_clock_in_min: number; grace_early_min: number; grace_late_min: number; half_day_late_min: number; id: string; overtime_after_min: number; overtime_needs_approval: boolean; schedule_id: string; updated_at: string; valid_from: string }
+        Insert: { company_id: string; created_at?: string; earliest_clock_in_min?: number; grace_early_min?: number; grace_late_min?: number; half_day_late_min?: number; id?: string; overtime_after_min?: number; overtime_needs_approval?: boolean; schedule_id: string; updated_at?: string; valid_from: string }
+        Update: { company_id?: string; created_at?: string; earliest_clock_in_min?: number; grace_early_min?: number; grace_late_min?: number; half_day_late_min?: number; id?: string; overtime_after_min?: number; overtime_needs_approval?: boolean; schedule_id?: string; updated_at?: string; valid_from?: string }
+        Relationships: []
+      }
+      work_schedule_days: {
+        Row: { break_min: number; company_id: string; day_kind: Database["public"]["Enums"]["schedule_day_kind"]; end_time: string | null; start_time: string | null; version_id: string; weekday: number }
+        Insert: { break_min?: number; company_id: string; day_kind: Database["public"]["Enums"]["schedule_day_kind"]; end_time?: string | null; start_time?: string | null; version_id: string; weekday: number }
+        Update: { break_min?: number; company_id?: string; day_kind?: Database["public"]["Enums"]["schedule_day_kind"]; end_time?: string | null; start_time?: string | null; version_id?: string; weekday?: number }
+        Relationships: []
+      }
+      work_schedule_assignments: {
+        Row: { company_id: string; created_at: string; created_by: string | null; effective_from: string; id: string; schedule_id: string | null; scope: Database["public"]["Enums"]["assignment_scope"]; target_id: string | null; updated_at: string }
+        Insert: { company_id: string; created_at?: string; created_by?: string | null; effective_from: string; id?: string; schedule_id?: string | null; scope: Database["public"]["Enums"]["assignment_scope"]; target_id?: string | null; updated_at?: string }
+        Update: { company_id?: string; created_at?: string; created_by?: string | null; effective_from?: string; id?: string; schedule_id?: string | null; scope?: Database["public"]["Enums"]["assignment_scope"]; target_id?: string | null; updated_at?: string }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      save_work_schedule: {
+        Args: { p_schedule_id: string | null; p_name: string; p_name_local: string | null; p_effective_from: string | null; p_rules: Json; p_days: Json }
+        Returns: string
+      }
+      set_work_schedule_active: {
+        Args: { p_schedule_id: string; p_active: boolean }
+        Returns: undefined
+      }
+      assign_work_schedule: {
+        Args: { p_scope: Database["public"]["Enums"]["assignment_scope"]; p_target_id: string | null; p_schedule_id: string | null; p_effective_from: string }
+        Returns: string
+      }
+      remove_work_assignment: {
+        Args: { p_assignment_id: string }
+        Returns: undefined
+      }
+      setup_working_time: {
+        Args: { p_pattern: string }
+        Returns: string
+      }
+      employee_work_days: {
+        Args: { p_employee_id: string; p_from: string; p_days?: number }
+        Returns: { day: string; day_kind: string; schedule_id: string | null; source: Database["public"]["Enums"]["assignment_scope"] | null; start_time: string | null; end_time: string | null; break_min: number | null; hours: number }[]
+      }
+      work_schedule_week_hours: {
+        Args: Record<string, never>
+        Returns: { version_id: string; hours: number }[]
+      }
       link_employee: {
         Args: { p_employee_id: string; p_membership_id: string | null }
         Returns: undefined
@@ -758,6 +819,8 @@ export type Database = {
       data_scope: "own" | "team" | "branch" | "company"
       employee_status: "active" | "on_leave" | "left"
       override_effect: "grant" | "deny"
+      schedule_day_kind: "full" | "half" | "off"
+      assignment_scope: "company" | "branch" | "department" | "employee"
       invitation_status: "pending" | "accepted" | "revoked"
       membership_status: "active" | "suspended" | "removed"
     }

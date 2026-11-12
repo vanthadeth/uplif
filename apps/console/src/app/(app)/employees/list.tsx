@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Info, Link2, Link2Off, Lock, Mail, Pencil, Plus, Search } from "lucide-react";
+import { CalendarClock, Info, Link2, Link2Off, Lock, Mail, Pencil, Plus, Search } from "lucide-react";
 import { Badge, Button, Input, Modal, Select, useToast, type BadgeTone } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
@@ -30,10 +30,12 @@ interface Props {
   canManage: boolean;
   /** Can send invitations; employees with a pending invitation are listed in pendingInvites. */
   canInvite: boolean;
+  /** Can read work schedules: each row links to the employee's Time and leave page. */
+  canSchedule: boolean;
   pendingInvites: string[];
 }
 
-export function EmployeeList({ employees, departments, positions, branches, members, companyId, canManage, canInvite, pendingInvites }: Props) {
+export function EmployeeList({ employees, departments, positions, branches, members, companyId, canManage, canInvite, canSchedule, pendingInvites }: Props) {
   const { t, locale } = useI18n();
   const toast = useToast();
   const router = useRouter();
@@ -162,11 +164,12 @@ export function EmployeeList({ employees, departments, positions, branches, memb
                   <Badge tone={tone[e.status]}>{t(statusKey[e.status])}</Badge>
                   <Badge tone={e.membership_id ? "info" : "neutral"}>{e.membership_id ? t("emp.userLinked") : t("emp.userNone")}</Badge>
                 </div>
-                {(canManage || canInvite) && (
+                {(canManage || canInvite || canSchedule) && (
                   <div className="col-span-2 mt-1.5 flex flex-wrap gap-2 md:justify-end">
                     {canInvite && !e.membership_id && e.status !== "left" && (pendingInvites.includes(e.id)
                       ? <Badge tone="info">{t("inv.invitePending")}</Badge>
                       : <Link href={`/users?invite=1&employee=${e.id}`} className="inline-flex min-h-(--control-h) flex-1 items-center justify-center gap-2 rounded-control border border-line-strong bg-surface px-4 font-semibold md:flex-none"><Mail className="size-4" aria-hidden />{t("inv.inviteBtn")}</Link>)}
+                    {canSchedule && <Link href={`/employees/${e.id}`} className="inline-flex min-h-(--control-h) flex-1 items-center justify-center gap-2 rounded-control border border-line-strong bg-surface px-4 font-semibold md:flex-none"><CalendarClock className="size-4" aria-hidden />{t("wt.emp.link")}</Link>}
                     {canManage && <>
                     <Button className="flex-1 md:flex-none" onClick={() => open(e)}><Pencil className="size-4" aria-hidden />{t("common.edit")}</Button>
                     {e.membership_id

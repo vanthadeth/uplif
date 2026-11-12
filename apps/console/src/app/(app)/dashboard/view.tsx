@@ -13,6 +13,7 @@ import { GROWTH, STARTER, TRIAL_DAYS, seatsUsed, trialDaysLeft } from "@/lib/pla
 import type { MessageKey } from "@/lib/messages";
 import type { Json } from "@/lib/supabase/database.types";
 import { planLimitKey } from "@/lib/plan-limit";
+import { WorkSetupCard } from "@/components/work-setup-card";
 
 export interface DashboardData {
   can: { members: boolean; invites: boolean; branches: boolean; roles: boolean; audit: boolean; plan: boolean; createBranch: boolean };
@@ -22,6 +23,8 @@ export interface DashboardData {
   roles: { id: string; name: string; name_local: string | null }[];
   audit: { id: string; created_at: string; membership_id: string | null; action: string; details: Json }[];
   companyCreatedAt: string | null;
+  /** The owner or admin has not answered the working time setup question yet. */
+  workSetupNeeded: boolean;
 }
 
 const fill = (s: string, v: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (m, k) => (k in v ? String(v[k]) : m));
@@ -105,6 +108,8 @@ export function DashboardView({ company, hasClaim, data }: { company: { name: st
   return (
     <div className="flex flex-col gap-5">
       <h1 className="sr-only">{t("nav.dashboard")}</h1>
+
+      {data.workSetupNeeded && <WorkSetupCard />}
 
       {showStart && (
         <Card><CardBody className="flex flex-col gap-3">

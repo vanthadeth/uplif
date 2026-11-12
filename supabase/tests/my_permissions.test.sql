@@ -37,14 +37,15 @@ select is((select count(*)::int from public.my_permissions()), (select count(*):
 select ok(not exists (select 1 from public.my_permissions() where data_scope <> 'company'), 'owner scopes are all company');
 reset role;
 
--- Staff: only branch.read, at branch scope
+-- Staff: branch.read at branch scope, plus reading their own schedule
 select set_config('request.jwt.claims', (select json_build_object('sub', 'b1000000-0000-0000-0000-000000000002', 'role', 'authenticated',
   'app_metadata', json_build_object('company_id', ctx.cid, 'membership_id', m.id))::text
   from ctx join public.memberships m on m.user_id = 'b1000000-0000-0000-0000-000000000002'), true);
 set local role authenticated;
-select is((select count(*)::int from public.my_permissions()), 1, 'staff holds one permission');
-select is((select permission_key from public.my_permissions()), 'org.branch.read', 'it is branch.read');
-select is((select data_scope::text from public.my_permissions()), 'branch', 'at branch scope');
+select is((select count(*)::int from public.my_permissions()), 2, 'staff holds two permissions');
+select is((select string_agg(permission_key, ',' order by permission_key) from public.my_permissions()), 'attendance.schedule.read,org.branch.read', 'branch.read and schedule.read');
+select is((select data_scope::text from public.my_permissions() where permission_key = 'org.branch.read'), 'branch', 'branch.read is at branch scope');
+select is((select data_scope::text from public.my_permissions() where permission_key = 'attendance.schedule.read'), 'own', 'schedule.read is own');
 reset role;
 
 -- A user cannot claim someone else's membership
