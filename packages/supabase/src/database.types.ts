@@ -438,6 +438,18 @@ export type Database = {
           status: string
         }[]
       }
+      my_sign_in_methods: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      start_telegram_link: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      unlink_telegram: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       my_account_lock: {
         Args: Record<PropertyKey, never>
         Returns: {

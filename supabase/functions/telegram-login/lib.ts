@@ -18,6 +18,10 @@ export function randomToken(bytes = 32): string {
   return b64urlEncode(crypto.getRandomValues(new Uint8Array(bytes)));
 }
 
+export async function sha256Hex(text: string): Promise<string> {
+  return [...new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(text)))].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export async function pkceChallenge(verifier: string): Promise<string> {
   return b64urlEncode(new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(verifier))));
 }
