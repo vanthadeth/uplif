@@ -523,6 +523,114 @@ export type Database = {
         Update: { break_min?: number; company_id?: string; day_kind?: Database["public"]["Enums"]["schedule_day_kind"]; end_time?: string | null; start_time?: string | null; version_id?: string; weekday?: number }
         Relationships: []
       }
+      company_holidays: {
+        Row: {
+          branch_id: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          holiday_date: string
+          id: string
+          name: string
+          name_local: string | null
+          observed_date: string | null
+          provisional: boolean
+          repeats_yearly: boolean
+          source: "manual" | "preset"
+          updated_at: string
+        }
+        Insert: {
+          branch_id?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          holiday_date?: string
+          id?: string
+          name?: string
+          name_local?: string | null
+          observed_date?: string | null
+          provisional?: boolean
+          repeats_yearly?: boolean
+          source?: "manual" | "preset"
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          holiday_date?: string
+          id?: string
+          name?: string
+          name_local?: string | null
+          observed_date?: string | null
+          provisional?: boolean
+          repeats_yearly?: boolean
+          source?: "manual" | "preset"
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      company_holiday_imports: {
+        Row: {
+          added_count: number
+          company_id: string
+          decided_at: string
+          decided_by: string | null
+          status: "imported" | "dismissed"
+          year: number
+        }
+        Insert: {
+          added_count?: number
+          company_id?: string
+          decided_at?: string
+          decided_by?: string | null
+          status?: "imported" | "dismissed"
+          year?: number
+        }
+        Update: {
+          added_count?: number
+          company_id?: string
+          decided_at?: string
+          decided_by?: string | null
+          status?: "imported" | "dismissed"
+          year?: number
+        }
+        Relationships: []
+      }
+      holiday_presets: {
+        Row: {
+          country_code: string
+          fetched_at: string
+          holiday_date: string
+          id: string
+          name: string
+          name_local: string | null
+          provisional: boolean
+          source: "nager" | "manual"
+        }
+        Insert: {
+          country_code?: string
+          fetched_at?: string
+          holiday_date?: string
+          id?: string
+          name?: string
+          name_local?: string | null
+          provisional?: boolean
+          source?: "nager" | "manual"
+        }
+        Update: {
+          country_code?: string
+          fetched_at?: string
+          holiday_date?: string
+          id?: string
+          name?: string
+          name_local?: string | null
+          provisional?: boolean
+          source?: "nager" | "manual"
+        }
+        Relationships: []
+      }
       work_schedule_assignments: {
         Row: { company_id: string; created_at: string; created_by: string | null; effective_from: string; id: string; schedule_id: string | null; scope: Database["public"]["Enums"]["assignment_scope"]; target_id: string | null; updated_at: string }
         Insert: { company_id: string; created_at?: string; created_by?: string | null; effective_from: string; id?: string; schedule_id?: string | null; scope: Database["public"]["Enums"]["assignment_scope"]; target_id?: string | null; updated_at?: string }
@@ -556,7 +664,27 @@ export type Database = {
       }
       employee_work_days: {
         Args: { p_employee_id: string; p_from: string; p_days?: number }
-        Returns: { day: string; day_kind: string; schedule_id: string | null; source: Database["public"]["Enums"]["assignment_scope"] | null; start_time: string | null; end_time: string | null; break_min: number | null; hours: number }[]
+        Returns: { day: string; day_kind: string; schedule_id: string | null; source: Database["public"]["Enums"]["assignment_scope"] | null; start_time: string | null; end_time: string | null; break_min: number | null; hours: number; holiday_name: string | null; holiday_name_local: string | null }[]
+      }
+      save_company_holiday: {
+        Args: { p_id: string | null; p_name: string; p_name_local: string | null; p_date: string; p_repeats_yearly: boolean; p_observed_date: string | null; p_branch_id: string | null }
+        Returns: string
+      }
+      delete_company_holiday: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      import_holiday_presets: {
+        Args: { p_year: number }
+        Returns: number
+      }
+      dismiss_holiday_notice: {
+        Args: { p_year: number }
+        Returns: undefined
+      }
+      holiday_notice: {
+        Args: Record<string, never>
+        Returns: { year: number; holiday_count: number; provisional: boolean }[]
       }
       work_schedule_week_hours: {
         Args: Record<string, never>
@@ -736,6 +864,8 @@ export type Database = {
       request_plan: { Args: { p_plan: string; p_cycle: string }; Returns: undefined }
       platform_extend_trial: { Args: { p_owner: string; p_days: number }; Returns: undefined }
       platform_run_billing: { Args: Record<PropertyKey, never>; Returns: Json }
+      platform_holiday_overview: { Args: Record<PropertyKey, never>; Returns: Json }
+      platform_ack_holiday_alert: { Args: { p_country: string; p_year: number }; Returns: undefined }
       platform_issue_invoice: { Args: { p_due_days?: number; p_owner: string }; Returns: string }
       platform_mark_invoice_paid: {
         Args: { p_id: string; p_method: string; p_paid_on?: string | null; p_ref?: string | null }

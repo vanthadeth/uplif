@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useOptimistic, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, History, LayoutDashboard, LifeBuoy, KeyRound, LogOut, Moon, Package, Receipt, Sun } from "lucide-react";
+import { Building2, CalendarDays, History, LayoutDashboard, LifeBuoy, KeyRound, LogOut, Moon, Package, Receipt, Sun } from "lucide-react";
 import { AppShell, Avatar, NavProgress, TitleBar, useTheme, type NavGroup, type NavItem, type UtilityItem } from "@uplif/ui";
 import { createClient } from "@uplif/supabase/client";
 
@@ -11,6 +11,7 @@ const items: (NavItem & { href: string; group: "platform" | "safety" })[] = [
   { id: "subscribers", label: "Subscribers", icon: <Building2 />, href: "/subscribers", group: "platform" },
   { id: "plans", label: "Plans", icon: <Package />, href: "/plans", group: "platform" },
   { id: "billing", label: "Billing", icon: <Receipt />, href: "/billing", group: "platform" },
+  { id: "holidays", label: "Holidays", icon: <CalendarDays />, href: "/holidays", group: "platform" },
   { id: "support", label: "Support access", icon: <LifeBuoy />, href: "/support", group: "safety" },
   { id: "activity", label: "Admin activity", icon: <History />, href: "/activity", group: "safety" },
 ];

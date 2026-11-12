@@ -14,6 +14,7 @@ import type { MessageKey } from "@/lib/messages";
 import type { Json } from "@/lib/supabase/database.types";
 import { planLimitKey } from "@/lib/plan-limit";
 import { WorkSetupCard } from "@/components/work-setup-card";
+import { HolidayNotice, type HolidayNotice as Notice } from "@/components/holiday-notice-card";
 
 export interface DashboardData {
   can: { members: boolean; invites: boolean; branches: boolean; roles: boolean; audit: boolean; plan: boolean; createBranch: boolean };
@@ -25,6 +26,8 @@ export interface DashboardData {
   companyCreatedAt: string | null;
   /** The owner or admin has not answered the working time setup question yet. */
   workSetupNeeded: boolean;
+  /** Next year's public holidays are ready to import (owner and admin only). */
+  holidayNotice: Notice | null;
 }
 
 const fill = (s: string, v: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (m, k) => (k in v ? String(v[k]) : m));
@@ -110,6 +113,7 @@ export function DashboardView({ company, hasClaim, data }: { company: { name: st
       <h1 className="sr-only">{t("nav.dashboard")}</h1>
 
       {data.workSetupNeeded && <WorkSetupCard />}
+      {data.holidayNotice && <HolidayNotice notice={data.holidayNotice} variant="card" />}
 
       {showStart && (
         <Card><CardBody className="flex flex-col gap-3">
