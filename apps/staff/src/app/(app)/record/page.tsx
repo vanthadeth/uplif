@@ -9,7 +9,6 @@ import type { MessageKey } from "@/lib/messages";
 const soon: { icon: typeof Award; key: MessageKey }[] = [
   { icon: BriefcaseBusiness, key: "st.record.jd" },
   { icon: TrendingUp, key: "st.record.perf" },
-  { icon: Award, key: "st.record.ach" },
   { icon: TriangleAlert, key: "st.record.warn" },
   { icon: CalendarDays, key: "st.record.leave" },
 ];
@@ -30,6 +29,11 @@ export default function RecordPage() {
         <Link href="/record/attendance" className="flex items-center gap-3 p-4 hover:bg-ground">
           <span className="grid size-9 shrink-0 place-items-center rounded-control bg-success-soft text-success-ink"><Clock className="size-4" aria-hidden /></span>
           <span className="min-w-0 flex-1"><b className="block">{t("st.record.attendance")}</b><span className="text-sm text-muted">{t("st.record.attendance.sub")}</span></span>
+          <ChevronRight className="size-5 text-muted rtl:rotate-180" aria-hidden />
+        </Link>
+        <Link href="/record/achievements" className="flex items-center gap-3 p-4 hover:bg-ground">
+          <span className="grid size-9 shrink-0 place-items-center rounded-control bg-success-soft text-success-ink"><Award className="size-4" aria-hidden /></span>
+          <span className="min-w-0 flex-1"><b className="block">{t("st.record.ach")}</b><span className="text-sm text-muted">{t("st.record.ach.sub")}</span></span>
           <ChevronRight className="size-5 text-muted rtl:rotate-180" aria-hidden />
         </Link>
         {soon.map(({ icon: Icon, key }) => (
