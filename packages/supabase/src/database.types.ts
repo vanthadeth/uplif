@@ -438,6 +438,7 @@ export type Database = {
           status: string
         }[]
       }
+      platform_run_billing: { Args: Record<PropertyKey, never>; Returns: Json }
       platform_issue_invoice: { Args: { p_due_days?: number; p_owner: string }; Returns: string }
       platform_mark_invoice_paid: {
         Args: { p_id: string; p_method: string; p_paid_on?: string | null; p_ref?: string | null }

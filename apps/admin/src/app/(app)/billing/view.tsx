@@ -1,8 +1,10 @@
 "use client";
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { Badge, Button, Card, EmptyState, ErrorState, SidePanel } from "@uplif/ui";
+import { Badge, Button, Card, EmptyState, ErrorState, SidePanel, useToast } from "@uplif/ui";
+import { createClient } from "@uplif/supabase/client";
 import { INVOICE_STATUS, methodLabel, money, type InvoiceStatus } from "@/lib/money";
 import { fmtDay } from "@/components/bits";
 import { PayModal, VoidModal } from "@/components/invoice-actions";
@@ -13,6 +15,9 @@ const month = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString("en-G
 const st = (i: Invoice) => INVOICE_STATUS[i.status as InvoiceStatus] ?? INVOICE_STATUS.open;
 
 export function BillingView({ invoices, failed }: { invoices: Invoice[]; failed: boolean }) {
+  const router = useRouter();
+  const toast = useToast();
+  const [running, setRunning] = useState(false);
   const [filter, setFilter] = useState<"all" | InvoiceStatus>("all");
   const [openId, setOpenId] = useState<string | null>(null);
   const [paying, setPaying] = useState<Invoice | null>(null);
@@ -43,13 +48,25 @@ export function BillingView({ invoices, failed }: { invoices: Invoice[]; failed:
     return g;
   }, [shown]);
   const open = invoices.find((i) => i.id === openId) ?? null;
+  async function runBilling() {
+    setRunning(true);
+    const { data, error } = await createClient().rpc("platform_run_billing");
+    setRunning(false);
+    if (error) return toast("error", "Could not run billing. Reload and try again.");
+    const r = data as { issued: number; failed: number; past_due: number };
+    toast(r.failed ? "error" : "success", `Issued ${r.issued} invoice${r.issued === 1 ? "" : "s"}, marked ${r.past_due} past due${r.failed ? `, ${r.failed} could not be issued (see Admin activity)` : ""}.`);
+    router.refresh();
+  }
   const canAct = (i: Invoice) => i.status === "open" || i.status === "overdue";
 
   return (
     <div className="mx-auto flex w-full max-w-(--content-max) flex-col gap-4">
-      <div>
-        <h1 className="text-2xl font-bold">Billing</h1>
-        <p className="text-muted">Subscription invoices for every account. Payments are recorded by hand for now. Issue an invoice from the subscriber&apos;s page.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Billing</h1>
+          <p className="text-muted">Subscription invoices for every account. New invoices go out by themselves every day at 8:00 (Cambodia time) when an account&apos;s billing date has come. Payments are recorded by hand.</p>
+        </div>
+        <Button loading={running} onClick={runBilling}>Run billing now</Button>
       </div>
       {failed ? <ErrorState title="Invoices could not be loaded" body="Check that the database migrations are applied, then reload." /> : (
         <>
