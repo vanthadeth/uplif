@@ -187,6 +187,105 @@ export type Database = {
         }
         Relationships: []
       }
+      kpis: {
+        Row: {
+          id: string
+          company_id: string
+          position_id: string
+          name: string
+          name_local: string | null
+          weight: number
+          active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id?: string
+          position_id?: string
+          name?: string
+          name_local?: string | null
+          weight?: number
+          active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          position_id?: string
+          name?: string
+          name_local?: string | null
+          weight?: number
+          active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      performance_reviews: {
+        Row: {
+          id: string
+          company_id: string
+          employee_id: string
+          period: string
+          overall_percent: number
+          comment: string | null
+          reviewed_by: string | null
+          reviewed_at: string
+        }
+        Insert: {
+          id?: string
+          company_id?: string
+          employee_id?: string
+          period?: string
+          overall_percent?: number
+          comment?: string | null
+          reviewed_by?: string | null
+          reviewed_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          employee_id?: string
+          period?: string
+          overall_percent?: number
+          comment?: string | null
+          reviewed_by?: string | null
+          reviewed_at?: string
+        }
+        Relationships: []
+      }
+      performance_scores: {
+        Row: {
+          company_id: string
+          review_id: string
+          position: number
+          kpi_name: string
+          kpi_name_local: string | null
+          weight: number
+          score: number
+        }
+        Insert: {
+          company_id?: string
+          review_id?: string
+          position?: number
+          kpi_name?: string
+          kpi_name_local?: string | null
+          weight?: number
+          score?: number
+        }
+        Update: {
+          company_id?: string
+          review_id?: string
+          position?: number
+          kpi_name?: string
+          kpi_name_local?: string | null
+          weight?: number
+          score?: number
+        }
+        Relationships: []
+      }
       leave_requests: {
         Row: {
           company_id: string
@@ -1065,6 +1164,30 @@ export type Database = {
       learn_results: {
         Args: { p_test_id?: string | null }
         Returns: { attempt_id: string; employee_id: string; name: string; name_local: string | null; test_id: string; title: string; score_percent: number; passed: boolean; is_retake: boolean; failed_retake: boolean; taken_at: string }[]
+      }
+      save_kpi: {
+        Args: { p_id: string | null; p_position_id: string; p_name: string; p_name_local: string | null; p_weight: number; p_active: boolean }
+        Returns: string
+      }
+      performance_review_list: {
+        Args: { p_period: string }
+        Returns: { employee_id: string; name: string; name_local: string | null; position_name: string | null; position_name_local: string | null; kpi_count: number; overall_percent: number | null; reviewed_at: string | null }[]
+      }
+      performance_review_form: {
+        Args: { p_employee_id: string; p_period: string }
+        Returns: { kpi_id: string; name: string; name_local: string | null; weight: number; score: number | null; comment: string | null }[]
+      }
+      submit_performance_review: {
+        Args: { p_employee_id: string; p_period: string; p_scores: unknown; p_comment: string | null }
+        Returns: number
+      }
+      my_kpis: {
+        Args: Record<string, never>
+        Returns: { name: string; name_local: string | null; weight: number; last_score: number | null; last_period: string | null }[]
+      }
+      my_reviews: {
+        Args: Record<string, never>
+        Returns: { period: string; overall_percent: number; comment: string | null; reviewed_at: string }[]
       }
       my_policies: {
         Args: Record<string, never>
