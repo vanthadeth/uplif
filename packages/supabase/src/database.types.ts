@@ -745,6 +745,28 @@ export type Database = {
           last?: { kind: Database["public"]["Enums"]["attendance_kind"]; occurred_at: string; flags: string[] } | null
         }
       }
+      request_leave: {
+        Args: { p_type_id: string; p_start: string; p_end: string; p_half: string; p_reason: string | null }
+        Returns: string
+      }
+      cancel_leave: { Args: { p_id: string }; Returns: undefined }
+      my_leave: {
+        Args: Record<string, never>
+        Returns: {
+          year: number
+          types: { id: string; code: string; name: string; name_local: string | null; paid: boolean; annual_days: number | null; used: number; pending: number }[]
+          requests: { id: string; type_id: string; code: string; name: string; name_local: string | null; start_date: string; end_date: string; half: "full" | "start" | "end"; days: number; reason: string | null; status: "pending" | "approved" | "rejected" | "cancelled"; decision_note: string | null; created_at: string }[]
+        }
+      }
+      leave_review_list: {
+        Args: { p_status?: string }
+        Returns: { id: string; employee_id: string; employee_name: string; employee_name_local: string | null; type_code: string; type_name: string; type_name_local: string | null; start_date: string; end_date: string; half: string; days: number; reason: string | null; status: string; decision_note: string | null; created_at: string }[]
+      }
+      decide_leave: { Args: { p_id: string; p_approve: boolean; p_note: string | null }; Returns: undefined }
+      save_leave_type: {
+        Args: { p_id: string | null; p_code: string; p_name: string; p_name_local: string | null; p_paid: boolean; p_annual_days: number | null; p_active: boolean }
+        Returns: string
+      }
       my_profile: {
         Args: Record<string, never>
         Returns: {
