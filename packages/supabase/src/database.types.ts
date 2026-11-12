@@ -438,6 +438,34 @@ export type Database = {
           status: string
         }[]
       }
+      my_account_lock: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          locked: boolean
+          reason: string | null
+          is_owner: boolean
+          status: string
+          trial_ends_at: string | null
+          requested_plan: string | null
+          requested_cycle: string | null
+          requested_at: string | null
+        }[]
+      }
+      list_available_plans: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string
+          price_month_cents: number | null
+          price_year_cents: number
+          max_companies: number
+          max_branches: number | null
+          max_users: number
+          modules: string[]
+        }[]
+      }
+      request_plan: { Args: { p_plan: string; p_cycle: string }; Returns: undefined }
+      platform_extend_trial: { Args: { p_owner: string; p_days: number }; Returns: undefined }
       platform_run_billing: { Args: Record<PropertyKey, never>; Returns: Json }
       platform_issue_invoice: { Args: { p_due_days?: number; p_owner: string }; Returns: string }
       platform_mark_invoice_paid: {
