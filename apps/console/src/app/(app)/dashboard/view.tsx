@@ -65,14 +65,12 @@ export function DashboardView({ company, hasClaim, data }: { company: { name: st
     toast("success", t("invite.revoked"));
     router.refresh();
   }
-  // Links are shown once and stored hashed, so "send again" makes a fresh link and cancels the old one.
+  // Links are shown once and stored hashed, so "get new link" cancels the old invitation and makes a fresh one with the same access.
   async function resend(i: DashboardData["invitations"][number]) {
     setBusy(i.id);
-    const supabase = createClient();
-    const made = await supabase.rpc("create_invitation", { p_role_id: i.role_id, p_branch_id: i.branch_id, p_label: i.label ?? "" });
-    if (made.error) { setBusy(""); return toast("error", planLimitKey(made.error) ? t(planLimitKey(made.error)!) : made.error.code === "42501" ? t("common.forbidden") : t("common.saveError")); }
-    await supabase.rpc("revoke_invitation", { p_id: i.id });
+    const made = await createClient().rpc("replace_invite", { p_id: i.id, p_days: 7 });
     setBusy("");
+    if (made.error) return toast("error", planLimitKey(made.error) ? t(planLimitKey(made.error)!) : made.error.code === "42501" ? t("common.forbidden") : t("common.saveError"));
     setLink(`${location.origin}/invite/${(made.data as { token: string }).token}`);
     router.refresh();
   }

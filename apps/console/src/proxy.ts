@@ -20,9 +20,9 @@ export async function proxy(request: NextRequest) {
     },
   });
   const { data } = await supabase.auth.getClaims();
-  // Signed-out visitors may only see the sign-in flow the design pages and the translation page.
+  // Signed-out visitors may only see the sign-in flow, an invitation link (it explains who it is for before they sign in), the design pages and the translation page.
   const { pathname } = request.nextUrl;
-  const open = ["/login", "/auth", "/gallery", "/shell", "/i18n"].some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  const open = ["/login", "/auth", "/invite", "/gallery", "/shell", "/i18n"].some((p) => pathname === p || pathname.startsWith(`${p}/`));
   if (!data?.claims && !open) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";

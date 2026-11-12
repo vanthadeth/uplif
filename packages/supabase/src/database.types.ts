@@ -308,10 +308,14 @@ export type Database = {
           company_id: string
           created_at: string
           created_by: string
+          employee_record_id: string | null
           expires_at: string
           id: string
           label: string | null
+          note: string | null
+          overrides: Json
           role_id: string
+          roles: Json
           status: Database["public"]["Enums"]["invitation_status"]
         }
         Insert: never
@@ -513,17 +517,32 @@ export type Database = {
         Args: { p_token: string }
         Returns: Json
       }
-      create_invitation: {
-        Args: { p_branch_id: string | null; p_label: string; p_role_id: string }
+      create_invite: {
+        Args: { p_days?: number; p_employee_id: string; p_note?: string | null; p_overrides?: Json; p_roles: Json }
+        Returns: Json
+      }
+      replace_invite: {
+        Args: { p_days?: number; p_id: string }
+        Returns: Json
+      }
+      invite_seats: {
+        Args: Record<PropertyKey, never>
         Returns: Json
       }
       preview_invitation: {
         Args: { p_token: string }
         Returns: {
+          state: string
           company_name: string
           company_name_local: string | null
-          expires_at: string
-          role_name: string
+          employee_name: string | null
+          employee_name_local: string | null
+          position_name: string | null
+          position_name_local: string | null
+          access: Json | null
+          invited_by: string | null
+          note: string | null
+          expires_at: string | null
         }[]
       }
       revoke_invitation: {

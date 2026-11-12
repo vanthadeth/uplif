@@ -33,6 +33,14 @@ create temp table ctx as
          (select id from public.roles r where r.company_id = (select id from public.companies where name = 'Limit Co') and r.name = 'Manager') as role_id;
 grant select on ctx to authenticated;
 
+-- Invitations need an employee record: this makes one and invites it.
+create function pg_temp.inv(p_role uuid, p_name text) returns jsonb language plpgsql as $f$
+declare eid uuid;
+begin
+  insert into public.employees (company_id, name) values (app.company_id(), p_name) returning id into eid;
+  return public.create_invite(eid, jsonb_build_array(jsonb_build_object('role_id', p_role)));
+end $f$;
+
 select pg_temp.claims('f7000000-0000-0000-0000-000000000001');
 set local role authenticated;
 select throws_ok($$select public.create_company('Second Co', null, 'KH', 'KHR', 'Main')$$, 'P0001', 'plan limit: companies', 'Lite cannot own a second company');
@@ -45,13 +53,13 @@ select lives_ok($$insert into public.branches (company_id, name) values ((select
 select throws_ok($$insert into public.branches (company_id, name) values ((select cid from ctx), 'B4')$$, 'P0001', 'plan limit: branches', 'a fourth branch is refused on Lite');
 
 -- users: owner is 1 of 5; four invitations fill the plan
-select lives_ok($$select public.create_invitation((select role_id from ctx), null, 'i1')$$, 'invitation 1');
-select lives_ok($$select public.create_invitation((select role_id from ctx), null, 'i2')$$, 'invitation 2');
-select lives_ok($$select public.create_invitation((select role_id from ctx), null, 'i3')$$, 'invitation 3');
-select set_config('test.tok4', (public.create_invitation((select role_id from ctx), null, 'i4')) ->> 'token', true);
-select throws_ok($$select public.create_invitation((select role_id from ctx), null, 'i5')$$, 'P0001', 'plan limit: users', 'the fifth seat is refused');
+select lives_ok($$select pg_temp.inv((select role_id from ctx), 'i1')$$, 'invitation 1');
+select lives_ok($$select pg_temp.inv((select role_id from ctx), 'i2')$$, 'invitation 2');
+select lives_ok($$select pg_temp.inv((select role_id from ctx), 'i3')$$, 'invitation 3');
+select set_config('test.tok4', (pg_temp.inv((select role_id from ctx), 'i4')) ->> 'token', true);
+select throws_ok($$select pg_temp.inv((select role_id from ctx), 'i5')$$, 'P0001', 'plan limit: users', 'the fifth seat is refused');
 select lives_ok($$select public.revoke_invitation((select id from public.invitations where label = 'i3'))$$, 'revoking an invitation frees its seat');
-select lives_ok($$select public.create_invitation((select role_id from ctx), null, 'i3b')$$, 'the freed seat can be used again');
+select lives_ok($$select pg_temp.inv((select role_id from ctx), 'i3b')$$, 'the freed seat can be used again');
 reset role;
 
 -- accepting uses the seat the invitation reserved, even when the plan is full
@@ -65,7 +73,7 @@ select is((select count(*)::int from public.memberships where company_id = (sele
 select pg_temp.member_claims('f7000000-0000-0000-0000-000000000001', (select cid from ctx), (select mid from ctx));
 set local role authenticated;
 select lives_ok($$update public.memberships set status = 'suspended' where user_id = 'f7000000-0000-0000-0000-000000000002'$$, 'suspend the joiner');
-select lives_ok($$select public.create_invitation((select role_id from ctx), null, 'i6')$$, 'the suspended seat is free for a new invitation');
+select lives_ok($$select pg_temp.inv((select role_id from ctx), 'i6')$$, 'the suspended seat is free for a new invitation');
 select throws_ok($$update public.memberships set status = 'active' where user_id = 'f7000000-0000-0000-0000-000000000002'$$, 'P0001', 'plan limit: users', 'reactivating needs a free seat');
 reset role;
 
