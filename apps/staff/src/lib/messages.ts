@@ -1,7 +1,8 @@
+import { enMe, kmMe } from "./messages-me";
 // English is the source. Khmer strings are drafts pending review by the Khmer reviewer (the same keys are seeded
 // into the translation tables by migration 37, so reviewers see them at /i18n in the console).
 export const en = {
-  "st.app": "UPLIF Staff",
+  "st.app": "UPLIF Me",
   "st.signIn.title": "Sign in to clock in",
   "st.signIn.body": "Use the account your company invited you with.",
   "st.signIn.google": "Continue with Google",
@@ -63,12 +64,13 @@ export const en = {
   "st.privacy.body": "When you clock in or out, the app saves one selfie and your location at that moment. It does not track you at other times. Your manager can review them. Selfies are deleted after the time your company sets.",
   "st.privacy.ok": "I understand",
   "st.offline": "You are offline. Connect to the internet to clock in.",
+  ...enMe,
 } as const;
 
 export type MessageKey = keyof typeof en;
 
 export const km: Partial<Record<MessageKey, string>> = {
-  "st.app": "UPLIF បុគ្គលិក",
+  "st.app": "UPLIF ខ្ញុំ",
   "st.signIn.title": "ចូលគណនីដើម្បីកត់ម៉ោងចូលធ្វើការ",
   "st.signIn.body": "ប្រើគណនីដែលក្រុមហ៊ុនរបស់អ្នកបានអញ្ជើញ។",
   "st.signIn.google": "បន្តជាមួយ Google",
@@ -130,6 +132,7 @@ export const km: Partial<Record<MessageKey, string>> = {
   "st.privacy.body": "ពេលអ្នកចូល ឬចេញពីការងារ កម្មវិធីរក្សាទុករូបសែលហ្វីមួយ និងទីតាំងរបស់អ្នកនៅពេលនោះ។ វាមិនតាមដានអ្នកនៅពេលផ្សេងទេ។ អ្នកគ្រប់គ្រងអាចពិនិត្យបាន។ រូបសែលហ្វីត្រូវបានលុបបន្ទាប់ពីរយៈពេលដែលក្រុមហ៊ុនកំណត់។",
   "st.privacy.ok": "ខ្ញុំយល់ហើយ",
   "st.offline": "អ្នកគ្មានអ៊ីនធឺណិត។ សូមភ្ជាប់អ៊ីនធឺណិតដើម្បីកត់ម៉ោង។",
+  ...kmMe,
 };
 export const dictionaries: Partial<Record<string, Partial<Record<MessageKey, string>>>> = { km };
 
