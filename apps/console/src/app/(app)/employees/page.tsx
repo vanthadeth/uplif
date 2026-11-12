@@ -27,6 +27,7 @@ export default async function EmployeesPage() {
       companyId={companyId ?? ""}
       canManage={can("org.employee.manage")}
       canInvite={canInvite}
+      canSchedule={can("attendance.schedule.read")}
       pendingInvites={(invites.data ?? []).map((i) => i.employee_record_id).filter((x): x is string => !!x)}
     />
   );
