@@ -8,6 +8,7 @@ import { fill, type MessageKey } from "@/lib/messages";
 import { useFormat } from "@/lib/use-format";
 import { addDays, startOfDay, workedMinutes, ymd, type EventLite } from "@/lib/format";
 import { useMe } from "./me-context";
+import { Amendments } from "./amendments";
 import type { MyLeave } from "@/lib/leave";
 
 interface DayResult { day: string; status: string; late_min: number; early_min: number; overtime_min: number }
@@ -208,6 +209,8 @@ export function AttendanceView() {
           {flags.length > 0 && <ul className="list-disc ps-5 text-sm">{flags.map((f) => <li key={f}>{FLAG_KEYS[f] ? t(FLAG_KEYS[f]) : f}</li>)}</ul>}
         </Card>
       )}
+
+      <Amendments date={sel} />
 
       <section className="flex flex-col gap-2">
         <h2 className="px-1 text-sm font-semibold text-muted">{fill(t("st.mon.holidays"), { month: first.toLocaleDateString(tag, { month: "long" }) })}</h2>
