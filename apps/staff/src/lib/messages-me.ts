@@ -162,6 +162,17 @@ export const enMe = {
   "st.record.tile.onTime": "On time this month",
   "st.record.tile.earned": "Earned so far",
   "st.record.more": "More",
+  "st.locate.title": "Finding your location",
+  "st.locate.none": "Waiting for a signal",
+  "st.locate.acc": "Accuracy ±{m} m",
+  "st.locate.waiting": "Waiting for {m} m or better",
+  "st.locate.countdown": "{s} s left",
+  "st.locate.progress": "Location accuracy progress",
+  "st.locate.weak.title": "Weak GPS signal",
+  "st.locate.weak.body": "You can still clock in. Your manager may review this clock.",
+  "st.locate.denied.body": "Location is off or blocked. You can still clock in. Your manager may review this clock.",
+  "st.locate.continue": "Continue to selfie",
+  "st.locate.retry": "Try again",
 } as const;
 
 export const kmMe: Partial<Record<keyof typeof enMe, string>> = {
@@ -326,4 +337,15 @@ export const kmMe: Partial<Record<keyof typeof enMe, string>> = {
   "st.record.tile.onTime": "ទាន់ម៉ោងក្នុងខែនេះ",
   "st.record.tile.earned": "ទទួលបានរហូតមកដល់ពេលនេះ",
   "st.record.more": "ផ្សេងទៀត",
+  "st.locate.title": "កំពុងស្វែងរកទីតាំងរបស់អ្នក",
+  "st.locate.none": "កំពុងរង់ចាំសញ្ញា",
+  "st.locate.acc": "ភាពត្រឹមត្រូវ ±{m} ម៉ែត្រ",
+  "st.locate.waiting": "កំពុងរង់ចាំ {m} ម៉ែត្រ ឬល្អជាងនេះ",
+  "st.locate.countdown": "នៅសល់ {s} វិនាទី",
+  "st.locate.progress": "វឌ្ឍនភាពនៃភាពត្រឹមត្រូវនៃទីតាំង",
+  "st.locate.weak.title": "សញ្ញា GPS ខ្សោយ",
+  "st.locate.weak.body": "អ្នកនៅតែអាចកត់ម៉ោងបាន។ អ្នកគ្រប់គ្រងរបស់អ្នកអាចពិនិត្យការកត់ម៉ោងនេះ។",
+  "st.locate.denied.body": "ទីតាំងត្រូវបានបិទ ឬរារាំង។ អ្នកនៅតែអាចកត់ម៉ោងបាន។ អ្នកគ្រប់គ្រងរបស់អ្នកអាចពិនិត្យការកត់ម៉ោងនេះ។",
+  "st.locate.continue": "បន្តទៅថតសែលហ្វី",
+  "st.locate.retry": "ព្យាយាមម្តងទៀត",
 };
