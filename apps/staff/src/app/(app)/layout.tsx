@@ -1,5 +1,6 @@
 import { getMyProfile, getMyState } from "@/lib/my-state";
 import { MeProvider } from "@/components/me-context";
+import { PictureProvider } from "@/components/picture-context";
 import { NoAccess } from "@/components/no-access";
 import { AppBar } from "@/components/app-bar";
 import { TabBar } from "@/components/tab-bar";
@@ -13,8 +14,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!state.module) return <NoAccess kind="module" />;
   return (
     <MeProvider state={state} profile={profile}>
-      <div className="mx-auto min-h-dvh max-w-md pb-[calc(5rem+env(safe-area-inset-bottom))]"><AppBar />{children}</div>
-      <TabBar />
+      <PictureProvider>
+        <div className="mx-auto min-h-dvh max-w-md pb-[calc(5rem+env(safe-area-inset-bottom))]"><AppBar />{children}</div>
+        <TabBar />
+      </PictureProvider>
     </MeProvider>
   );
 }

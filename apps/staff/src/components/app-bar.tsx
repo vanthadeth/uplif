@@ -7,6 +7,7 @@ import { useI18n } from "@/lib/i18n";
 import { useAppearance, type Appearance } from "@/lib/appearance";
 import { createClient } from "@/lib/supabase/client";
 import { LanguageBar } from "@/components/language-bar";
+import { usePicture } from "@/components/picture-context";
 import { localName, useDisplay, useMe, useProfile } from "@/components/me-context";
 
 const modes = [
@@ -21,6 +22,7 @@ export function AppBar() {
   const state = useMe();
   const profile = useProfile();
   const { name } = useDisplay(state, locale);
+  const picture = usePicture();
   const { appearance, setAppearance } = useAppearance();
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -51,13 +53,13 @@ export function AppBar() {
       <div ref={root} className="relative">
         <button ref={btn} type="button" aria-label={t("st.bar.account")} aria-haspopup="true" aria-expanded={open} onClick={() => setOpen(!open)}
           className="grid size-12 place-items-center rounded-full">
-          <Avatar name={name || "?"} size="md" />
+          <Avatar name={name || "?"} src={picture.src} size="md" />
         </button>
         {open && (
           <div role="group" aria-label={t("st.bar.account")}
             className="absolute end-0 top-full z-30 mt-1 w-[min(21rem,calc(100vw-1rem))] origin-top-right animate-[uplif-in_0.15s_ease-out] overflow-hidden rounded-card border border-line bg-surface shadow-pop">
             <div className="flex items-center gap-3 p-4">
-              <Avatar name={name || "?"} size="lg" />
+              <Avatar name={name || "?"} src={picture.src} size="lg" />
               <div className="min-w-0"><b className="block truncate">{name}</b><span className="block truncate text-sm text-muted">{role}</span></div>
             </div>
             <div className="flex min-h-15 items-center justify-between gap-3 border-t border-line px-4 py-2">

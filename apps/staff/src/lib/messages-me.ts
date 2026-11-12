@@ -255,6 +255,11 @@ export const enMe = {
   "st.perf.weight": "Weight {n}",
   "st.perf.notScored": "Not scored yet",
   "st.perf.history": "Earlier reviews",
+  "st.photo.change": "Change photo",
+  "st.photo.remove": "Remove photo",
+  "st.photo.saved": "Photo saved.",
+  "st.photo.removed": "Photo removed.",
+  "st.photo.error": "Could not save the photo. Try a different picture.",
 } as const;
 
 export const kmMe: Partial<Record<keyof typeof enMe, string>> = {
@@ -512,4 +517,9 @@ export const kmMe: Partial<Record<keyof typeof enMe, string>> = {
   "st.perf.weight": "ទម្ងន់ {n}",
   "st.perf.notScored": "មិនទាន់ដាក់ពិន្ទុ",
   "st.perf.history": "ការវាយតម្លៃមុនៗ",
+  "st.photo.change": "ប្តូររូបថត",
+  "st.photo.remove": "លុបរូបថត",
+  "st.photo.saved": "បានរក្សាទុករូបថត។",
+  "st.photo.removed": "បានលុបរូបថត។",
+  "st.photo.error": "មិនអាចរក្សាទុករូបថតបានទេ។ សូមសាកល្បងរូបផ្សេង។",
 };

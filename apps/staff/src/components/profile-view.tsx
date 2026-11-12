@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
 import { SignInMethods, type SignInMethodsData } from "@uplif/auth";
-import { Avatar, Card, Tabs } from "@uplif/ui";
+import { AvatarEdit, Card, Tabs } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
+import { usePicture } from "@/components/picture-context";
 import { localName, useDisplay, useMe, useProfile } from "@/components/me-context";
 
 const telegramEnabled = process.env.NEXT_PUBLIC_TELEGRAM_LOGIN === "true";
@@ -13,6 +14,7 @@ export function ProfileView({ methods, failed }: { methods: SignInMethodsData | 
   const state = useMe();
   const profile = useProfile();
   const { name, branch } = useDisplay(state, locale);
+  const picture = usePicture();
   const [tab, setTab] = useState("work");
   const none = t("st.profile.none");
   const date = profile?.employment_date
@@ -29,7 +31,8 @@ export function ProfileView({ methods, failed }: { methods: SignInMethodsData | 
     <div className="flex flex-col gap-4 p-4">
       <h1 className="pt-2 text-2xl font-bold tracking-tight">{t("st.profile.title")}</h1>
       <Card className="flex items-center gap-4 p-4">
-        <Avatar name={name || "?"} size="lg" />
+        <AvatarEdit name={name || "?"} src={picture.src} busy={picture.busy} changeLabel={t("st.photo.change")} removeLabel={t("st.photo.remove")}
+          onPick={(f) => void picture.change(f)} onRemove={() => void picture.remove()} />
         <div className="min-w-0"><b className="block truncate text-lg">{name}</b><span className="block truncate text-muted">{localName(profile?.position, locale) ?? t("st.bar.role")}</span></div>
       </Card>
       <Tabs label={t("st.profile.tabs")} value={tab} onChange={setTab}
