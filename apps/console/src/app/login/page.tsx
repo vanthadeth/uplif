@@ -11,6 +11,9 @@ import { useI18n } from "@/lib/i18n";
 
 // Phone sign-in is paused. Set NEXT_PUBLIC_PHONE_LOGIN=true to bring it back; the code is kept.
 const phoneEnabled = process.env.NEXT_PUBLIC_PHONE_LOGIN === "true";
+// Telegram sign-in needs the custom provider "custom:telegram" set up in Supabase Auth first.
+// Set NEXT_PUBLIC_TELEGRAM_LOGIN=true once it is; until then the button stays disabled.
+const telegramEnabled = process.env.NEXT_PUBLIC_TELEGRAM_LOGIN === "true";
 
 export default function LoginPage() {
   const { t, locale, setLocale } = useI18n();
@@ -55,6 +58,15 @@ export default function LoginPage() {
     });
   }
 
+  async function telegram() {
+    setError(undefined);
+    const { error: err } = await createClient().auth.signInWithOAuth({
+      provider: "custom:telegram" as never,
+      options: { redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(nextPath())}`, scopes: "openid profile" },
+    });
+    if (err) setError(t("auth.error.generic"));
+  }
+
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 p-4">
       <div className="flex justify-end">
@@ -84,7 +96,10 @@ export default function LoginPage() {
           ))}
           {phoneEnabled && <p className="text-center text-sm text-muted">{t("auth.or")}</p>}
           <Button variant={phoneEnabled ? "secondary" : "primary"} onClick={google}>{t("auth.google")}</Button>
-          <Button disabled title={t("auth.telegramSoon")}>{t("auth.telegram")}</Button>
+          {telegramEnabled
+            ? <Button onClick={telegram}>{t("auth.telegram")}</Button>
+            : <Button disabled title={t("auth.telegramSoon")}>{t("auth.telegram")}</Button>}
+          {error && !phoneEnabled && <p role="alert" className="text-danger-ink">{error}</p>}
         </CardBody>
       </Card>
     </main>
