@@ -159,6 +159,9 @@ export const enMe = {
   "st.account.loadFailed": "Could not load your sign-in methods",
   "st.account.loadFailedBody": "Reload the page and try again.",
   "st.account.close": "Close",
+  "st.record.tile.onTime": "On time this month",
+  "st.record.tile.earned": "Earned so far",
+  "st.record.more": "More",
 } as const;
 
 export const kmMe: Partial<Record<keyof typeof enMe, string>> = {
@@ -320,4 +323,7 @@ export const kmMe: Partial<Record<keyof typeof enMe, string>> = {
   "st.account.loadFailed": "មិនអាចផ្ទុកវិធីចូលគណនីរបស់អ្នកបានទេ",
   "st.account.loadFailedBody": "សូមផ្ទុកទំព័រឡើងវិញ ហើយព្យាយាមម្តងទៀត។",
   "st.account.close": "បិទ",
+  "st.record.tile.onTime": "ទាន់ម៉ោងក្នុងខែនេះ",
+  "st.record.tile.earned": "ទទួលបានរហូតមកដល់ពេលនេះ",
+  "st.record.more": "ផ្សេងទៀត",
 };
