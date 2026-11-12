@@ -17,9 +17,10 @@ export default async function DashboardPage() {
   const canAudit = can("org.audit.read");
   const canPlan = can("org.settings.update") || can("org.company.update");
   const canSetupWork = can("attendance.schedule.manage");
+  const canHolidays = can("attendance.holiday.manage");
   const none = Promise.resolve({ data: null });
 
-  const [members, invitations, branches, roles, audit, co, work] = await Promise.all([
+  const [members, invitations, branches, roles, audit, co, work, holiday] = await Promise.all([
     canMembers || canAudit ? supabase.from("memberships").select("id, display_name, status") : none,
     canInvites ? supabase.from("invitations").select("id, label, role_id, branch_id, expires_at, created_at").eq("status", "pending").gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }) : none,
     canBranches ? supabase.from("branches").select("id, name, name_local, is_active").order("created_at") : none,
@@ -27,6 +28,7 @@ export default async function DashboardPage() {
     canAudit ? supabase.from("audit_log").select("id, created_at, membership_id, action, details").order("created_at", { ascending: false }).limit(8) : none,
     canPlan ? supabase.from("companies").select("created_at").maybeSingle() : none,
     canSetupWork ? supabase.from("company_settings").select("work_setup_done").maybeSingle() : none,
+    canHolidays ? supabase.rpc("holiday_notice") : none,
   ]);
 
   const data: DashboardData = {
@@ -37,6 +39,7 @@ export default async function DashboardPage() {
     roles: roles.data ?? [],
     audit: audit.data ?? [],
     workSetupNeeded: canSetupWork && (work.data as { work_setup_done: boolean } | null)?.work_setup_done === false,
+    holidayNotice: (holiday.data as { year: number; holiday_count: number; provisional: boolean }[] | null)?.[0] ?? null,
     companyCreatedAt: (co.data as { created_at: string } | null)?.created_at ?? null,
   };
   return <DashboardView company={company} hasClaim={state.hasCompanyClaim} data={data} />;

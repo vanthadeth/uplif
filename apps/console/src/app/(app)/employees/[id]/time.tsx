@@ -10,7 +10,7 @@ import type { MessageKey } from "@/lib/messages";
 import { AssignScheduleModal, type Named } from "@/components/assign-schedule-modal";
 import { hhmm, type AssignScope } from "@/lib/working-time";
 
-interface WorkDay { day: string; day_kind: string; schedule_id: string | null; source: AssignScope | null; start_time: string | null; end_time: string | null; break_min: number | null; hours: number }
+interface WorkDay { day: string; day_kind: string; schedule_id: string | null; source: AssignScope | null; start_time: string | null; end_time: string | null; break_min: number | null; hours: number; holiday_name?: string | null; holiday_name_local?: string | null }
 
 interface Props {
   employee: { id: string; name: string; name_local: string | null; branch_id: string | null; department_id: string | null };
@@ -25,7 +25,7 @@ interface Props {
 }
 
 const tile: Record<string, string> = {
-  work: "bg-surface", half: "bg-warning-soft", off: "bg-ground text-muted", none: "bg-ground text-muted", not_employed: "bg-ground text-muted line-through",
+  work: "bg-surface", half: "bg-warning-soft", holiday: "bg-primary-soft text-primary-ink", off: "bg-ground text-muted", none: "bg-ground text-muted", not_employed: "bg-ground text-muted line-through",
 };
 
 /** What one employee is expected to do over the next two weeks, as the database resolver answers it. */
@@ -82,16 +82,16 @@ export function TimeAndLeave({ employee, week, today, schedules, allSchedules, b
             <ul className="m-0 grid list-none grid-cols-7 gap-1.5 p-0">
               {week.map((d) => (
                 <li key={d.day} className={`min-w-0 rounded-control border px-1 py-1.5 text-center text-xs ${tile[d.day_kind] ?? "bg-surface"} ${d.day === today ? "border-primary" : "border-line"}`}
-                  title={d.start_time ? `${hhmm(d.start_time)}–${hhmm(d.end_time)}` : t(kindKey(d.day_kind))}>
+                  title={d.day_kind === "holiday" ? pick(locale, d.holiday_name ?? "", d.holiday_name_local) : d.start_time ? `${hhmm(d.start_time)}–${hhmm(d.end_time)}` : t(kindKey(d.day_kind))}>
                   <small className="block text-muted">{dow(d.day)}</small>
                   <b className="block text-[13px]">{dom(d.day)}</b>
                   <small className="block text-muted">{d.day_kind === "work" || d.day_kind === "half" ? `${nf.format(d.hours)} h` : "–"}</small>
                 </li>
               ))}
             </ul>
-            <p className="m-0 text-[13px] text-muted">{t("wt.emp.nextHint")}</p>
+            <p className="m-0 text-[13px] text-muted">{t("hol.emp.hint")}</p>
             <div className="flex flex-wrap gap-2 text-xs text-muted">
-              <Badge tone="neutral">{t("wt.emp.day.work")}</Badge><Badge tone="warning">{t("wt.emp.day.half")}</Badge><Badge tone="neutral">{t("wt.emp.day.off")}</Badge>
+              <Badge tone="neutral">{t("wt.emp.day.work")}</Badge><Badge tone="warning">{t("wt.emp.day.half")}</Badge><Badge tone="neutral">{t("wt.emp.day.off")}</Badge><Badge tone="info">{t("wt.emp.day.holiday")}</Badge>
             </div>
           </section>
         </>

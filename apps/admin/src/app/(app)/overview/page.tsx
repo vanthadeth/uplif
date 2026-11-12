@@ -9,7 +9,8 @@ const DAY = 86_400_000;
 
 export default async function OverviewPage() {
   const { supabase } = await loadPlatform();
-  const [subs, plans] = await Promise.all([supabase.rpc("platform_list_subscribers"), supabase.rpc("platform_list_plans")]);
+  const [subs, plans, hol] = await Promise.all([supabase.rpc("platform_list_subscribers"), supabase.rpc("platform_list_plans"), supabase.rpc("platform_holiday_overview")]);
+  const holAlerts = ((hol.data as { alerts?: { country_code: string; year: number; acknowledged_at: string | null }[] } | null)?.alerts ?? []).filter((a) => !a.acknowledged_at);
   const header = (
     <div>
       <h1 className="text-2xl font-bold">Overview</h1>
@@ -40,6 +41,7 @@ export default async function OverviewPage() {
     { icon: Hourglass, label: "Trials ending soon", value: String(trialsEnding.length), sub: "Within 3 days." },
   ];
   const attention = [
+    ...holAlerts.map((a) => ({ key: `h${a.country_code}${a.year}`, id: "", href: "/holidays" as string, name: a.country_code === "*" ? "Holiday fetch" : `Holidays ${a.country_code}`, why: `${a.year} holidays could not be fetched`, tone: "warning" as const })),
     ...pastDue.map((x) => ({ key: `d${x.owner_user_id}`, id: x.owner_user_id, name: x.owner_name || x.owner_email || "Unknown", why: `Payment past due${x.next_invoice_at ? ` since ${fmtDate(x.next_invoice_at)}` : ""}`, tone: "warning" as const })),
     ...trialsEnding.map((x) => ({ key: `t${x.owner_user_id}`, id: x.owner_user_id, name: x.owner_name || x.owner_email || "Unknown", why: `Trial ends ${fmtDate(x.trial_ends_at!)}`, tone: "info" as const })),
     ...atLimit.map((x) => ({ key: `l${x.owner_user_id}`, id: x.owner_user_id, name: x.owner_name || x.owner_email || "Unknown", why: "Using every user their plan allows", tone: "neutral" as const })),
@@ -67,7 +69,7 @@ export default async function OverviewPage() {
           <ul>
             {attention.map((a) => (
               <li key={a.key} className="border-b border-line last:border-b-0">
-                <Link href={`/subscribers/${a.id}`} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 hover:bg-primary-soft">
+                <Link href={"href" in a ? String(a.href) : `/subscribers/${a.id}`} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 hover:bg-primary-soft">
                   <b className="font-semibold">{a.name}</b>
                   <Badge tone={a.tone}>{a.why}</Badge>
                 </Link>
