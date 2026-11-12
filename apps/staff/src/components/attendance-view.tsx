@@ -8,6 +8,7 @@ import { fill, type MessageKey } from "@/lib/messages";
 import { useFormat } from "@/lib/use-format";
 import { addDays, startOfDay, workedMinutes, ymd, type EventLite } from "@/lib/format";
 import { useMe } from "./me-context";
+import type { MyLeave } from "@/lib/leave";
 
 interface DayResult { day: string; status: string; late_min: number; early_min: number; overtime_min: number }
 interface WorkDay { day: string; day_kind: string; hours: number; holiday_name: string | null; holiday_name_local: string | null }
@@ -32,6 +33,7 @@ export function AttendanceView() {
   const [back, setBack] = useState(0); // 0 = this month
   const [picked, setPicked] = useState<string | null>(null);
   const [now, setNow] = useState<Date | null>(null);
+  const [leave, setLeave] = useState<MyLeave["requests"]>([]);
   const employeeId = state.employee_id;
 
   const load = useCallback(async () => {
@@ -42,16 +44,18 @@ export function AttendanceView() {
     const count = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
     const next = new Date(first.getFullYear(), first.getMonth() + 1, 1);
     const supabase = createClient();
-    const [ev, wd, rs] = await Promise.all([
+    const [ev, wd, rs, lv] = await Promise.all([
       supabase.from("attendance_events").select("kind, occurred_at, flags").eq("employee_id", employeeId)
         .gte("occurred_at", first.toISOString()).lt("occurred_at", next.toISOString()).order("occurred_at", { ascending: true }).limit(1000),
       supabase.rpc("employee_work_days", { p_employee_id: employeeId, p_from: ymd(first), p_days: count }),
       supabase.rpc("employee_attendance_days", { p_employee_id: employeeId, p_from: ymd(first), p_days: count }),
+      supabase.rpc("my_leave"),
     ]);
     if (ev.error) { setFailed(true); return; }
     setEvents(ev.data as EventLite[]);
     setDays(!wd.error && wd.data ? (wd.data as WorkDay[]) : []);
     setResults(!rs.error && rs.data ? (rs.data as DayResult[]) : []);
+    setLeave(!lv.error && lv.data ? lv.data.requests : []);
     setNow(today);
   }, [employeeId, back]);
   useEffect(() => { void load(); }, [load]);
@@ -66,6 +70,19 @@ export function AttendanceView() {
   }, [events]);
   const schedule = useMemo(() => new Map(days.map((d) => [d.day, d])), [days]);
   const result = useMemo(() => new Map(results.map((r) => [r.day, r])), [results]);
+  /** Leave by day: approved or waiting requests spread over their dates. */
+  const leaveByDay = useMemo(() => {
+    const m = new Map<string, { code: string; status: string }>();
+    for (const r of leave) {
+      if (r.status !== "approved" && r.status !== "pending") continue;
+      for (let d = new Date(`${r.start_date}T00:00:00`); ymd(d) <= r.end_date; d = addDays(d, 1)) {
+        const k = ymd(d);
+        if (m.get(k)?.status === "approved") continue;
+        m.set(k, { code: r.code, status: r.status });
+      }
+    }
+    return m;
+  }, [leave]);
 
   if (failed) return <ErrorState title={t("st.att.error")} action={<Button onClick={() => void load()}>{t("st.att.retry")}</Button>} />;
   if (!events || !now) {
@@ -87,12 +104,21 @@ export function AttendanceView() {
   const present = monthResults.filter((r) => COUNTED.includes(r.status) && r.status !== "absent").length;
   const scheduled = monthResults.filter((r) => COUNTED.includes(r.status)).length;
   const absent = monthResults.filter((r) => r.status === "absent").length;
+  const leaveDays = monthResults.filter((r) => r.status === "leave").length;
   const lateMin = monthResults.reduce((s, r) => s + (r.status === "late" ? r.late_min : 0), 0);
   const holidays = days.filter((d) => holidayName(d.day));
 
+  const pill = (k: string) => {
+    const l = leaveByDay.get(k);
+    if (!l) return null;
+    return l.status === "approved"
+      ? <b className="rounded-full bg-primary-soft px-1.5 text-[10px] text-link">{l.code}</b>
+      : <b className="rounded-full border border-dashed border-primary px-1.5 text-[10px] text-link">{l.code}</b>;
+  };
   const mark = (k: string, past: boolean) => {
     const r = result.get(k);
     if (holidayName(k)) return null;
+    if (leaveByDay.has(k) && !(byDay.get(k)?.length)) return pill(k);
     if (r?.status === "absent") return <b className="text-xs text-danger">A</b>;
     if (r?.status === "late") return <b className="text-[11px] text-warning">{r.late_min}m</b>;
     if (r?.status === "on_time" || r?.status === "extra" || r?.status === "early_leave") return <Check className="size-4 text-success" aria-hidden />;
@@ -110,8 +136,8 @@ export function AttendanceView() {
   const worked = workedMinutes(evs, now, sel === todayKey);
   const st = res?.status;
   const dayOff = !!selSched && !selHoliday && ["off", "none", "not_employed"].includes(selSched.day_kind);
-  const tone: BadgeTone = open ? "success" : st === "absent" ? "danger" : flags.length || st === "late" || st === "early_leave" || st === "incomplete" ? "warning" : selHoliday || st === "extra" ? "info" : st === "on_time" ? "success" : "neutral";
-  const text = open ? t("st.att.inprogress")
+  const tone: BadgeTone = st === "leave" ? "info" : open ? "success" : st === "absent" ? "danger" : flags.length || st === "late" || st === "early_leave" || st === "incomplete" ? "warning" : selHoliday || st === "extra" ? "info" : st === "on_time" ? "success" : "neutral";
+  const text = st === "leave" ? t("st.att.leave") : open ? t("st.att.inprogress")
     : st === "late" ? fill(t("st.att.late"), { m: dur(res!.late_min) })
     : st === "early_leave" ? fill(t("st.att.early"), { m: dur(res!.early_min) })
     : st === "incomplete" ? t("st.att.incomplete") : st === "absent" ? t("st.att.absent") : st === "extra" ? t("st.att.extra")
@@ -134,10 +160,11 @@ export function AttendanceView() {
         </div>
       </div>
 
-      <Card className="grid grid-cols-3 gap-2 p-3">
+      <Card className="grid grid-cols-4 gap-2 p-3">
         {tile(t("st.mon.present"), fill(t("st.mon.of"), { n: present, total: scheduled }))}
         {tile(t("st.mon.absent"), String(absent))}
         {tile(t("st.mon.late"), dur(lateMin))}
+        {tile(t("st.mon.leave"), String(leaveDays))}
       </Card>
 
       <Card className="overflow-hidden">
@@ -157,7 +184,7 @@ export function AttendanceView() {
                 style={holiday ? STRIPES : undefined}
                 className={`flex min-h-14 flex-col items-center justify-start gap-0.5 bg-surface pt-1.5 ${mine ? "" : "opacity-40"} ${isSel ? "relative z-10 ring-2 ring-primary ring-inset" : ""}`}>
                 <span className={`grid size-6 place-items-center rounded-full text-sm ${isToday ? "bg-primary font-bold text-white" : weekend ? "text-muted" : ""}`}>{d.getDate()}</span>
-                {mine && d <= today && mark(k, true)}
+                {mine && (d <= today ? mark(k, true) : pill(k))}
               </button>
             );
           })}

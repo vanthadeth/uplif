@@ -1,5 +1,6 @@
 "use client";
-import { BriefcaseBusiness, CalendarDays, TrendingUp, TriangleAlert } from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, ChevronRight, TrendingUp, TriangleAlert } from "lucide-react";
+import Link from "next/link";
 import { Badge, Card } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
 import { RecordSummary } from "@/components/record-summary";
@@ -7,7 +8,6 @@ import type { MessageKey } from "@/lib/messages";
 
 const soon: { icon: typeof TrendingUp; key: MessageKey }[] = [
   { icon: TrendingUp, key: "st.record.perf" },
-  { icon: CalendarDays, key: "st.record.leave" },
   { icon: BriefcaseBusiness, key: "st.record.jd" },
   { icon: TriangleAlert, key: "st.record.warn" },
 ];
@@ -21,6 +21,11 @@ export default function RecordPage() {
       <RecordSummary />
       <h2 className="px-1 pt-2 text-sm font-semibold text-muted">{t("st.record.more")}</h2>
       <Card className="divide-y divide-line overflow-hidden">
+        <Link href="/record/leave" className="flex min-h-15 items-center gap-3 p-4 hover:bg-ground">
+          <span className="grid size-9 shrink-0 place-items-center rounded-control bg-primary-soft text-primary-ink"><CalendarDays className="size-4" aria-hidden /></span>
+          <span className="min-w-0 flex-1"><b className="block">{t("st.record.leave")}</b><span className="text-sm text-muted">{t("st.record.leave.sub")}</span></span>
+          <ChevronRight className="size-5 text-muted rtl:rotate-180" aria-hidden />
+        </Link>
         {soon.map(({ icon: Icon, key }) => (
           <div key={key} className="flex min-h-15 items-center gap-3 p-4 opacity-75">
             <span className="grid size-9 shrink-0 place-items-center rounded-control bg-neutral-soft text-muted"><Icon className="size-4" aria-hidden /></span>
