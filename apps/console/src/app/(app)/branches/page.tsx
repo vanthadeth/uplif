@@ -8,7 +8,7 @@ export default async function BranchesPage() {
   // People counts need to read role assignments, so they are shown only to people allowed to.
   const canPeople = can("org.role.read");
   const [{ data }, assignments] = await Promise.all([
-    supabase.from("branches").select("id, name, name_local, is_active, created_at").order("created_at"),
+    supabase.from("branches").select("id, name, name_local, is_active, created_at, latitude, longitude, geofence_radius_m").order("created_at"),
     canPeople ? supabase.from("membership_roles").select("branch_id, membership_id").not("branch_id", "is", null) : Promise.resolve({ data: null }),
   ]);
   const people: Record<string, number> | null = canPeople ? {} : null;

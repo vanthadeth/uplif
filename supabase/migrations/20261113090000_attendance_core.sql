@@ -1,4 +1,5 @@
 -- Migration 36: attendance, slice A1 (clock in and out, online).
+-- Late and early-leave grace minutes already live on each work schedule version, so they are not repeated here.
 -- Rules (plan approved 2026-11-12, all recommendations):
 --  * An employee clocks in and out from the staff app with a live selfie and GPS. Every clock is one append-only
 --    event; nobody can edit or delete an event through the app. Corrections arrive in a later slice as adjustments.
@@ -97,6 +98,20 @@ end $$;
 -- ---------- plan: does it include Attendance, and how long are selfies kept? ----------
 alter table public.plans add column selfie_retention_days integer not null default 60 check (selfie_retention_days between 7 and 3650);
 
+-- Selfie retention already lives in company_settings (company page). The plan caps it.
+create function app.cap_selfie_retention() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if (select auth.uid()) is null then return new; end if;
+  if new.attendance_selfie_retention_days > coalesce((app.company_plan(new.company_id)).selfie_retention_days, 60) then
+    raise exception 'plan limit: selfie retention' using errcode = 'P0001';
+  end if;
+  return new;
+end $$;
+create trigger company_settings_selfie_cap before update on public.company_settings for each row
+  when (new.attendance_selfie_retention_days is distinct from old.attendance_selfie_retention_days)
+  execute function app.cap_selfie_retention();
+
 -- Is this module part of the plan of the account that owns the company? No subscription row (admin and service
 -- tooling, the first days of a new company) means yes, like the other plan checks.
 create function app.module_enabled(p_company uuid, p_module text) returns boolean
@@ -120,12 +135,9 @@ create table public.attendance_settings (
   company_id uuid primary key references public.companies (id) on delete cascade,
   geofence_mode public.geofence_mode not null default 'flag',
   default_radius_m integer not null default 150 check (default_radius_m between 20 and 5000),
-  late_grace_min integer not null default 5 check (late_grace_min between 0 and 120),
-  early_grace_min integer not null default 5 check (early_grace_min between 0 and 120),
   day_start_hour integer not null default 4 check (day_start_hour between 0 and 12),
   selfie_required boolean not null default true,
   allow_without_selfie boolean not null default false,
-  selfie_retention_days integer not null default 60 check (selfie_retention_days between 7 and 3650),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -225,43 +237,40 @@ revoke all on function app.distance_m(double precision, double precision, double
 -- ---------- settings calls ----------
 create function public.get_attendance_settings() returns jsonb
 language plpgsql stable security definer set search_path = '' as $$
-declare s public.attendance_settings%rowtype; cap integer;
+declare s public.attendance_settings%rowtype; cap integer; kept integer;
 begin
   if not (select app.is_active_member()) or (select app.permission_scope('attendance.settings.manage')) is distinct from 'company' then
     raise exception 'not allowed' using errcode = '42501';
   end if;
   select * into s from public.attendance_settings where company_id = app.company_id();
   if not found then
-    s.geofence_mode := 'flag'; s.default_radius_m := 150; s.late_grace_min := 5; s.early_grace_min := 5;
-    s.day_start_hour := 4; s.selfie_required := true; s.allow_without_selfie := false; s.selfie_retention_days := 60;
+    s.geofence_mode := 'flag'; s.default_radius_m := 150;
+    s.day_start_hour := 4; s.selfie_required := true; s.allow_without_selfie := false;
   end if;
   cap := coalesce((app.company_plan(app.company_id())).selfie_retention_days, 60);
+  select cs.attendance_selfie_retention_days into kept from public.company_settings cs where cs.company_id = app.company_id();
   return jsonb_build_object('geofence_mode', s.geofence_mode, 'default_radius_m', s.default_radius_m,
-    'late_grace_min', s.late_grace_min, 'early_grace_min', s.early_grace_min, 'day_start_hour', s.day_start_hour,
+    'day_start_hour', s.day_start_hour,
     'selfie_required', s.selfie_required, 'allow_without_selfie', s.allow_without_selfie,
-    'selfie_retention_days', s.selfie_retention_days, 'plan_retention_days', cap);
+    'selfie_retention_days', coalesce(kept, 60), 'plan_retention_days', cap);
 end $$;
 
 create function public.save_attendance_settings(
-  p_geofence_mode public.geofence_mode, p_default_radius_m integer, p_late_grace_min integer, p_early_grace_min integer,
-  p_day_start_hour integer, p_allow_without_selfie boolean, p_selfie_retention_days integer
+  p_geofence_mode public.geofence_mode, p_default_radius_m integer, p_day_start_hour integer, p_allow_without_selfie boolean
 ) returns void
 language plpgsql security definer set search_path = '' as $$
-declare cid uuid := app.company_id(); cap integer;
+declare cid uuid := app.company_id();
 begin
   if not (select app.is_active_member()) or (select app.permission_scope('attendance.settings.manage')) is distinct from 'company' then
     raise exception 'not allowed' using errcode = '42501';
   end if;
   if not app.module_enabled(cid, 'attendance') then raise exception 'module not in plan: attendance' using errcode = 'P0001'; end if;
-  cap := coalesce((app.company_plan(cid)).selfie_retention_days, 60);
-  if p_selfie_retention_days > cap then raise exception 'plan limit: selfie retention' using errcode = 'P0001'; end if;
-  insert into public.attendance_settings (company_id, geofence_mode, default_radius_m, late_grace_min, early_grace_min,
-                                          day_start_hour, allow_without_selfie, selfie_retention_days)
-  values (cid, p_geofence_mode, p_default_radius_m, p_late_grace_min, p_early_grace_min, p_day_start_hour,
-          coalesce(p_allow_without_selfie, false), p_selfie_retention_days)
+  insert into public.attendance_settings (company_id, geofence_mode, default_radius_m, day_start_hour, allow_without_selfie)
+  values (cid, p_geofence_mode, p_default_radius_m, p_day_start_hour,
+          coalesce(p_allow_without_selfie, false))
   on conflict (company_id) do update set geofence_mode = excluded.geofence_mode, default_radius_m = excluded.default_radius_m,
-    late_grace_min = excluded.late_grace_min, early_grace_min = excluded.early_grace_min, day_start_hour = excluded.day_start_hour,
-    allow_without_selfie = excluded.allow_without_selfie, selfie_retention_days = excluded.selfie_retention_days;
+    day_start_hour = excluded.day_start_hour,
+    allow_without_selfie = excluded.allow_without_selfie;
 end $$;
 
 -- ---------- what the staff app needs to draw its screen ----------
@@ -393,11 +402,11 @@ begin
 end $$;
 
 revoke execute on function public.get_attendance_settings() from public, anon;
-revoke execute on function public.save_attendance_settings(public.geofence_mode, integer, integer, integer, integer, boolean, integer) from public, anon;
+revoke execute on function public.save_attendance_settings(public.geofence_mode, integer, integer, boolean) from public, anon;
 revoke execute on function public.attendance_my_state() from public, anon;
 revoke execute on function public.attendance_clock(public.attendance_kind, uuid, timestamptz, double precision, double precision, integer, text, text) from public, anon;
 grant execute on function public.get_attendance_settings() to authenticated;
-grant execute on function public.save_attendance_settings(public.geofence_mode, integer, integer, integer, integer, boolean, integer) to authenticated;
+grant execute on function public.save_attendance_settings(public.geofence_mode, integer, integer, boolean) to authenticated;
 grant execute on function public.attendance_my_state() to authenticated;
 grant execute on function public.attendance_clock(public.attendance_kind, uuid, timestamptz, double precision, double precision, integer, text, text) to authenticated;
 

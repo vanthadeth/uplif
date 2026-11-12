@@ -1,13 +1,13 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Info, Lock, Pencil, Plus, Search, X } from "lucide-react";
+import { Check, Info, Lock, MapPin, Pencil, Plus, Search, X } from "lucide-react";
 import { Badge, Button, Input, Modal, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { planLimitKey } from "@/lib/plan-limit";
 
-interface Branch { id: string; name: string; name_local: string | null; is_active: boolean; created_at: string }
+interface Branch { id: string; name: string; name_local: string | null; is_active: boolean; created_at: string; latitude: number | null; longitude: number | null; geofence_radius_m: number | null }
 type Filter = "all" | "active" | "inactive";
 
 interface Props {
@@ -29,6 +29,10 @@ export function BranchList({ branches, people, companyId, canCreate, canUpdate }
   const [deactivating, setDeactivating] = useState<Branch | null>(null);
   const [name, setName] = useState("");
   const [nameLocal, setNameLocal] = useState("");
+  const [lat, setLat] = useState("");
+  const [lon, setLon] = useState("");
+  const [radius, setRadius] = useState("");
+  const [locating, setLocating] = useState(false);
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
 
@@ -51,14 +55,35 @@ export function BranchList({ branches, people, companyId, canCreate, canUpdate }
     setEditing(b);
     setName(b === "new" ? "" : b.name);
     setNameLocal(b === "new" ? "" : b.name_local ?? "");
+    setLat(b === "new" || b.latitude == null ? "" : String(b.latitude));
+    setLon(b === "new" || b.longitude == null ? "" : String(b.longitude));
+    setRadius(b === "new" || b.geofence_radius_m == null ? "" : String(b.geofence_radius_m));
     setError(undefined);
+  }
+
+  function useMyLocation() {
+    if (!navigator.geolocation) return toast("error", t("branches.locationDenied"));
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (p) => { setLat(p.coords.latitude.toFixed(6)); setLon(p.coords.longitude.toFixed(6)); setLocating(false); },
+      () => { setLocating(false); toast("error", t("branches.locationDenied")); },
+      { enableHighAccuracy: true, timeout: 15000 },
+    );
   }
 
   async function save() {
     if (!name.trim()) return setError(t("branches.error.name"));
     setBusy(true);
     const supabase = createClient();
-    const values = { name: name.trim(), name_local: nameLocal.trim() || null };
+    const hasLat = lat.trim() !== "", hasLon = lon.trim() !== "";
+    if (hasLat !== hasLon) { setBusy(false); return toast("error", t("branches.error.location")); }
+    const latN = hasLat ? Number(lat) : null, lonN = hasLon ? Number(lon) : null;
+    if ((latN !== null && (!Number.isFinite(latN) || latN < -90 || latN > 90)) || (lonN !== null && (!Number.isFinite(lonN) || lonN < -180 || lonN > 180))) {
+      setBusy(false); return toast("error", t("branches.error.range"));
+    }
+    const radiusN = radius.trim() === "" ? null : Number(radius);
+    if (radiusN !== null && (!Number.isInteger(radiusN) || radiusN < 20 || radiusN > 5000)) { setBusy(false); return toast("error", t("branches.error.radius")); }
+    const values = { name: name.trim(), name_local: nameLocal.trim() || null, latitude: latN, longitude: lonN, geofence_radius_m: latN === null ? null : radiusN };
     // .select() returns the rows row-level security let us change; an empty result means no permission.
     const res = editing === "new"
       ? await supabase.from("branches").insert({ company_id: companyId, ...values }).select("id")
@@ -179,6 +204,16 @@ export function BranchList({ branches, people, companyId, canCreate, canUpdate }
         <div className="flex flex-col gap-4">
           <Input label={t("branches.name")} value={name} maxLength={120} onChange={(e) => setName(e.target.value)} error={error} />
           <Input label={t("branches.nameLocal")} value={nameLocal} maxLength={120} onChange={(e) => setNameLocal(e.target.value)} hint={t("branches.nameLocalHint")} />
+          <fieldset className="flex flex-col gap-3 rounded-control border border-line p-3">
+            <legend className="px-1 font-semibold">{t("branches.location")}</legend>
+            <p className="text-[13px] text-muted">{t("branches.locationHint")}</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Input label={t("branches.lat")} inputMode="decimal" value={lat} onChange={(e) => setLat(e.target.value)} />
+              <Input label={t("branches.lon")} inputMode="decimal" value={lon} onChange={(e) => setLon(e.target.value)} />
+            </div>
+            <Input label={t("branches.radius")} inputMode="numeric" value={radius} onChange={(e) => setRadius(e.target.value)} />
+            <Button loading={locating} onClick={useMyLocation}><MapPin className="size-4" aria-hidden />{locating ? t("branches.locating") : t("branches.useMyLocation")}</Button>
+          </fieldset>
         </div>
       </Modal>
 

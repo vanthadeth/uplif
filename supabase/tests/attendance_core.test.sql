@@ -82,13 +82,14 @@ select is((select latitude from public.branches where company_id = (select cid f
 select pg_temp.as_user(4);
 set local role authenticated;
 select throws_ok($$select public.get_attendance_settings()$$, '42501', 'not allowed', 'staff cannot read settings');
-select throws_ok($$select public.save_attendance_settings('block', 150, 5, 5, 4, false, 60)$$, '42501', 'not allowed', 'staff cannot save settings');
+select throws_ok($$select public.save_attendance_settings('block', 150, 4, false)$$, '42501', 'not allowed', 'staff cannot save settings');
 reset role;
 select pg_temp.as_user(1);
 set local role authenticated;
 select is((select (public.get_attendance_settings() ->> 'geofence_mode')), 'flag', 'defaults: geofence flags only');
-select throws_ok($$select public.save_attendance_settings('flag', 150, 5, 5, 4, false, 365)$$, 'P0001', 'plan limit: selfie retention', 'retention is capped by the plan');
-select lives_ok($$select public.save_attendance_settings('flag', 150, 5, 5, 4, false, 60)$$, 'owner saves settings');
+select throws_ok($$update public.company_settings set attendance_selfie_retention_days = 365$$, 'P0001', 'plan limit: selfie retention', 'retention is capped by the plan');
+select lives_ok($$update public.company_settings set attendance_selfie_retention_days = 30$$, 'a shorter retention is fine');
+select lives_ok($$select public.save_attendance_settings('flag', 150, 4, false)$$, 'owner saves settings');
 reset role;
 
 -- ===== selfie bucket =====
@@ -147,7 +148,7 @@ reset role;
 -- ===== block mode and missing selfie switch =====
 select pg_temp.as_user(1);
 set local role authenticated;
-select lives_ok($$select public.save_attendance_settings('block', 150, 5, 5, 4, true, 60)$$, 'owner switches to block and allows no-selfie');
+select lives_ok($$select public.save_attendance_settings('block', 150, 4, true)$$, 'owner switches to block and allows no-selfie');
 reset role;
 select pg_temp.as_user(4);
 set local role authenticated;
@@ -157,7 +158,7 @@ select ok((select 'missing_selfie' = any (flags) from public.attendance_events o
 reset role;
 select pg_temp.as_user(1);
 set local role authenticated;
-select lives_ok($$select public.save_attendance_settings('off', 150, 5, 5, 4, false, 60)$$, 'owner turns the geofence off');
+select lives_ok($$select public.save_attendance_settings('off', 150, 4, false)$$, 'owner turns the geofence off');
 reset role;
 
 -- ===== shared device =====
@@ -201,7 +202,7 @@ select throws_ok($$select pg_temp.clock('out', gen_random_uuid(), 11.5564, 104.9
 reset role;
 select pg_temp.as_user(1);
 set local role authenticated;
-select throws_ok($$select public.save_attendance_settings('flag', 150, 5, 5, 4, false, 60)$$, 'P0001', 'module not in plan: attendance', 'so is saving settings');
+select throws_ok($$select public.save_attendance_settings('flag', 150, 4, false)$$, 'P0001', 'module not in plan: attendance', 'so is saving settings');
 reset role;
 update public.subscriptions set plan_id = (select id from public.plans where code = 'premium') where owner_user_id = 'f8000000-0000-0000-0000-000000000001';
 select is(app.module_enabled((select cid from ctx), 'attendance'), true, 'Premium includes Attendance');
