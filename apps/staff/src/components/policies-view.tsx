@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { Check, ChevronLeft, ChevronRight } from "lucide-react";
-import { Badge, Button, EmptyState, ErrorState, Skeleton, useToast } from "@uplif/ui";
+import { Badge, Button, EmptyState, ErrorState, Reveal, Skeleton, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
@@ -57,7 +57,7 @@ export function PoliciesView() {
 
   if (open) {
     return (
-      <div className="flex flex-col gap-4">
+      <Reveal className="flex flex-col gap-4">
         <div className="flex items-center gap-1">
           <button type="button" aria-label={t("st.back")} onClick={() => { setOpenId(null); setAgreed(false); }} className="grid size-11 place-items-center rounded-control hover:bg-ground"><ChevronLeft className="size-6 rtl:rotate-180" aria-hidden /></button>
           <h2 className="min-w-0 break-words text-xl font-bold tracking-tight">{local(open.title, open.title_local)}</h2>
@@ -78,7 +78,7 @@ export function PoliciesView() {
             <Button variant="primary" className="h-14 w-full text-lg" disabled={!agreed} loading={busy} onClick={() => void confirm(open)}>{t("st.policy.confirmBtn")}</Button>
           </div>
         )}
-      </div>
+      </Reveal>
     );
   }
 
@@ -86,8 +86,8 @@ export function PoliciesView() {
     <div className="flex flex-col gap-3">
       {todo > 0 && <div><Badge tone="warning">{fill(t("st.learn.todo"), { n: todo })}</Badge></div>}
       <ul className="m-0 list-none divide-y divide-line overflow-hidden rounded-card border border-line bg-surface p-0">
-        {rows.map((r) => (
-          <li key={r.policy_id}>
+        {rows.map((r, i) => (
+          <li key={r.policy_id} className="animate-[uplif-in_240ms_ease-out_both]" style={{ animationDelay: `${Math.min(i * 40, 400)}ms` }}>
             <button type="button" onClick={() => setOpenId(r.policy_id)} className="flex w-full items-center gap-3 p-4 text-start hover:bg-ground">
               <span className="min-w-0 flex-1">
                 <b className="block break-words">{local(r.title, r.title_local)}</b>

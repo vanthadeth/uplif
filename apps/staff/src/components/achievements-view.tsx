@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { Award, Medal } from "lucide-react";
-import { Button, Card, CardBody, EmptyState, ErrorState, Skeleton } from "@uplif/ui";
+import { Button, Card, CardBody, EmptyState, ErrorState, ProgressBar, Skeleton } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
@@ -41,9 +41,7 @@ export function AchievementsView() {
           {progress && progress.total ? (
             <>
               <b className="text-lg">{fill(t("st.ach.progress"), { n: progress.n, total: progress.total })}</b>
-              <div className="h-2 overflow-hidden rounded-full bg-neutral-soft" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={fill(t("st.ach.progress"), { n: progress.n, total: progress.total })}>
-                <div className={`h-full rounded-full ${onTrack ? "bg-success" : "bg-warning"}`} style={{ width: `${pct}%` }} />
-              </div>
+              <ProgressBar value={pct} tone={onTrack ? "success" : "warning"} label={fill(t("st.ach.progress"), { n: progress.n, total: progress.total })} />
               <span className="text-sm text-muted">{t(onTrack ? "st.ach.ontrack" : "st.ach.missed")}</span>
             </>
           ) : <span className="text-muted">{t("st.ach.progress.none")}</span>}
@@ -56,8 +54,8 @@ export function AchievementsView() {
         <Card className="overflow-hidden">
           <div className="px-4 pb-1 pt-4"><span className="caps text-xs font-bold text-muted">{t("st.ach.earned")}</span></div>
           <ul className="m-0 list-none divide-y divide-line p-0">
-            {earned.map((r) => (
-              <li key={`${r.kind}-${r.period}`} className="flex items-center gap-3 px-4 py-3">
+            {earned.map((r, i) => (
+              <li key={`${r.kind}-${r.period}`} className="flex items-center gap-3 px-4 py-3 animate-[uplif-in_240ms_ease-out_both]" style={{ animationDelay: `${Math.min(i * 40, 400)}ms` }}>
                 <span className={`grid size-10 shrink-0 place-items-center rounded-full ${r.kind === "green_month" ? "bg-success-soft text-success-ink" : "bg-primary-soft text-primary-ink"}`}>
                   {r.kind === "green_month" ? <Award className="size-5" aria-hidden /> : <Medal className="size-5" aria-hidden />}
                 </span>

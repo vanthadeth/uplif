@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarDays, LogIn, LogOut, Pencil, WifiOff } from "lucide-react";
-import { Badge, Button, Card, CardBody, useToast } from "@uplif/ui";
+import { Badge, Button, Card, CardBody, ProgressBar, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
@@ -111,9 +111,7 @@ export function Today() {
           </div>
           {clockedIn && totalMin > 0 && (
             <div className="flex flex-col gap-2">
-              <div className="h-2 overflow-hidden rounded-full bg-neutral-soft" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={fill(t("st.worked.of"), { worked: duration(worked), total: duration(totalMin) })}>
-                <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
-              </div>
+              <ProgressBar value={pct} label={fill(t("st.worked.of"), { worked: duration(worked), total: duration(totalMin) })} />
               <span className="text-sm text-muted">{fill(t("st.worked.of"), { worked: duration(worked), total: duration(totalMin) })}</span>
             </div>
           )}
