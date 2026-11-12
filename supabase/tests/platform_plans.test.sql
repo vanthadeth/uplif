@@ -74,7 +74,7 @@ select is((select count(*)::int from public.invitations), 0, 'platform admin see
 select is((select count(*)::int from public.audit_log), 0, 'platform admin cannot read a company audit log');
 -- what the detail function returns: account facts only
 select is((select array_agg(k order by k) from jsonb_object_keys(public.platform_get_subscriber('f3000000-0000-0000-0000-000000000002')) k),
-  array['billing_email', 'companies', 'cycle', 'next_invoice_at', 'owner_email', 'owner_name', 'owner_user_id', 'plan_id', 'plan_name', 'started_at', 'status', 'trial_ends_at', 'usage'],
+  array['billing_email', 'companies', 'cycle', 'next_invoice_at', 'owner_email', 'owner_name', 'owner_user_id', 'plan_id', 'plan_name', 'requested_at', 'requested_cycle', 'requested_plan', 'requested_plan_id', 'started_at', 'status', 'suspended_reason', 'trial_ends_at', 'usage'],
   'subscriber detail has account facts only');
 select is((select array_agg(k order by k) from jsonb_object_keys((public.platform_get_subscriber('f3000000-0000-0000-0000-000000000002') -> 'companies') -> 0) k),
   array['country_code', 'created_at', 'id', 'name', 'name_local'], 'company entries have id, name, country and date only');

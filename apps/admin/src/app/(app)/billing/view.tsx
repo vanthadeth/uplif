@@ -53,8 +53,8 @@ export function BillingView({ invoices, failed }: { invoices: Invoice[]; failed:
     const { data, error } = await createClient().rpc("platform_run_billing");
     setRunning(false);
     if (error) return toast("error", "Could not run billing. Reload and try again.");
-    const r = data as { issued: number; failed: number; past_due: number };
-    toast(r.failed ? "error" : "success", `Issued ${r.issued} invoice${r.issued === 1 ? "" : "s"}, marked ${r.past_due} past due${r.failed ? `, ${r.failed} could not be issued (see Admin activity)` : ""}.`);
+    const r = data as { issued: number; failed: number; past_due: number; trials_ended: number };
+    toast(r.failed ? "error" : "success", `Issued ${r.issued} invoice${r.issued === 1 ? "" : "s"}, marked ${r.past_due} past due, ended ${r.trials_ended} trial${r.trials_ended === 1 ? "" : "s"}${r.failed ? `, ${r.failed} could not be issued (see Admin activity)` : ""}.`);
     router.refresh();
   }
   const canAct = (i: Invoice) => i.status === "open" || i.status === "overdue";
@@ -64,7 +64,7 @@ export function BillingView({ invoices, failed }: { invoices: Invoice[]; failed:
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Billing</h1>
-          <p className="text-muted">Subscription invoices for every account. New invoices go out by themselves every day at 8:00 (Cambodia time) when an account&apos;s billing date has come. Payments are recorded by hand.</p>
+          <p className="text-muted">Subscription invoices for every account. Every day at 8:00 (Cambodia time), invoices go out when an account&apos;s billing date has come, and accounts whose trial has ended are locked. Payments are recorded by hand.</p>
         </div>
         <Button loading={running} onClick={runBilling}>Run billing now</Button>
       </div>
