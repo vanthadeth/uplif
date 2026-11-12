@@ -2,43 +2,49 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronDown, ChevronRight, Clock, Info, Lock, Plus, Search, Shield, Users } from "lucide-react";
-import { Badge, Button, Input, Modal, Select, useToast, type BadgeTone } from "@uplif/ui";
+import { Badge, Button, Modal, Select, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import type { MessageKey } from "@/lib/messages";
-import { fmtDate, pick } from "@/lib/format";
+import { pick } from "@/lib/format";
 import { GROWTH, seatsUsed } from "@/lib/plan";
-import { planLimitKey } from "@/lib/plan-limit";
 import { OverridesDialog, type Override, type PermissionDef } from "./overrides";
+import { InvitePanel, SeatBanner, seatState, usePendingEmployeeIds, type InviteEmployee, type InvitePosition, type Seats } from "./invite-panel";
+import { InvitesTab, type Invitation } from "./invites";
 
 interface Member { id: string; display_name: string | null; status: "active" | "suspended" | "removed" }
 interface MemberRole { id: string; membership_id: string; role_id: string; branch_id: string | null }
 interface Role { id: string; name: string; name_local: string | null }
 interface Branch { id: string; name: string; name_local: string | null; is_active: boolean }
-interface Invitation { id: string; label: string | null; role_id: string; branch_id: string | null; status: "pending" | "accepted" | "revoked"; expires_at: string }
-type InviteStatus = "pending" | "accepted" | "revoked" | "expired";
 type Filter = "all" | "active" | "suspended";
 type GroupBy = "none" | "branch" | "role";
 
 interface Props {
   myMembershipId: string;
+  companyId: string;
+  companyName: string;
+  companyNameLocal: string | null;
   members: Member[];
   memberRoles: MemberRole[];
   roles: Role[];
   branches: Branch[];
   invitations: Invitation[];
+  employees: InviteEmployee[];
+  positions: InvitePosition[];
+  seats: Seats | null;
   canInvite: boolean;
+  canCreateEmployee: boolean;
   canEdit: boolean;
   canRoles: boolean;
   overrides: Override[];
   catalog: PermissionDef[];
   /** Open the invite dialog on arrival (the title bar action links here with ?invite=1). */
   openInvite?: boolean;
+  /** Employee to preselect when the invite panel opens (from the employee list). */
+  presetEmployeeId?: string;
 }
 
-const inviteTone: Record<InviteStatus, BadgeTone> = { pending: "info", accepted: "success", revoked: "neutral", expired: "neutral" };
-
-export function UsersView({ myMembershipId, members, memberRoles, roles, branches, invitations, canInvite, canEdit, canRoles, overrides, catalog, openInvite: autoInvite }: Props) {
+export function UsersView({ myMembershipId, companyId, companyName, companyNameLocal, members, memberRoles, roles, branches, invitations, employees, positions, seats, canInvite, canEdit, canRoles, canCreateEmployee, overrides, catalog, openInvite: autoInvite, presetEmployeeId }: Props) {
   const { t, locale } = useI18n();
   const toast = useToast();
   const router = useRouter();
@@ -47,15 +53,17 @@ export function UsersView({ myMembershipId, members, memberRoles, roles, branche
   const roleName = (id: string) => { const r = roles.find((x) => x.id === id); return r ? pick(locale, r.name, r.name_local) : "—"; };
   const branchName = (id: string | null) => { if (!id) return t("invite.allBranches"); const b = branches.find((x) => x.id === id); return b ? pick(locale, b.name, b.name_local) : "—"; };
   const invitable = roles.filter((r) => r.name !== "Owner");
+  const pendingEmployeeIds = usePendingEmployeeIds(invitations);
   const activeBranches = branches.filter((b) => b.is_active);
 
   const visible = members.filter((m) => m.status !== "removed");
-  const inviteStatus = (i: Invitation): InviteStatus => (i.status === "pending" && new Date(i.expires_at) < new Date() ? "expired" : i.status);
   const active = visible.filter((m) => m.status === "active").length;
   const suspended = visible.filter((m) => m.status === "suspended").length;
-  const pending = invitations.filter((i) => inviteStatus(i) === "pending").length;
-  const used = seatsUsed(active, pending);
-  const limit = GROWTH.seats; // Seat limits are not enforced by the database yet; this is the intended rule.
+  const pending = invitations.filter((i) => i.status === "pending" && new Date(i.expires_at) >= new Date()).length;
+  // The database knows the real plan and counts seats across the owner's companies; fall back to this company's count when it is not readable.
+  const seatInfo = seatState(seats);
+  const used = seats ? seatInfo.used : seatsUsed(active, pending);
+  const limit = seats ? seatInfo.max ?? Infinity : GROWTH.seats;
   const full = used >= limit;
   const readOnly = !canInvite && !canEdit && !canRoles;
 
@@ -67,46 +75,20 @@ export function UsersView({ myMembershipId, members, memberRoles, roles, branche
   const [busy, setBusy] = useState(false);
 
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [label, setLabel] = useState("");
-  const [roleId, setRoleId] = useState("");
-  const [branchId, setBranchId] = useState("");
-  const [link, setLink] = useState<string>();
   const [rolesFor, setRolesFor] = useState<string | null>(null);
   const [addRoleId, setAddRoleId] = useState("");
   const [addBranchId, setAddBranchId] = useState("");
   const [suspending, setSuspending] = useState<Member | null>(null);
   const [permsFor, setPermsFor] = useState<string | null>(null);
 
-  function openInvite() {
-    setLabel(""); setBranchId(""); setRoleId(invitable[0]?.id ?? ""); setLink(undefined); setInviteOpen(true);
-  }
+  function openInvite() { setInviteOpen(true); }
 
   useEffect(() => {
     if (!autoInvite) return;
-    if (canInvite && !full && invitable.length > 0) openInvite();
+    if (canInvite && invitable.length > 0) openInvite();
     router.replace("/users");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoInvite]);
-
-  async function createInvite() {
-    setBusy(true);
-    const { data, error } = await createClient().rpc("create_invitation", { p_role_id: roleId, p_branch_id: branchId || null, p_label: label });
-    setBusy(false);
-    if (error) return toast("error", planLimitKey(error) ? t(planLimitKey(error)!) : error.code === "42501" ? t("common.forbidden") : t("common.saveError"));
-    setLink(`${location.origin}/invite/${(data as { token: string }).token}`);
-    router.refresh();
-  }
-
-  async function copy() {
-    try { await navigator.clipboard.writeText(link!); toast("success", t("invite.copied")); } catch { toast("error", t("common.saveError")); }
-  }
-
-  async function revoke(id: string) {
-    const { error } = await createClient().rpc("revoke_invitation", { p_id: id });
-    if (error) return toast("error", t("common.saveError"));
-    toast("success", t("invite.revoked"));
-    router.refresh();
-  }
 
   async function setStatus(m: Member, status: Member["status"]) {
     setBusy(true);
@@ -214,7 +196,7 @@ export function UsersView({ myMembershipId, members, memberRoles, roles, branche
           <p className="mt-1 max-w-[62ch] text-muted">{t("users.subtitle")}</p>
         </div>
         {readOnly ? <Badge tone="neutral"><Lock className="size-3" aria-hidden />{t("users.viewOnly")}</Badge>
-          : canInvite && <Button variant="primary" className="w-full sm:w-auto" disabled={full || invitable.length === 0} title={full ? t("users.fullTitle") : undefined} onClick={openInvite}><Plus className="size-[18px]" aria-hidden />{t("users.invite")}</Button>}
+          : canInvite && <Button variant="primary" className="w-full sm:w-auto" disabled={invitable.length === 0} onClick={openInvite}><Plus className="size-[18px]" aria-hidden />{t("users.invite")}</Button>}
       </div>
 
       {readOnly && (
@@ -242,7 +224,7 @@ export function UsersView({ myMembershipId, members, memberRoles, roles, branche
         </div>
       </section>
 
-      {full && (
+      {seats ? <SeatBanner seats={seats} onInvites={() => setTab("inv")} /> : full && (
         <div role="alert" className="flex items-start gap-3 rounded-card bg-warning-soft p-4 leading-normal text-warning-ink">
           <Info className="mt-0.5 size-5 shrink-0" aria-hidden />
           <div><b className="block">{t("users.fullTitle")}</b>{t("users.fullBody")}</div>
@@ -309,57 +291,15 @@ export function UsersView({ myMembershipId, members, memberRoles, roles, branche
             )}
           </div>
         </>
-      ) : invitations.length === 0 ? (
-        <div className="rounded-card border border-line bg-surface px-4 py-9 text-center text-muted">
-          <b className="mb-1 block text-[15px] text-ink">{t("users.noInvites")}</b>{t("users.noInvitesBody")}
-          {canInvite && <div className="mt-3.5"><Button variant="primary" disabled={full} onClick={openInvite}><Plus className="size-[18px]" aria-hidden />{t("users.invite")}</Button></div>}
-        </div>
       ) : (
-        <div role="tabpanel" className="overflow-hidden rounded-card border border-line bg-surface">
-          <div aria-hidden className={`hidden items-center gap-4 border-b border-line bg-ground px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted md:grid ${canInvite ? "md:grid-cols-[minmax(0,1.6fr)_minmax(0,1.6fr)_minmax(0,.8fr)_minmax(0,.8fr)_120px]" : "md:grid-cols-[minmax(0,1.6fr)_minmax(0,1.6fr)_minmax(0,.8fr)_minmax(0,.8fr)]"}`}>
-            <span>{t("users.cFor")}</span><span>{t("users.cRoleBranch")}</span><span>{t("common.status")}</span><span>{t("invite.expires")}</span>{canInvite && <span />}
-          </div>
-          {invitations.map((i) => {
-            const st = inviteStatus(i);
-            return (
-              <div key={i.id} className={`grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1.5 border-t border-line px-4 py-3.5 first:border-t-0 md:gap-x-4 ${canInvite ? "md:grid-cols-[minmax(0,1.6fr)_minmax(0,1.6fr)_minmax(0,.8fr)_minmax(0,.8fr)_120px]" : "md:grid-cols-[minmax(0,1.6fr)_minmax(0,1.6fr)_minmax(0,.8fr)_minmax(0,.8fr)]"}`}>
-                <div className="min-w-0 break-words">{i.label ? <b className="font-semibold">{i.label}</b> : <span className="text-muted">{t("users.noNote")}</span>}</div>
-                <span className="col-start-2 row-start-1 md:col-start-auto md:row-start-auto"><Badge tone={inviteTone[st]}>{t(`invite.status.${st}` as MessageKey)}</Badge></span>
-                <div className="col-span-2 row-start-2 md:col-span-1 md:row-start-auto"><b className="font-semibold">{roleName(i.role_id)}</b> <em className="not-italic text-muted">· {branchName(i.branch_id)}</em></div>
-                <span className="col-span-2 tabular-nums text-muted md:col-span-1"><span className="md:hidden">{t("invite.expires")} </span>{fmtDate(locale, i.expires_at)}</span>
-                {canInvite && <div className="col-span-2 flex md:col-span-1 md:justify-end">{st === "pending" && <Button className="flex-1 md:flex-none" onClick={() => revoke(i.id)}>{t("invite.revoke")}</Button>}</div>}
-              </div>
-            );
-          })}
-        </div>
+        <InvitesTab invitations={invitations} employees={employees} members={members} roles={roles} branches={branches} companyName={pick(locale, companyName, companyNameLocal)} canInvite={canInvite} onNew={openInvite} />
       )}
 
-      <Modal
-        open={inviteOpen} onClose={() => setInviteOpen(false)} closeLabel={t("common.close")}
-        title={link ? t("invite.linkTitle") : t("users.invite")}
-        footer={link
-          ? <><Button onClick={() => setInviteOpen(false)}>{t("common.close")}</Button><Button variant="primary" onClick={copy}><Check className="size-4" aria-hidden />{t("invite.copy")}</Button></>
-          : <><Button onClick={() => setInviteOpen(false)}>{t("common.cancel")}</Button><Button variant="primary" loading={busy} onClick={createInvite}>{t("invite.create")}</Button></>}
-      >
-        {link ? (
-          <div className="flex flex-col gap-3">
-            <p className="leading-relaxed text-muted">{t("invite.linkBody")}</p>
-            <input readOnly value={link} aria-label={t("invite.linkTitle")} onFocus={(e) => e.currentTarget.select()} className="h-(--control-h) w-full rounded-control border border-line-strong bg-ground px-3" />
-          </div>
-        ) : (
-          <div className="flex flex-col gap-4">
-            <Input label={t("invite.label")} hint={t("invite.labelHint")} value={label} maxLength={120} onChange={(e) => setLabel(e.target.value)} />
-            <Select label={t("invite.role")} value={roleId} onChange={(e) => setRoleId(e.target.value)}>
-              {invitable.map((r) => <option key={r.id} value={r.id}>{pick(locale, r.name, r.name_local)}</option>)}
-            </Select>
-            <Select label={t("invite.branch")} value={branchId} onChange={(e) => setBranchId(e.target.value)}>
-              <option value="">{t("invite.allBranches")}</option>
-              {activeBranches.map((b) => <option key={b.id} value={b.id}>{pick(locale, b.name, b.name_local)}</option>)}
-            </Select>
-            <div className="flex items-start gap-3 rounded-control bg-primary-soft p-3 text-[13px] leading-snug text-primary-ink"><Info className="mt-0.5 size-4 shrink-0" aria-hidden />{t("users.inviteSeat")}</div>
-          </div>
-        )}
-      </Modal>
+      {inviteOpen && (
+        <InvitePanel companyId={companyId} companyName={pick(locale, companyName, companyNameLocal)} employees={employees} positions={positions} roles={roles} branches={branches}
+          pendingEmployeeIds={pendingEmployeeIds} presetEmployeeId={presetEmployeeId} seats={seats} catalog={catalog} canRoles={canRoles} canCreateEmployee={canCreateEmployee}
+          onInvites={() => setTab("inv")} onClose={() => setInviteOpen(false)} />
+      )}
 
       <Modal open={rolesTarget != null} onClose={() => setRolesFor(null)} closeLabel={t("common.close")} title={`${t("users.rolesFor")} ${rolesTarget?.display_name ?? ""}`}
         footer={<><Button onClick={() => setRolesFor(null)}>{t("common.close")}</Button><Button variant="primary" disabled={!addRoleId} onClick={addRole}>{t("users.addRole")}</Button></>}>

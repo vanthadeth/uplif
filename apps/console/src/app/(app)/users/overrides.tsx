@@ -12,9 +12,9 @@ export type Scope = "own" | "team" | "branch" | "company";
 export interface PermissionDef { key: string; description: string; description_local: string | null }
 export interface Override { id: string; membership_id: string; permission_key: string; effect: "grant" | "deny"; data_scope: Scope | null; reason: string; expires_at: string | null }
 
-const scopeKey: Record<Scope, MessageKey> = { own: "roles.scope.own", team: "roles.scope.team", branch: "roles.scope.branch", company: "roles.scope.company" };
+export const scopeKey: Record<Scope, MessageKey> = { own: "roles.scope.own", team: "roles.scope.team", branch: "roles.scope.branch", company: "roles.scope.company" };
 // Keys that are only ever granted at company level (they have no narrower meaning).
-const READ_KEYS = new Set(["org.branch.read", "org.member.read", "org.role.read", "org.employee.read"]);
+export const READ_KEYS = new Set(["org.branch.read", "org.member.read", "org.role.read", "org.employee.read"]);
 
 interface Props { memberId: string; memberName: string; overrides: Override[]; catalog: PermissionDef[]; onClose: () => void }
 
