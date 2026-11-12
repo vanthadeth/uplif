@@ -60,6 +60,14 @@ export function safeNext(value: string | null | undefined): string | null {
   return value;
 }
 
+/** Picks the app to return to: the requested origin only if it is on the allowed list, else the first allowed one. */
+export function pickOrigin(requested: string | null | undefined, allowed: string[]): string | null {
+  const clean = allowed.map((a) => a.trim().replace(/\/$/, "")).filter(Boolean);
+  const want = (requested ?? "").trim().replace(/\/$/, "");
+  if (want && clean.includes(want)) return want;
+  return clean[0] ?? null;
+}
+
 /** Telegram gives no email address, and Supabase needs one, so each Telegram user gets a placeholder address. */
 export function placeholderEmail(telegramId: string): string {
   return `tg-${telegramId}@telegram.uplif.invalid`;

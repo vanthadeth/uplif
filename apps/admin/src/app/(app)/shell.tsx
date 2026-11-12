@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useOptimistic, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, History, LayoutDashboard, LifeBuoy, LogOut, Moon, Package, Receipt, Sun } from "lucide-react";
+import { Building2, History, LayoutDashboard, LifeBuoy, KeyRound, LogOut, Moon, Package, Receipt, Sun } from "lucide-react";
 import { AppShell, Avatar, NavProgress, TitleBar, useTheme, type NavGroup, type NavItem, type UtilityItem } from "@uplif/ui";
 import { createClient } from "@uplif/supabase/client";
 
@@ -44,7 +44,7 @@ export function AdminShell({ userName, userEmail, children }: { userName: string
       utilities={utilities}
       account={{
         label: "Account", name: userName || "?", sub: userEmail || undefined, avatar: <Avatar name={userName || "?"} />,
-        menu: [{ id: "out", label: "Sign out", icon: <LogOut />, onClick: signOut }],
+        menu: [{ id: "methods", label: "Sign-in methods", icon: <KeyRound />, onClick: () => router.push("/account") }, { id: "out", label: "Sign out", icon: <LogOut />, onClick: signOut }],
       }}
       navLabel="Main menu" collapseLabel="Collapse menu" expandLabel="Expand menu" menuLabel="Open menu" closeLabel="Close menu"
       topBar={<TitleBar name={userName} greeting="Platform administration" searchLabel="Search" notifLabel="Notifications" soonLabel="coming later" />}

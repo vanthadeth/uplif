@@ -1,8 +1,9 @@
+import { loadSignInMethods } from "@uplif/auth/server";
 import { loadSession } from "@/lib/auth/session";
-import { AccountView, type Methods } from "./view";
+import { AccountView } from "./view";
 
 export default async function AccountPage() {
   const { supabase } = await loadSession();
-  const { data, error } = await supabase.rpc("my_sign_in_methods");
-  return <AccountView methods={(data as unknown as Methods | null) ?? null} failed={!!error} />;
+  const { methods, failed } = await loadSignInMethods(supabase);
+  return <AccountView methods={methods} failed={failed} />;
 }

@@ -9,9 +9,11 @@
 //   3. This function  -> redirects to <console>/auth/telegram?token_hash=...   (the console turns it into a session)
 //
 // The Supabase admin key never leaves Supabase: it is only used here. Secrets to set (Edge Functions -> Secrets):
-//   TELEGRAM_CLIENT_ID, TELEGRAM_CLIENT_SECRET, CONSOLE_URL (for example https://uplif-console.vercel.app)
+//   TELEGRAM_CLIENT_ID, TELEGRAM_CLIENT_SECRET, APP_URLS (comma list of every UPLIF app address, for example
+//   https://uplif-console.vercel.app,https://uplif-admin.vercel.app). CONSOLE_URL still works as a one-app fallback.
+// Each app passes ?app=<its own address>; it is used only if it is on the APP_URLS list.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { openCookie, pkceChallenge, placeholderEmail, randomToken, readCookie, safeNext, sealCookie, sha256Hex, verifyIdToken, type Jwk } from "./lib.ts";
+import { openCookie, pickOrigin, pkceChallenge, placeholderEmail, randomToken, readCookie, safeNext, sealCookie, sha256Hex, verifyIdToken, type Jwk } from "./lib.ts";
 
 const ISSUER = "https://oauth.telegram.org";
 const COOKIE = "tg_login";
@@ -19,12 +21,13 @@ const env = (k: string) => Deno.env.get(k) ?? "";
 
 const clientId = env("TELEGRAM_CLIENT_ID");
 const clientSecret = env("TELEGRAM_CLIENT_SECRET");
-const consoleUrl = env("CONSOLE_URL").replace(/\/$/, "");
+const appUrls = (env("APP_URLS") || env("CONSOLE_URL")).split(",").map((a) => a.trim().replace(/\/$/, "")).filter(Boolean);
 const supabaseUrl = env("SUPABASE_URL");
 const selfUrl = `${supabaseUrl}/functions/v1/telegram-login`;
 
 const admin = createClient(supabaseUrl, env("SUPABASE_SERVICE_ROLE_KEY"), { auth: { persistSession: false, autoRefreshToken: false } });
-const back = (path: string) => `${consoleUrl}${path}`;
+let appUrl = appUrls[0] ?? "";
+const back = (path: string) => `${appUrl}${path}`;
 const redirect = (to: string, cookie?: string) =>
   new Response(null, { status: 302, headers: { Location: to, ...(cookie ? { "Set-Cookie": cookie } : {}), "Cache-Control": "no-store" } });
 const cookieHeader = (value: string, maxAge: number) =>
@@ -33,8 +36,9 @@ const fail = (why: string, to = "/login?error=1") => { console.error("telegram-l
 
 Deno.serve(async (req) => {
   if (req.method !== "GET") return new Response("Method not allowed", { status: 405 });
-  if (!clientId || !clientSecret || !consoleUrl) return new Response("Telegram sign-in is not configured", { status: 503 });
+  if (!clientId || !clientSecret || !appUrls.length) return new Response("Telegram sign-in is not configured", { status: 503 });
   const url = new URL(req.url);
+  appUrl = pickOrigin(url.searchParams.get("app"), appUrls) ?? "";
 
   // Step 1: send the person to Telegram.
   if (!url.searchParams.has("code") && !url.searchParams.has("error")) {
@@ -50,7 +54,7 @@ Deno.serve(async (req) => {
       if (!intent || new Date(intent.expires_at).getTime() < Date.now()) return fail("link ticket invalid or expired", "/account?error=telegram_failed");
       linkUser = intent.user_id;
     }
-    const sealed = await sealCookie({ s: state, v: verifier, n: safeNext(url.searchParams.get("next")) ?? "/", u: linkUser, exp: Date.now() + 10 * 60_000 }, clientSecret);
+    const sealed = await sealCookie({ s: state, v: verifier, n: safeNext(url.searchParams.get("next")) ?? "/", u: linkUser, a: appUrl, exp: Date.now() + 10 * 60_000 }, clientSecret);
     const auth = new URL(`${ISSUER}/auth`);
     auth.search = new URLSearchParams({
       client_id: clientId, redirect_uri: selfUrl, response_type: "code", scope: "openid profile",
@@ -60,7 +64,8 @@ Deno.serve(async (req) => {
   }
 
   // Step 2: Telegram is sending the person back.
-  const saved = await openCookie<{ s: string; v: string; n: string; u: string | null; exp: number }>(readCookie(req.headers.get("cookie"), COOKIE), clientSecret);
+  const saved = await openCookie<{ s: string; v: string; n: string; u: string | null; a?: string; exp: number }>(readCookie(req.headers.get("cookie"), COOKIE), clientSecret);
+  if (saved?.a) appUrl = pickOrigin(saved.a, appUrls) ?? appUrl;
   const linking = !!saved?.u;
   const failTo = linking ? "/account?error=telegram_failed" : "/login?error=1";
   if (url.searchParams.has("error")) return fail(`telegram returned ${url.searchParams.get("error")}`, failTo);

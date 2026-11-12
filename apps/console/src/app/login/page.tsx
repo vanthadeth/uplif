@@ -5,7 +5,7 @@ import { Button, Card, CardBody, Input, LanguagePicker } from "@uplif/ui";
 import { isLocale } from "@/lib/languages";
 import { useLanguageOptions } from "@/lib/use-language-options";
 import { createClient } from "@/lib/supabase/client";
-import { supabaseUrl } from "@uplif/supabase/env";
+import { startGoogleSignIn, startTelegramSignIn } from "@uplif/auth";
 import { toE164 } from "@/lib/auth/phone";
 import { safeNext } from "@/lib/auth/safe-next";
 import { useI18n } from "@/lib/i18n";
@@ -52,17 +52,9 @@ export default function LoginPage() {
     return safeNext(new URLSearchParams(location.search).get("next")) ?? "/";
   }
 
-  async function google() {
-    await createClient().auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(nextPath())}` },
-    });
-  }
-
-  // Telegram sign-in runs in a Supabase Edge Function (telegram-login), which sends the person to Telegram and back.
-  function telegram() {
-    location.href = `${supabaseUrl}/functions/v1/telegram-login?next=${encodeURIComponent(nextPath())}`;
-  }
+  // Same sign-in calls in every UPLIF app (packages/auth), so linked accounts work everywhere.
+  const google = () => startGoogleSignIn(nextPath());
+  const telegram = () => startTelegramSignIn(nextPath());
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 p-4">

@@ -56,3 +56,13 @@ test("safeNext and placeholderEmail", () => {
 test("sha256Hex matches the standard vector", async () => {
   assert.equal(await sha256Hex("abc"), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
 });
+
+import { pickOrigin } from "./lib.ts";
+test("pickOrigin only returns allowed apps", () => {
+  const allowed = ["https://a.example", " https://b.example/ "];
+  assert.equal(pickOrigin("https://b.example", allowed), "https://b.example");
+  assert.equal(pickOrigin("https://b.example/", allowed), "https://b.example");
+  assert.equal(pickOrigin("https://evil.example", allowed), "https://a.example");
+  assert.equal(pickOrigin(null, allowed), "https://a.example");
+  assert.equal(pickOrigin("https://a.example", []), null);
+});
