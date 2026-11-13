@@ -12,6 +12,7 @@ import { hasOpenIn, hhmm, startOfDay, workedMinutes, ymd, type EventLite } from 
 import { LanguageBar } from "./language-bar";
 import { ClockFlow } from "./clock-flow";
 import { useDisplay, useMe } from "./me-context";
+import { useClockOutbox } from "./outbox-context";
 
 interface WorkDay { day_kind: string; start_time: string | null; end_time: string | null; break_min: number | null; hours: number; holiday_name: string | null; holiday_name_local: string | null }
 
@@ -22,6 +23,7 @@ export function Today() {
   const router = useRouter();
   const { time, duration, tag } = useFormat();
   const { name, branch } = useDisplay(state, locale);
+  const outbox = useClockOutbox();
 
   const [now, setNow] = useState<Date | null>(null);
   const [online, setOnline] = useState(true);
@@ -59,7 +61,14 @@ export function Today() {
   }, [employeeId]);
   useEffect(() => { void load(); }, [load, state.last?.occurred_at]);
 
-  const clockedIn = state.last?.kind === "in" || hasOpenIn(events);
+  // Clocks saved on the phone count as if sent, so the button and the day list stay right without signal.
+  const waiting = outbox.items.filter((i) => i.status === "pending");
+  const refused = outbox.items.filter((i) => i.status === "failed");
+  const shown: (EventLite & { waiting?: boolean })[] = [
+    ...events,
+    ...waiting.filter((i) => i.data.day === ymd(new Date())).map((i) => ({ kind: i.data.kind, occurred_at: i.data.deviceTime, flags: [] as string[], waiting: true })),
+  ];
+  const clockedIn = waiting.length > 0 ? waiting[waiting.length - 1].data.kind === "in" : state.last?.kind === "in" || hasOpenIn(events);
 
   const holiday = work ? ((locale !== "en" && work.holiday_name_local) || work.holiday_name) : null;
   const hasShift = !!work?.start_time && !!work?.end_time;
@@ -68,10 +77,10 @@ export function Today() {
     : hasShift ? fill(t("st.shift"), { start: hhmm(work.start_time), end: hhmm(work.end_time) })
     : work.day_kind === "none" ? t("st.shift.none") : t("st.shift.off");
 
-  const worked = now ? workedMinutes(events, now, true) : 0;
+  const worked = now ? workedMinutes(shown, now, true) : 0;
   const totalMin = work ? Math.round(Number(work.hours) * 60) : 0;
   const pct = totalMin > 0 ? Math.min(100, Math.round((worked / totalMin) * 100)) : 0;
-  const first = events[0], lastEvent = events[events.length - 1];
+  const first = shown[0], lastEvent = shown[shown.length - 1];
 
   const statusBadge = clockedIn && state.last
     ? <Badge tone="success">{fill(t("st.status.in"), { time: time((events.find((e) => e.kind === "in") ?? state.last).occurred_at) }).replace(/[.។]$/, "")}</Badge>
@@ -100,8 +109,20 @@ export function Today() {
       )}
 
       {!online && (
-        <p role="status" className="flex items-start gap-3 rounded-card bg-warning-soft p-3 text-warning-ink"><WifiOff className="mt-0.5 size-5 shrink-0" aria-hidden />{t("st.offline")}</p>
+        <p role="status" className="flex items-start gap-3 rounded-card bg-warning-soft p-3 text-warning-ink"><WifiOff className="mt-0.5 size-5 shrink-0" aria-hidden />{t("st.offline.ok")}</p>
       )}
+      {waiting.length > 0 && (
+        <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-card bg-warning-soft p-3 text-warning-ink">
+          <span>{fill(t("st.out.banner"), { n: waiting.length })}</span>
+          {online && <Button loading={outbox.sending} onClick={() => void outbox.flush()}>{t("st.out.send")}</Button>}
+        </div>
+      )}
+      {refused.map((i) => (
+        <div key={i.id} role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-card bg-danger-soft p-3 text-danger-ink">
+          <span>{t("st.out.failed")}</span>
+          <Button onClick={() => void outbox.dismiss(i.id)}>{t("st.out.dismiss")}</Button>
+        </div>
+      ))}
 
       <Card>
         <CardBody className="flex flex-col gap-3">
@@ -115,7 +136,7 @@ export function Today() {
               <span className="text-sm text-muted">{fill(t("st.worked.of"), { worked: duration(worked), total: duration(totalMin) })}</span>
             </div>
           )}
-          <Button variant={clockedIn ? "secondary" : "primary"} disabled={!privacyOk || !online}
+          <Button variant={clockedIn ? "secondary" : "primary"} disabled={!privacyOk}
             className={`h-16 w-full text-lg ${clockedIn ? "border-primary! text-link!" : ""}`} onClick={() => setFlow(clockedIn ? "out" : "in")}>
             {clockedIn ? <LogOut className="size-6" aria-hidden /> : <LogIn className="size-6" aria-hidden />}
             {t(clockedIn ? "st.clockOut" : "st.clockIn")}
@@ -126,13 +147,13 @@ export function Today() {
       <Card>
         <div className="px-4 pb-1 pt-4"><span className="caps text-xs font-bold text-muted">{t("st.today")}</span></div>
         <ul className="divide-y divide-line">
-          {events.map((e, i) => (
+          {shown.map((e, i) => (
             <li key={`${e.occurred_at}-${i}`} className="flex items-center gap-3 px-4 py-3">
               <span className={`grid size-9 shrink-0 place-items-center rounded-control ${e.kind === "in" ? "bg-success-soft text-success-ink" : "bg-neutral-soft text-muted"}`}>
                 {e.kind === "in" ? <LogIn className="size-4" aria-hidden /> : <LogOut className="size-4" aria-hidden />}
               </span>
               <div className="min-w-0 flex-1"><b className="block">{t(e.kind === "in" ? "st.kind.in" : "st.kind.out")}</b><span className="text-sm text-muted">{time(e.occurred_at)}</span></div>
-              {e.flags.length > 0 && <Badge tone="warning">{t("st.review")}</Badge>}
+              {e.waiting ? <Badge tone="warning">{t("st.out.waiting")}</Badge> : e.flags.length > 0 && <Badge tone="warning">{t("st.review")}</Badge>}
             </li>
           ))}
           {!first && hasShift && (
@@ -147,7 +168,7 @@ export function Today() {
               <div><b className="block">{t("st.kind.out")}</b><span className="text-sm text-muted">{fill(t("st.sched"), { time: hhmm(work!.end_time) })}</span></div>
             </li>
           )}
-          {events.length === 0 && !hasShift && <li className="px-4 py-3 text-muted">{t("st.recent.empty")}</li>}
+          {shown.length === 0 && !hasShift && <li className="px-4 py-3 text-muted">{t("st.recent.empty")}</li>}
         </ul>
       </Card>
 
