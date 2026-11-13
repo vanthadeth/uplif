@@ -1059,6 +1059,36 @@ export type Database = {
         Update: { archived?: boolean; kind?: "policy" | "conduct"; company_id?: string; created_at?: string; created_by?: string | null; id?: string; title?: string; title_local?: string | null; updated_at?: string }
         Relationships: []
       }
+      customer_events: {
+        Row: { author_employee_id: string | null; body: string; client_op_id: string; company_id: string; created_at: string; customer_id: string; id: string; kind: "note" | "comment"; occurred_at: string; photo_paths: string[] }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      customer_event_reads: {
+        Row: { company_id: string; customer_id: string; employee_id: string; last_read_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      customers: {
+        Row: { address: string | null; archived_at: string | null; branch_id: string | null; client_op_id: string | null; company_id: string; created_at: string; created_by_employee_id: string | null; credit_limit_cents: number | null; id: string; latitude: number | null; longitude: number | null; name: string; name_local: string | null; notes: string | null; owner_employee_id: string | null; updated_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      customer_contacts: {
+        Row: { company_id: string; created_at: string; customer_id: string; id: string; is_default: boolean; name: string; phone: string | null }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      customer_photos: {
+        Row: { company_id: string; created_at: string; created_by_employee_id: string | null; customer_id: string; id: string; is_default: boolean; note: string | null; photo_type: "storefront" | "display_shelf" | "damage_proof" | "competitor_product" | "other"; storage_path: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       playbook_guides: {
         Row: { archived: boolean; company_id: string; created_at: string; created_by: string | null; id: string; read_minutes: number | null; title: string; title_local: string | null; topic: string | null; updated_at: string }
         Insert: { archived?: boolean; company_id?: string; created_at?: string; created_by?: string | null; id?: string; read_minutes?: number | null; title?: string; title_local?: string | null; topic?: string | null; updated_at?: string }
@@ -1214,6 +1244,50 @@ export type Database = {
       save_policy: {
         Args: { p_id: string | null; p_title: string; p_title_local: string | null; p_body: string; p_body_local: string | null; p_kind?: "policy" | "conduct" }
         Returns: string
+      }
+      sales_add_note: {
+        Args: { p_customer_id: string; p_client_op_id: string; p_body: string | null; p_photo_paths: string[] | null; p_occurred_at: string | null }
+        Returns: string
+      }
+      sales_add_comment: {
+        Args: { p_customer_id: string; p_client_op_id: string; p_body: string }
+        Returns: string
+      }
+      sales_mark_read: {
+        Args: { p_customer_id: string }
+        Returns: undefined
+      }
+      sales_timeline: {
+        Args: { p_customer_id: string; p_limit?: number; p_before?: string | null }
+        Returns: Json
+      }
+      sales_inbox: {
+        Args: { p_limit?: number }
+        Returns: Json
+      }
+      sales_my_state: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      sales_save_customer: {
+        Args: { p_id: string | null; p_name: string; p_name_local: string | null; p_address: string | null; p_latitude: number | null; p_longitude: number | null; p_notes: string | null; p_contacts: Json | null; p_photos: Json | null }
+        Returns: string
+      }
+      sales_archive_customer: {
+        Args: { p_id: string; p_archived: boolean }
+        Returns: undefined
+      }
+      sales_assign_customer: {
+        Args: { p_id: string; p_employee_id: string }
+        Returns: undefined
+      }
+      sales_customer_list: {
+        Args: { p_search: string | null; p_limit?: number; p_include_archived?: boolean }
+        Returns: Json
+      }
+      sales_customer_detail: {
+        Args: { p_id: string }
+        Returns: Json
       }
       save_playbook: {
         Args: { p_id: string | null; p_title: string; p_title_local: string | null; p_topic: string | null; p_read_minutes: number | null; p_position_ids: string[] | null; p_steps: Json }
@@ -1621,6 +1695,8 @@ export type Database = {
       career_event_kind: "promotion" | "transfer"
       geofence_mode: "off" | "flag" | "block"
       attendance_kind: "in" | "out"
+      customer_event_kind: "note" | "comment"
+      customer_photo_type: "storefront" | "display_shelf" | "damage_proof" | "competitor_product" | "other"
       data_scope: "own" | "team" | "branch" | "company"
       employee_status: "active" | "on_leave" | "left"
       override_effect: "grant" | "deny"
