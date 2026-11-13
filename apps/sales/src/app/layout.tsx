@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, title: "UPLIF Go", statusBarStyle: "default" },
 };
 export const viewport: Viewport = {
-  themeColor: [{ media: "(prefers-color-scheme: light)", color: "#1D5FD1" }, { media: "(prefers-color-scheme: dark)", color: "#111A2B" }],
+  themeColor: [{ media: "(prefers-color-scheme: light)", color: "#EA580C" }, { media: "(prefers-color-scheme: dark)", color: "#111A2B" }],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
