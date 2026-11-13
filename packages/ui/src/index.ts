@@ -6,6 +6,7 @@ export * from "./Select";
 export * from "./Badge";
 export * from "./Avatar";
 export * from "./AvatarEdit";
+export * from "./PhotoHero";
 export * from "./image";
 export * from "./Card";
 export * from "./Table";

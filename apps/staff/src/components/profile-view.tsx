@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { SignInMethods, type SignInMethodsData } from "@uplif/auth";
 import { Briefcase, Building2, CalendarDays, Info, MapPin, UserRound, type LucideIcon } from "lucide-react";
-import { AvatarEdit, Card, Reveal, Tabs } from "@uplif/ui";
+import { Card, PhotoHero, Reveal, Tabs } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
 import { usePicture } from "@/components/picture-context";
 import { localName, useDisplay, useMe, useProfile } from "@/components/me-context";
@@ -42,23 +42,12 @@ export function ProfileView({ methods, failed }: { methods: SignInMethodsData | 
   return (
     <div className="flex flex-col gap-4 p-4 pb-6">
       <Reveal>
-        <Card className="overflow-hidden">
-          <div aria-hidden className="h-20 bg-primary-soft" />
-          <div className="-mt-12 flex flex-col items-center gap-1 px-4 pb-5 text-center">
-            <div className="rounded-full border-4 border-surface bg-surface">
-              <AvatarEdit size="xl" name={name || "?"} src={picture.src} busy={picture.busy} changeLabel={t("st.photo.change")} removeLabel={t("st.photo.remove")}
-                onPick={(f) => void picture.change(f)} onRemove={() => void picture.remove()} />
-            </div>
-            <h1 className="mt-2 max-w-full truncate text-2xl font-bold tracking-tight">{name}</h1>
-            <p className="m-0 max-w-full truncate text-muted">{position ?? t("st.bar.role")}</p>
-            {branch && <span className="mt-1 inline-flex max-w-full items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-sm font-medium text-primary-ink"><MapPin className="size-3.5 shrink-0" aria-hidden /><span className="truncate">{branch}</span></span>}
-          </div>
-          {tenure && (
-            <div className="border-t border-line px-4 py-3 text-center text-sm text-muted">
-              {t("st.profile.since")} <b className="text-ink">{date}</b> · <b className="text-ink">{tenure}</b>
-            </div>
-          )}
-        </Card>
+        <PhotoHero name={name || "?"} src={picture.src} busy={picture.busy} title={name}
+          subtitle={[position ?? t("st.bar.role"), branch].filter(Boolean).join(" · ")}
+          changeLabel={t("st.photo.change")} removeLabel={t("st.photo.remove")}
+          onPick={(f) => void picture.change(f)} onRemove={() => void picture.remove()}>
+          {tenure && <p className="m-0 mt-1 text-sm text-white/80">{t("st.profile.since")} {date} · {tenure}</p>}
+        </PhotoHero>
       </Reveal>
       <Tabs label={t("st.profile.tabs")} value={tab} onChange={setTab}
         items={[{ id: "work", label: t("st.profile.work") }, { id: "accounts", label: t("st.profile.accounts") }]} />
