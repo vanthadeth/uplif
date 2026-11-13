@@ -320,6 +320,11 @@ export const enMe = {
   "st.notif.error": "Could not load notifications.",
   "st.notif.loading": "Loading notifications",
   "st.bar.unread": "Notifications, {n} unread",
+  "st.push.toggle": "Alerts on this phone",
+  "st.push.hint": "Get a short alert when something new arrives. It never shows details on your lock screen.",
+  "st.push.denied": "Alerts are blocked for this app in your phone settings.",
+  "st.push.unsupported": "This phone or browser cannot receive alerts here. On iPhone, add the app to your Home Screen first.",
+  "st.push.error": "Could not change alerts. Try again.",
 } as const;
 
 export const kmMe: Partial<Record<keyof typeof enMe, string>> = {
@@ -642,4 +647,9 @@ export const kmMe: Partial<Record<keyof typeof enMe, string>> = {
   "st.notif.error": "មិនអាចផ្ទុកការជូនដំណឹងបានទេ។",
   "st.notif.loading": "កំពុងផ្ទុកការជូនដំណឹង",
   "st.bar.unread": "ការជូនដំណឹង មាន {n} មិនទាន់អាន",
+  "st.push.toggle": "ការជូនដំណឹងនៅលើទូរស័ព្ទនេះ",
+  "st.push.hint": "ទទួលដំណឹងខ្លីៗនៅពេលមានអ្វីថ្មី។ វាមិនបង្ហាញព័ត៌មានលម្អិតនៅលើអេក្រង់ចាក់សោរបស់អ្នកទេ។",
+  "st.push.denied": "ការជូនដំណឹងត្រូវបានបិទសម្រាប់កម្មវិធីនេះនៅក្នុងការកំណត់ទូរស័ព្ទរបស់អ្នក។",
+  "st.push.unsupported": "ទូរស័ព្ទ ឬកម្មវិធីរុករកនេះមិនអាចទទួលការជូនដំណឹងនៅទីនេះបានទេ។ នៅលើ iPhone សូមបន្ថែមកម្មវិធីទៅអេក្រង់ដើមជាមុនសិន។",
+  "st.push.error": "មិនអាចប្តូរការជូនដំណឹងបានទេ។ សូមព្យាយាមម្តងទៀត។",
 };
