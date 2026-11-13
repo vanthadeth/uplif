@@ -1150,8 +1150,15 @@ export type Database = {
           department?: { name: string; name_local: string | null } | null
           reports_to?: { name: string; name_local: string | null } | null
           employment_date?: string | null
+          role?: { name: string; name_local: string | null } | null
+          manager?: { name: string; name_local: string | null; position: { name: string; name_local: string | null } | null; phone: string | null; telegram: string | null } | null
         }
       }
+      my_personal: {
+        Args: Record<string, never>
+        Returns: { nickname: string | null; date_of_birth: string | null; address: string | null; phones: string[]; emergency: { name: string | null; relation: string | null; phone: string | null }[] }
+      }
+      my_save_personal: { Args: { p: Json }; Returns: undefined }
       attendance_clock: {
         Args: { p_kind: Database["public"]["Enums"]["attendance_kind"]; p_client_event_id: string; p_device_time: string; p_latitude: number | null; p_longitude: number | null; p_accuracy_m: number | null; p_selfie_path: string | null; p_device_id: string | null; p_offline?: boolean }
         Returns: { id: string; kind: Database["public"]["Enums"]["attendance_kind"]; occurred_at: string; flags: string[]; repeat: boolean }
