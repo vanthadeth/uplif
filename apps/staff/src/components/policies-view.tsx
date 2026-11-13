@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { Check, ChevronLeft, ChevronRight } from "lucide-react";
-import { Badge, Button, EmptyState, ErrorState, Reveal, Skeleton, useToast } from "@uplif/ui";
+import { Badge, Button, EmptyState, ErrorState, Reveal, RichText, Skeleton, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
@@ -66,7 +66,7 @@ export function PoliciesView({ kind = "policy" }: { kind?: "policy" | "conduct" 
           <span>{fill(t("st.policy.version"), { n: open.version, date: date(open.published_at) })}</span>
           {!open.acknowledged_at && open.confirmed_earlier && <Badge tone="warning">{t("st.policy.updated")}</Badge>}
         </div>
-        <p className="m-0 whitespace-pre-wrap break-words rounded-card border border-line bg-surface p-4 leading-relaxed">{local(open.body, open.body_local)}</p>
+        <RichText html={local(open.body, open.body_local)} className="rounded-card border border-line bg-surface p-4" />
         {open.acknowledged_at ? (
           <p className="m-0 flex items-center gap-2 rounded-card bg-success-soft p-3 font-semibold text-success-ink"><Check className="size-5" aria-hidden />{fill(t("st.policy.done"), { date: date(open.acknowledged_at) })}</p>
         ) : (
