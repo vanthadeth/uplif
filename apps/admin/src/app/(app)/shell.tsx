@@ -39,7 +39,7 @@ export function AdminShell({ userName, userEmail, children }: { userName: string
   }
   return (
     <AppShell
-      company={{ name: "UPLIF", sub: "Super Admin", label: "UPLIF Super Admin" }}
+      company={{ name: "UPLIF", sub: "Super Admin", label: "UPLIF Platform" }}
       groups={groups} activeId={active}
       onNavigate={(id) => { const href = items.find((i) => i.id === id)?.href ?? "/overview"; startTransition(() => { setShownPath(href); router.push(href); }); }}
       utilities={utilities}

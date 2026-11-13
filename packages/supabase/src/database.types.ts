@@ -1595,6 +1595,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      my_enabled_modules: {
+        Args: Record<PropertyKey, never>
+        Returns: string[]
+      }
       my_permissions: {
         Args: Record<PropertyKey, never>
         Returns: {

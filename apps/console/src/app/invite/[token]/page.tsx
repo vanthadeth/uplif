@@ -11,5 +11,5 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   const preview = (data?.[0] as Preview | undefined) ?? null;
   // Someone signed in without a profile gives their name first; the profile page returns here.
   if (preview?.state === "pending" && state.signedIn && !state.hasProfile) redirect(`/profile?next=${encodeURIComponent(here)}`);
-  return <InviteView token={token} preview={preview} signedIn={state.signedIn} />;
+  return <InviteView token={token} preview={preview} signedIn={state.signedIn} existingAccount={state.signedIn && state.companyCount > 0} />;
 }
