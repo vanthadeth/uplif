@@ -9,6 +9,8 @@ import { useI18n } from "@/lib/i18n";
 export function TabBar() {
   const { t } = useI18n();
   const path = usePathname();
+  // The conversation has its own message bar at the bottom.
+  if (/^\/customers\/[0-9a-f-]{36}$/.test(path)) return null;
   return (
     <BottomNav label={t("go.tab.label")} path={path} linkAs={Link}
       items={[

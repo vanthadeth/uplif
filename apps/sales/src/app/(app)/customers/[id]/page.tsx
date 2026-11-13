@@ -1,6 +1,6 @@
-import { CustomerView } from "@/components/customer-view";
+import { Conversation } from "@/components/conversation";
 
 export default async function CustomerPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return <CustomerView id={id} />;
+  return <Conversation id={id} />;
 }

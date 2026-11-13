@@ -10,7 +10,7 @@ export default async function EditCustomerPage({ params }: { params: Promise<{ i
   const { id } = await params;
   const state = await getSalesState();
   if (!uuid.test(id)) notFound();
-  if (!state?.can_update) redirect(`/customers/${id}`);
+  if (!state?.can_update) redirect(`/customers/${id}/details`);
   const supabase = await createClient();
   const { data } = await supabase.rpc("sales_customer_detail", { p_id: id });
   if (!data) notFound();

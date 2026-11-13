@@ -30,7 +30,7 @@ export function CustomerView({ id }: { id: string }) {
   }, [id, tick]);
   const urls = useSignedUrls((c?.photos ?? []).map((p) => p.path));
   const back = (
-    <Link href="/customers" aria-label={t("go.det.back")} className="grid size-11 place-items-center rounded-full text-muted active:bg-neutral-soft"><ChevronLeft className="size-6" aria-hidden /></Link>
+    <Link href={`/customers/${id}`} aria-label={t("go.det.back")} className="grid size-11 place-items-center rounded-full text-muted active:bg-neutral-soft"><ChevronLeft className="size-6" aria-hidden /></Link>
   );
 
   async function archive(on: boolean) {

@@ -47,3 +47,20 @@ export function useSignedUrls(paths: (string | null | undefined)[]): Record<stri
 }
 
 export const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
+
+export interface TimelineEvent {
+  id: string; kind: "note" | "comment"; body: string; photo_paths: string[]; occurred_at: string; created_at: string;
+  author_employee_id: string | null; mine: boolean; author_name: string | null; author_name_local: string | null;
+}
+export interface InboxRow {
+  customer_id: string; name: string; name_local: string | null; kind: "note" | "comment"; body: string; last_at: string;
+  has_photos: boolean; author_name: string | null; author_name_local: string | null; mine: boolean; unread: boolean; photo_path: string | null;
+}
+
+/** "10:42" for today, "Mon 9 Nov" for earlier days. */
+export function shortWhen(iso: string, tag: string): string {
+  const d = new Date(iso), now = new Date();
+  const same = d.toDateString() === now.toDateString();
+  return same ? d.toLocaleTimeString(tag, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
+    : d.toLocaleDateString(tag, { day: "numeric", month: "short" });
+}

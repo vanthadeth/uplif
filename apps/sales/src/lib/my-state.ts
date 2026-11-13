@@ -14,6 +14,7 @@ export interface SalesState {
   can_create?: boolean;
   can_update?: boolean;
   can_manage?: boolean;
+  can_comment?: boolean;
 }
 
 /** The signed-in person's employee record, plan check and customer permissions. Cached for one request. */

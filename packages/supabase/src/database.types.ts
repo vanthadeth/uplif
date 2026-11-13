@@ -1059,6 +1059,18 @@ export type Database = {
         Update: { archived?: boolean; kind?: "policy" | "conduct"; company_id?: string; created_at?: string; created_by?: string | null; id?: string; title?: string; title_local?: string | null; updated_at?: string }
         Relationships: []
       }
+      customer_events: {
+        Row: { author_employee_id: string | null; body: string; client_op_id: string; company_id: string; created_at: string; customer_id: string; id: string; kind: "note" | "comment"; occurred_at: string; photo_paths: string[] }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      customer_event_reads: {
+        Row: { company_id: string; customer_id: string; employee_id: string; last_read_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       customers: {
         Row: { address: string | null; archived_at: string | null; branch_id: string | null; client_op_id: string | null; company_id: string; created_at: string; created_by_employee_id: string | null; credit_limit_cents: number | null; id: string; latitude: number | null; longitude: number | null; name: string; name_local: string | null; notes: string | null; owner_employee_id: string | null; updated_at: string }
         Insert: never
@@ -1232,6 +1244,26 @@ export type Database = {
       save_policy: {
         Args: { p_id: string | null; p_title: string; p_title_local: string | null; p_body: string; p_body_local: string | null; p_kind?: "policy" | "conduct" }
         Returns: string
+      }
+      sales_add_note: {
+        Args: { p_customer_id: string; p_client_op_id: string; p_body: string | null; p_photo_paths: string[] | null; p_occurred_at: string | null }
+        Returns: string
+      }
+      sales_add_comment: {
+        Args: { p_customer_id: string; p_client_op_id: string; p_body: string }
+        Returns: string
+      }
+      sales_mark_read: {
+        Args: { p_customer_id: string }
+        Returns: undefined
+      }
+      sales_timeline: {
+        Args: { p_customer_id: string; p_limit?: number; p_before?: string | null }
+        Returns: Json
+      }
+      sales_inbox: {
+        Args: { p_limit?: number }
+        Returns: Json
       }
       sales_my_state: {
         Args: Record<string, never>
@@ -1663,6 +1695,7 @@ export type Database = {
       career_event_kind: "promotion" | "transfer"
       geofence_mode: "off" | "flag" | "block"
       attendance_kind: "in" | "out"
+      customer_event_kind: "note" | "comment"
       customer_photo_type: "storefront" | "display_shelf" | "damage_proof" | "competitor_product" | "other"
       data_scope: "own" | "team" | "branch" | "company"
       employee_status: "active" | "on_leave" | "left"

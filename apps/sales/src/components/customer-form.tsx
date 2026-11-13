@@ -89,14 +89,14 @@ export function CustomerForm({ initial }: { initial?: CustomerDetail }) {
     setBusy(false);
     if (err) { setError("go.form.saveFailed"); return; }
     toast("success", t("go.form.saved"));
-    router.replace(`/customers/${id}`);
+    router.replace(initial ? `/customers/${id}/details` : `/customers/${id}`);
     router.refresh();
   }
 
   return (
     <div className="flex flex-col gap-5 p-4">
       <div className="flex items-center gap-2 pt-2">
-        <Link href={initial ? `/customers/${id}` : "/customers"} aria-label={t("go.cancel")} className="grid size-11 place-items-center rounded-full text-muted active:bg-neutral-soft"><ChevronLeft className="size-6" aria-hidden /></Link>
+        <Link href={initial ? `/customers/${id}/details` : "/customers"} aria-label={t("go.cancel")} className="grid size-11 place-items-center rounded-full text-muted active:bg-neutral-soft"><ChevronLeft className="size-6" aria-hidden /></Link>
         <h1 className="text-2xl font-bold tracking-tight">{t(initial ? "go.form.editTitle" : "go.form.newTitle")}</h1>
       </div>
 
