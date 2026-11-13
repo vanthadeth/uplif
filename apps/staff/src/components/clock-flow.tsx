@@ -10,6 +10,8 @@ import { useFormat } from "@/lib/use-format";
 import { deviceId } from "@/lib/store";
 import { distanceM, ymd } from "@/lib/format";
 import { useMe, useDisplay } from "./me-context";
+import { useClockOutbox } from "./outbox-context";
+import { isNetworkError } from "@/lib/clock-outbox";
 
 type Gps = { status: "getting" } | { status: "denied" } | { status: "ok"; lat: number; lon: number; acc: number };
 type Step = "locate" | "camera" | "preview" | "sending" | "done";
@@ -19,6 +21,7 @@ const TARGET_M = 30;
 const WAIT_S = 15;
 
 const FLAG_KEYS: Record<string, MessageKey> = {
+  offline: "st.flag.offline",
   outside_geofence: "st.flag.outside_geofence", no_gps: "st.flag.no_gps", low_accuracy: "st.flag.low_accuracy",
   clock_drift: "st.flag.clock_drift", missing_selfie: "st.flag.missing_selfie", shared_device: "st.flag.shared_device",
 };
@@ -32,13 +35,14 @@ export function ClockFlow({ kind, onClose, onSaved }: { kind: "in" | "out"; onCl
   const { t, locale } = useI18n();
   const { branch: branchName } = useDisplay(state, locale);
   const { time } = useFormat();
+  const outbox = useClockOutbox();
 
   const [step, setStep] = useState<Step>("locate");
   const [cameraError, setCameraError] = useState<"" | "denied" | "none">("");
   const [gps, setGps] = useState<Gps>({ status: "getting" });
   const [photo, setPhoto] = useState<{ blob: Blob; url: string } | null>(null);
   const [error, setError] = useState("");
-  const [done, setDone] = useState<{ at: string; flags: string[] } | null>(null);
+  const [done, setDone] = useState<{ at: string; flags: string[]; queued?: boolean } | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const attemptRef = useRef<string>("");
@@ -142,15 +146,33 @@ export function ClockFlow({ kind, onClose, onSaved }: { kind: "in" | "out"; onCl
     setStep("sending"); setError("");
     const supabase = createClient();
     const eventId = attemptRef.current;
+    const deviceTime = new Date().toISOString();
+    const g = gps.status === "ok" ? gps : null;
+
+    /** Keep the clock on this phone; it is sent when there is signal. */
+    const saveOnPhone = async () => {
+      await outbox.save({
+        kind, eventId, deviceTime, day: ymd(new Date()), lat: g ? g.lat : null, lon: g ? g.lon : null, acc: g ? g.acc : null,
+        selfie: photo.blob, deviceId: deviceId(), companyId: state.company_id ?? "", employeeId: state.employee_id ?? "",
+      });
+      setDone({ at: deviceTime, flags: [], queued: true });
+      setStep("done");
+    };
+    // Something already waits to be sent, or there is no signal: keep the order and save it too.
+    if (!navigator.onLine || outbox.items.some((i) => i.status === "pending")) { await saveOnPhone(); return; }
+
     const path = `${state.company_id}/${state.employee_id}/${ymd(new Date())}/${eventId}.jpg`;
     const up = await supabase.storage.from("attendance-selfies").upload(path, photo.blob, { contentType: "image/jpeg", upsert: false });
-    if (up.error && !/exist|duplicate/i.test(up.error.message)) { setError(t("st.err.upload")); setStep("preview"); return; }
-    const g = gps.status === "ok" ? gps : null;
+    if (up.error && !/exist|duplicate/i.test(up.error.message)) {
+      if (isNetworkError(up.error)) { await saveOnPhone(); return; }
+      setError(t("st.err.upload")); setStep("preview"); return;
+    }
     const { data, error: err } = await supabase.rpc("attendance_clock", {
-      p_kind: kind, p_client_event_id: eventId, p_device_time: new Date().toISOString(),
+      p_kind: kind, p_client_event_id: eventId, p_device_time: deviceTime,
       p_latitude: g ? g.lat : null, p_longitude: g ? g.lon : null, p_accuracy_m: g ? g.acc : null,
       p_selfie_path: path, p_device_id: deviceId(),
     });
+    if (err && isNetworkError(err)) { await saveOnPhone(); return; }
     if (err || !data) { setError(errorText(err?.message ?? "")); setStep("preview"); return; }
     setDone({ at: data.occurred_at, flags: data.flags });
     setStep("done");
@@ -177,6 +199,7 @@ export function ClockFlow({ kind, onClose, onSaved }: { kind: "in" | "out"; onCl
           <div className="flex flex-col items-center gap-3 text-center">
             <span className="grid size-22 place-items-center rounded-full bg-success-soft text-success-ink"><Check className="size-11" aria-hidden /></span>
             <h1 className="text-2xl font-bold tracking-tight">{fill(t(kind === "in" ? "st.done.in" : "st.done.out"), { time: time(done.at) })}</h1>
+            {done.queued && <p className="m-0 text-muted">{t("st.done.queued")}</p>}
           </div>
           <ul className="divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
             <li className="flex items-center gap-3 p-4"><span className="grid size-9 place-items-center rounded-control bg-success-soft text-success-ink"><Camera className="size-4" aria-hidden /></span><b>{t("st.done.selfie")}</b></li>

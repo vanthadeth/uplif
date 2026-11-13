@@ -299,6 +299,14 @@ export const enMe = {
   "st.job.transfer": "Transfer",
   "st.job.line": "{from} to {to}",
   "st.job.note": "Note: {note}",
+  "st.offline.ok": "You are offline. You can still clock in. It is saved on your phone and sent when you have signal.",
+  "st.done.queued": "Saved on your phone. It will be sent when you have signal.",
+  "st.flag.offline": "Saved without signal and sent later.",
+  "st.out.waiting": "Waiting to send",
+  "st.out.banner": "{n} saved on your phone, waiting to send.",
+  "st.out.send": "Send now",
+  "st.out.failed": "A clock saved on your phone could not be accepted, for example because it is over 7 days old. You can ask for a correction under Record > Attendance.",
+  "st.out.dismiss": "Dismiss",
 } as const;
 
 export const kmMe: Partial<Record<keyof typeof enMe, string>> = {
@@ -600,4 +608,12 @@ export const kmMe: Partial<Record<keyof typeof enMe, string>> = {
   "st.job.transfer": "ការផ្លាស់ប្តូរ",
   "st.job.line": "{from} ទៅ {to}",
   "st.job.note": "កំណត់ចំណាំ៖ {note}",
+  "st.offline.ok": "អ្នកគ្មានអ៊ីនធឺណិត។ អ្នកនៅតែអាចកត់ម៉ោងបាន។ វាត្រូវបានរក្សាទុកក្នុងទូរស័ព្ទ ហើយផ្ញើនៅពេលមានអ៊ីនធឺណិត។",
+  "st.done.queued": "បានរក្សាទុកក្នុងទូរស័ព្ទ។ វានឹងត្រូវបានផ្ញើនៅពេលមានអ៊ីនធឺណិត។",
+  "st.flag.offline": "បានរក្សាទុកពេលគ្មានអ៊ីនធឺណិត ហើយផ្ញើក្រោយ។",
+  "st.out.waiting": "កំពុងរង់ចាំផ្ញើ",
+  "st.out.banner": "មាន {n} បានរក្សាទុកក្នុងទូរស័ព្ទ កំពុងរង់ចាំផ្ញើ។",
+  "st.out.send": "ផ្ញើឥឡូវនេះ",
+  "st.out.failed": "ការកត់ម៉ោងដែលបានរក្សាទុកក្នុងទូរស័ព្ទមិនត្រូវបានទទួលយកទេ ឧទាហរណ៍ព្រោះលើសពី 7 ថ្ងៃ។ អ្នកអាចស្នើសុំការកែតម្រូវនៅក្នុង កំណត់ត្រា > វត្តមាន។",
+  "st.out.dismiss": "បិទ",
 };
