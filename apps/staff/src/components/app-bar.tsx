@@ -4,9 +4,11 @@ import Link from "next/link";
 import { Bell, ChevronRight, LogOut, Menu, Monitor, Moon, Sun } from "lucide-react";
 import { Avatar } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
+import { fill } from "@/lib/messages";
 import { useAppearance, type Appearance } from "@/lib/appearance";
 import { createClient } from "@/lib/supabase/client";
 import { LanguageBar } from "@/components/language-bar";
+import { useNotifications } from "@/components/notifications-context";
 import { usePicture } from "@/components/picture-context";
 import { localName, useDisplay, useMe, useProfile } from "@/components/me-context";
 
@@ -23,6 +25,7 @@ export function AppBar() {
   const profile = useProfile();
   const { name } = useDisplay(state, locale);
   const picture = usePicture();
+  const { unread } = useNotifications();
   const { appearance, setAppearance } = useAppearance();
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -47,8 +50,9 @@ export function AppBar() {
   return (
     <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-line bg-surface ps-4 pe-2">
       <b className="min-w-0 flex-1 truncate text-lg">{company}</b>
-      <Link href="/notifications" aria-label={t("st.bar.notifications")} className="grid size-12 place-items-center rounded-full text-muted transition-colors hover:bg-primary-soft">
+      <Link href="/notifications" aria-label={unread > 0 ? fill(t("st.bar.unread"), { n: unread }) : t("st.bar.notifications")} className="relative grid size-12 place-items-center rounded-full text-muted transition-colors hover:bg-primary-soft">
         <Bell className="size-6" aria-hidden />
+        {unread > 0 && <span aria-hidden className="absolute end-2 top-2 grid min-w-5 place-items-center rounded-full bg-danger px-1 text-[11px] font-bold leading-5 text-white">{unread > 9 ? "9+" : unread}</span>}
       </Link>
       <div ref={root} className="relative">
         <button ref={btn} type="button" aria-label={t("st.bar.account")} aria-haspopup="true" aria-expanded={open} onClick={() => setOpen(!open)}
