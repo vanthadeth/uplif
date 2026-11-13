@@ -136,7 +136,7 @@ export function CareerView({ positions, descriptions, events, people }: { positi
             <Textarea label={t("cr.jd.summaryLocal")} rows={3} maxLength={2000} value={jd.summaryLocal} onChange={(e) => setJd({ ...jd, summaryLocal: e.target.value })} />
             <Textarea label={t("cr.jd.duties")} rows={7} maxLength={6000} value={jd.duties} onChange={(e) => setJd({ ...jd, duties: e.target.value })} />
             <Textarea label={t("cr.jd.dutiesLocal")} rows={7} maxLength={6000} value={jd.dutiesLocal} onChange={(e) => setJd({ ...jd, dutiesLocal: e.target.value })} />
-            {error && <p role="alert" className="m-0 text-[13px] font-semibold text-danger">{error}</p>}
+            {error && <p role="alert" className="m-0 text-[14px] font-semibold text-danger">{error}</p>}
           </div>
         )}
       </SidePanel>
@@ -159,7 +159,7 @@ export function CareerView({ positions, descriptions, events, people }: { positi
             </Select>
             <Input label={t("cr.pr.date")} type="date" max={today()} value={pr.date} onChange={(e) => { setPr({ ...pr, date: e.target.value }); setError(undefined); }} />
             <Textarea label={t("cr.pr.note")} rows={3} maxLength={1000} value={pr.note} onChange={(e) => setPr({ ...pr, note: e.target.value })} />
-            {error && <p role="alert" className="m-0 text-[13px] font-semibold text-danger">{error}</p>}
+            {error && <p role="alert" className="m-0 text-[14px] font-semibold text-danger">{error}</p>}
           </div>
         )}
       </SidePanel>

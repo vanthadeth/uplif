@@ -258,7 +258,7 @@ export function Select({ label, hint, error, id, name, className, disabled, requ
       <div className="fixed inset-0 z-[100] flex items-end bg-navy/50" onPointerDown={(e) => { if (e.target === e.currentTarget) close(); }}>
         <div className="w-full animate-[uplif-slide-up_0.18s_ease-out] rounded-t-card bg-surface pb-[env(safe-area-inset-bottom)] shadow-pop">
           <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-line-strong" aria-hidden="true" />
-          <div className="px-4 pb-1 pt-3 text-[13px] font-semibold text-muted">{label}</div>
+          <div className="px-4 pb-1 pt-3 text-[14px] font-semibold text-muted">{label}</div>
           {ul}
         </div>
       </div>

@@ -106,7 +106,7 @@ export function HolidaysView({ canManage, today, country, holidays, branches, pr
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[22px] font-bold tracking-tight">{t("hol.title")}</h1>
+          <h1 className="text-[24px] font-bold tracking-tight">{t("hol.title")}</h1>
           <p className="mt-1 max-w-[66ch] text-muted">{t("hol.subtitle")}</p>
         </div>
         {canManage ? (
@@ -128,7 +128,7 @@ export function HolidaysView({ canManage, today, country, holidays, branches, pr
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1">
           <Button aria-label={t("hol.prevYear")} onClick={() => setYear(year - 1)}><ChevronLeft className="size-4" aria-hidden /></Button>
-          <b className="min-w-16 text-center text-[17px] tabular-nums">{year}</b>
+          <b className="min-w-16 text-center text-[18px] tabular-nums">{year}</b>
           <Button aria-label={t("hol.nextYear")} onClick={() => setYear(year + 1)}><ChevronRight className="size-4" aria-hidden /></Button>
         </div>
         {/* The calendar is a desktop view; the phone shows the list only. */}
@@ -165,14 +165,14 @@ export function HolidaysView({ canManage, today, country, holidays, branches, pr
 
       {occ.length === 0 ? (
         <div className={`rounded-card border border-line bg-surface px-4 py-9 text-center text-muted ${view === "calendar" ? "md:hidden" : ""}`}>
-          <b className="mb-1 block text-[15px] text-ink">{f("hol.empty", { year })}</b>{t(canManage ? "hol.emptyBody" : "hol.emptyBodyRo")}
+          <b className="mb-1 block text-[16px] text-ink">{f("hol.empty", { year })}</b>{t(canManage ? "hol.emptyBody" : "hol.emptyBodyRo")}
         </div>
       ) : (
         <div className={`overflow-hidden rounded-card border border-line bg-surface ${view === "calendar" ? "md:mt-0" : ""}`}>
           {occ.map((o) => (
             <div key={`${o.holiday.id}-${o.date}`} className={`grid grid-cols-[auto_1fr_auto] items-center gap-x-4 gap-y-1 border-t border-line px-4 py-3 first:border-t-0 ${o.date < today ? "text-muted" : ""}`}>
               <div className="w-14 text-center leading-tight">
-                <b className="block text-[19px] tabular-nums">{Number(o.date.slice(8))}</b>
+                <b className="block text-[20px] tabular-nums">{Number(o.date.slice(8))}</b>
                 <small className="block text-xs uppercase">{new Date(o.date + "T00:00:00Z").toLocaleDateString(tag, { month: "short", timeZone: "UTC" })} · {weekday(o.date)}</small>
               </div>
               <div className="min-w-0 leading-snug">
@@ -193,20 +193,20 @@ export function HolidaysView({ canManage, today, country, holidays, branches, pr
         </>}>
         {draft && (
           <div className="flex flex-col gap-4">
-            {editingHistory && <p className="m-0 text-[13px] leading-snug text-muted">{t("hol.errHistory")}</p>}
+            {editingHistory && <p className="m-0 text-[14px] leading-snug text-muted">{t("hol.errHistory")}</p>}
             <Input label={t("hol.name")} value={draft.name} maxLength={120} disabled={editingHistory} onChange={(e) => { setDraft({ ...draft, name: e.target.value }); setError(undefined); }} error={error && !draft.name.trim() ? error : undefined} />
             <Input label={t("hol.nameLocal")} value={draft.nameLocal} maxLength={120} disabled={editingHistory} onChange={(e) => setDraft({ ...draft, nameLocal: e.target.value })} hint={t("branches.nameLocalHint")} />
             <Input label={t("hol.date")} type="date" value={draft.date} disabled={editingHistory} onChange={(e) => { setDraft({ ...draft, date: e.target.value }); setError(undefined); }} />
             <div className="flex flex-col gap-1">
               <Toggle checked={draft.yearly} label={t("hol.repeats")} disabled={editingHistory} onChange={(v) => setDraft({ ...draft, yearly: v, observed: v ? false : draft.observed })} />
-              <small className="text-[13px] text-muted">{t("hol.repeatsHint")}</small>
+              <small className="text-[14px] text-muted">{t("hol.repeatsHint")}</small>
             </div>
             {!draft.yearly && (
               <div className="flex flex-col gap-3">
                 <Toggle checked={draft.observed} label={t("hol.observed")} disabled={editingHistory} onChange={(v) => setDraft({ ...draft, observed: v })} />
                 {draft.observed
                   ? <Input label={t("hol.observedDate")} type="date" value={draft.observedDate} disabled={editingHistory} onChange={(e) => { setDraft({ ...draft, observedDate: e.target.value }); setError(undefined); }} hint={t("hol.observedHint")} />
-                  : <small className="text-[13px] text-muted">{t("hol.observedOff")}</small>}
+                  : <small className="text-[14px] text-muted">{t("hol.observedOff")}</small>}
               </div>
             )}
             {branches.length > 0 && (
@@ -215,7 +215,7 @@ export function HolidaysView({ canManage, today, country, holidays, branches, pr
                 {branches.map((b) => <option key={b.id} value={b.id}>{pick(locale, b.name, b.name_local)}</option>)}
               </Select>
             )}
-            {error && (draft.name.trim() || !error.includes(t("hol.errName"))) && <p role="alert" className="m-0 text-[13px] font-semibold text-danger">{error}</p>}
+            {error && (draft.name.trim() || !error.includes(t("hol.errName"))) && <p role="alert" className="m-0 text-[14px] font-semibold text-danger">{error}</p>}
           </div>
         )}
       </SidePanel>
@@ -232,21 +232,21 @@ export function HolidaysView({ canManage, today, country, holidays, branches, pr
           <Select label={t("hol.imp.year")} value={String(importYear ?? thisYear)} onChange={(e) => setImportYear(Number(e.target.value))}>
             {importYears.map((y) => <option key={y} value={y}>{y}</option>)}
           </Select>
-          <p className="m-0 text-[13px] leading-snug text-muted">{f("hol.imp.body", { country: country || "—" })}</p>
+          <p className="m-0 text-[14px] leading-snug text-muted">{f("hol.imp.body", { country: country || "—" })}</p>
           {importList.length === 0 ? (
-            <p className="m-0 rounded-card bg-ground p-3 text-[13px] leading-snug">{f("hol.imp.none", { year: importYear ?? thisYear, country: country || "—" })}</p>
+            <p className="m-0 rounded-card bg-ground p-3 text-[14px] leading-snug">{f("hol.imp.none", { year: importYear ?? thisYear, country: country || "—" })}</p>
           ) : (
             <ul className="m-0 max-h-64 list-none overflow-auto rounded-card border border-line p-0">
               {importList.map((p) => (
-                <li key={p.holiday_date + p.name} className="flex items-baseline justify-between gap-3 border-t border-line px-3 py-2 text-[13px] first:border-t-0">
+                <li key={p.holiday_date + p.name} className="flex items-baseline justify-between gap-3 border-t border-line px-3 py-2 text-[14px] first:border-t-0">
                   <span className="min-w-0 break-words">{pick(locale, p.name, p.name_local)}</span>
                   <span className="shrink-0 tabular-nums text-muted">{fmtDate(locale, p.holiday_date)}{p.provisional ? " *" : ""}</span>
                 </li>
               ))}
             </ul>
           )}
-          {importList.some((p) => p.provisional) && <p className="m-0 text-[13px] leading-snug text-warning-ink">{t("hol.imp.provisional")}</p>}
-          <p className="m-0 text-[13px] leading-snug text-muted">{t("hol.imp.safe")}</p>
+          {importList.some((p) => p.provisional) && <p className="m-0 text-[14px] leading-snug text-warning-ink">{t("hol.imp.provisional")}</p>}
+          <p className="m-0 text-[14px] leading-snug text-muted">{t("hol.imp.safe")}</p>
         </div>
       </Modal>
     </div>

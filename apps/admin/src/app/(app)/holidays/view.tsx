@@ -41,8 +41,8 @@ export function HolidaysView({ data }: { data: Overview | null }) {
               <li key={`${a.country_code}${a.year}`} className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3 last:border-b-0">
                 <div className="min-w-0">
                   <b className="font-semibold">{a.country_code === "*" ? "The whole run" : a.country_code} · {a.year}</b>
-                  <p className="m-0 text-[13px] text-muted">{a.last_error ?? "Failed"} · seen {a.occurrences}× · last {fmtTime(a.last_seen)}</p>
-                  {a.country_code !== "*" && <p className="m-0 text-[13px] text-muted">Fix: enter this country&apos;s {a.year} presets by hand (source &quot;manual&quot;); the alert then clears.</p>}
+                  <p className="m-0 text-[14px] text-muted">{a.last_error ?? "Failed"} · seen {a.occurrences}× · last {fmtTime(a.last_seen)}</p>
+                  {a.country_code !== "*" && <p className="m-0 text-[14px] text-muted">Fix: enter this country&apos;s {a.year} presets by hand (source &quot;manual&quot;); the alert then clears.</p>}
                 </div>
                 <Button loading={busy === `${a.country_code}${a.year}`} onClick={() => ack(a)}>Acknowledge</Button>
               </li>
@@ -54,7 +54,7 @@ export function HolidaysView({ data }: { data: Overview | null }) {
         <CardHeader title={`Countries (${data.next_year} presets)`} />
         <CardBody className="overflow-x-auto p-0">
           <table className="w-full text-left text-sm">
-            <thead><tr className="border-b border-line text-[13px] text-muted"><th className="px-5 py-2 font-medium">Country</th><th className="px-3 py-2 font-medium">Companies</th><th className="px-3 py-2 font-medium">Presets</th><th className="px-3 py-2 font-medium">Last fetch</th></tr></thead>
+            <thead><tr className="border-b border-line text-[14px] text-muted"><th className="px-5 py-2 font-medium">Country</th><th className="px-3 py-2 font-medium">Companies</th><th className="px-3 py-2 font-medium">Presets</th><th className="px-3 py-2 font-medium">Last fetch</th></tr></thead>
             <tbody>
               {data.countries.map((c) => (
                 <tr key={c.country_code} className="border-b border-line last:border-b-0">
@@ -75,7 +75,7 @@ export function HolidaysView({ data }: { data: Overview | null }) {
             {data.runs.map((r) => (
               <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3 last:border-b-0">
                 <span><b className="font-semibold">{r.year}</b> · {fmtTime(r.requested_at)}{r.forced ? " · started by hand" : ""}</span>
-                <span className="flex items-center gap-2 text-[13px] text-muted">{r.countries} countries{r.failed ? `, ${r.failed} failed` : ""}<Badge tone={tone(r.status)}>{r.status}</Badge></span>
+                <span className="flex items-center gap-2 text-[14px] text-muted">{r.countries} countries{r.failed ? `, ${r.failed} failed` : ""}<Badge tone={tone(r.status)}>{r.status}</Badge></span>
               </li>
             ))}
           </ul>

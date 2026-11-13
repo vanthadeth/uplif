@@ -71,7 +71,7 @@ export function RichEditor({ label, value, onChange, labels, hint, minHeight = 2
 
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <span id={`${id}-l`} className="text-[13px] font-semibold text-ink-2">{label}</span>
+      <span id={`${id}-l`} className="text-[14px] font-semibold text-ink-2">{label}</span>
       <div className="overflow-hidden rounded-control border border-line-strong bg-surface focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
         <div role="toolbar" aria-label={label} className="flex flex-wrap items-center gap-0.5 border-b border-line bg-ground/60 p-1">
           {tool("b", labels.bold, Bold, () => run("bold"), active.bold)}

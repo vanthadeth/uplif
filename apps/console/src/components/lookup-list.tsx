@@ -96,7 +96,7 @@ export function LookupList({ kind, items, counts, departments, roles, companyId,
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[22px] font-bold tracking-tight">{t(`${p}.title`)}</h1>
+          <h1 className="text-[24px] font-bold tracking-tight">{t(`${p}.title`)}</h1>
           <p className="mt-1 max-w-[62ch] text-muted">{t(`${p}.subtitle`)}</p>
         </div>
         {canManage ? add : <Badge tone="neutral"><Lock className="size-3" aria-hidden />{t("branches.viewOnly")}</Badge>}
@@ -111,7 +111,7 @@ export function LookupList({ kind, items, counts, departments, roles, companyId,
 
       {items.length === 0 ? (
         <div className="rounded-card border border-line bg-surface px-4 py-9 text-center text-muted">
-          <b className="mb-1 block text-[15px] text-ink">{t(`${p}.empty`)}</b>
+          <b className="mb-1 block text-[16px] text-ink">{t(`${p}.empty`)}</b>
           {t(`${p}.emptyBody`)}
           {canManage && <div className="mt-3.5">{add}</div>}
         </div>
@@ -124,12 +124,12 @@ export function LookupList({ kind, items, counts, departments, roles, companyId,
           </label>
           <div className="overflow-hidden rounded-card border border-line bg-surface">
             {shown.length === 0 ? (
-              <div className="px-4 py-9 text-center text-muted"><b className="mb-1 block text-[15px] text-ink">{t("emp.noMatch")}</b>{t("emp.noMatchBody")}</div>
+              <div className="px-4 py-9 text-center text-muted"><b className="mb-1 block text-[16px] text-ink">{t("emp.noMatch")}</b>{t("emp.noMatchBody")}</div>
             ) : shown.map((i) => (
               <div key={i.id} className="grid min-h-[68px] grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1.5 border-t border-line px-4 py-3.5 first:border-t-0">
                 <div className="min-w-0 leading-snug">
-                  <b className="block break-words text-[15px] font-semibold">{pick(locale, i.name, i.name_local)}</b>
-                  {(kind === "pos" ? [deptName(i.department_id), roleName(i.default_role_id)] : []).filter(Boolean).map((x, k) => <small key={k} className="block break-words text-[13px] text-muted">{x}</small>)}
+                  <b className="block break-words text-[16px] font-semibold">{pick(locale, i.name, i.name_local)}</b>
+                  {(kind === "pos" ? [deptName(i.department_id), roleName(i.default_role_id)] : []).filter(Boolean).map((x, k) => <small key={k} className="block break-words text-[14px] text-muted">{x}</small>)}
                 </div>
                 <span className="tabular-nums text-muted">{counts ? `${t(`${p}.people`)}: ${n(counts[i.id] ?? 0)}` : ""}</span>
                 {canManage && (

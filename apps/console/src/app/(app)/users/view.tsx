@@ -157,7 +157,7 @@ export function UsersView({ myMembershipId, companyId, companyName, companyNameL
     return (
       <div key={`${m.id}-${only[0]?.id ?? "x"}`} className={`grid min-h-[68px] grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 border-t border-line px-4 py-3.5 first:border-t-0 md:gap-x-4 ${readOnly ? "md:grid-cols-[minmax(0,1.5fr)_minmax(0,1.7fr)_minmax(0,.8fr)]" : "md:grid-cols-[minmax(0,1.5fr)_minmax(0,1.7fr)_minmax(0,.8fr)_210px]"}`}>
         <div className="flex min-w-0 items-center gap-3">
-          <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full border border-line bg-primary-soft text-[13px] font-bold text-primary-ink">{(m.display_name ?? "?").charAt(0).toUpperCase()}</span>
+          <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full border border-line bg-primary-soft text-[14px] font-bold text-primary-ink">{(m.display_name ?? "?").charAt(0).toUpperCase()}</span>
           <div className="min-w-0"><b className={`break-words font-semibold ${m.status === "suspended" ? "text-muted" : ""}`}>{m.display_name ?? "—"}</b> {me && <Badge tone="info">{t("users.you")}</Badge>}</div>
         </div>
         <div className="col-span-2 row-start-2 md:col-span-1 md:row-start-auto">{roleCell(rs)}</div>
@@ -192,7 +192,7 @@ export function UsersView({ myMembershipId, companyId, companyName, companyNameL
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[22px] font-bold tracking-tight">{t("users.title")}</h1>
+          <h1 className="text-[24px] font-bold tracking-tight">{t("users.title")}</h1>
           <p className="mt-1 max-w-[62ch] text-muted">{t("users.subtitle")}</p>
         </div>
         {readOnly ? <Badge tone="neutral"><Lock className="size-3" aria-hidden />{t("users.viewOnly")}</Badge>
@@ -209,7 +209,7 @@ export function UsersView({ myMembershipId, companyId, companyName, companyNameL
       <section aria-label={t("users.seats")} className="grid items-center gap-x-6 gap-y-3 rounded-card border border-line bg-surface p-4 sm:grid-cols-[minmax(0,1fr)_auto]">
         <div>
           <div className="text-2xl font-bold tabular-nums leading-tight">{n(used)} <small className="text-sm font-medium text-muted">{t("users.of")} {n(limit)} {t("users.seatsUsed")}</small></div>
-          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-[13px] text-muted">
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-[14px] text-muted">
             <span><i className="me-1.5 inline-block size-2.5 rounded-[3px] bg-primary" />{n(active)} {t("users.lgActive")}</span>
             <span><i className="me-1.5 inline-block size-2.5 rounded-[3px] bg-primary/40" />{n(pending)} {t("users.lgInvited")}</span>
             <span><i className="me-1.5 inline-block size-2.5 rounded-[3px] bg-line-strong" />{n(suspended)} {t("users.lgSuspended")}</span>
@@ -249,13 +249,13 @@ export function UsersView({ myMembershipId, companyId, companyName, companyNameL
             <div role="group" aria-label={t("common.status")} className="flex flex-wrap gap-2">
               {filters.map((f) => (
                 <button key={f.id} type="button" aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}
-                  className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3 text-[13px] ${filter === f.id ? "border-primary bg-primary-soft font-semibold text-primary-ink" : "border-line-strong bg-surface font-medium"}`}>
+                  className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3 text-[14px] ${filter === f.id ? "border-primary bg-primary-soft font-semibold text-primary-ink" : "border-line-strong bg-surface font-medium"}`}>
                   {t(f.label)} <em className="not-italic tabular-nums opacity-70">{n(f.count)}</em>
                 </button>
               ))}
             </div>
             <div className="flex w-full items-center gap-2 sm:ms-auto sm:w-auto">
-              <span aria-hidden="true" className="whitespace-nowrap text-[13px] font-semibold text-muted">{t("users.groupBy")}</span>
+              <span aria-hidden="true" className="whitespace-nowrap text-[14px] font-semibold text-muted">{t("users.groupBy")}</span>
               <div className="min-w-[160px] flex-1"><Select bare label={t("users.groupBy")} value={groupBy} onChange={(e) => setGroupBy(e.target.value as GroupBy)}>
                 <option value="none">{t("users.gNone")}</option>
                 <option value="branch">{t("invite.branch")}</option>
@@ -266,12 +266,12 @@ export function UsersView({ myMembershipId, companyId, companyName, companyNameL
           <div role="tabpanel" className="overflow-hidden rounded-card border border-line bg-surface">
             {shown.length === 0 ? (
               <div className="px-4 py-9 text-center text-muted">
-                <b className="mb-1 block text-[15px] text-ink">{t("users.noMatch")}</b>{t("users.noMatchBody")}
+                <b className="mb-1 block text-[16px] text-ink">{t("users.noMatch")}</b>{t("users.noMatchBody")}
                 <div className="mt-3"><Button onClick={() => { setQuery(""); setFilter("all"); }}>{t("branches.clearSearch")}</Button></div>
               </div>
             ) : (
               <>
-                <div aria-hidden className={`hidden items-center gap-4 border-b border-line bg-ground px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted md:grid ${readOnly ? "md:grid-cols-[minmax(0,1.5fr)_minmax(0,1.7fr)_minmax(0,.8fr)]" : "md:grid-cols-[minmax(0,1.5fr)_minmax(0,1.7fr)_minmax(0,.8fr)_210px]"}`}>
+                <div aria-hidden className={`hidden items-center gap-4 border-b border-line bg-ground px-4 py-2.5 text-[13px] font-semibold uppercase tracking-wider text-muted md:grid ${readOnly ? "md:grid-cols-[minmax(0,1.5fr)_minmax(0,1.7fr)_minmax(0,.8fr)]" : "md:grid-cols-[minmax(0,1.5fr)_minmax(0,1.7fr)_minmax(0,.8fr)_210px]"}`}>
                   <span>{t("users.name")}</span><span>{t("users.roles")}</span><span>{t("common.status")}</span>{!readOnly && <span />}
                 </div>
                 {groups === null ? shown.map((m) => memberRow(m, [])) : groups.map((g) => {

@@ -34,7 +34,7 @@ export default function Gallery() {
     <main className="mx-auto max-w-5xl px-4 py-8 sm:px-8">
       <header className="mb-2 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-[32px] font-bold leading-tight tracking-tight">{t("gallery.title")}</h1>
+          <h1 className="text-[34px] font-bold leading-tight tracking-tight">{t("gallery.title")}</h1>
           <p className="mt-2 max-w-xl text-muted">{t("gallery.intro")}</p>
         </div>
         <div role="group" aria-label={t("lang.toggle")} className="inline-flex rounded-control border border-line-strong bg-surface p-0.5">

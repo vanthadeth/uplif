@@ -81,7 +81,7 @@ export function LanguageSelect({ languages, userId }: { languages: LanguageRow[]
               <li key={l.code} className={`grid items-center gap-x-4 gap-y-2 border-t border-line p-4 first:border-t-0 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_150px_170px] ${cur ? "bg-primary-soft" : ""}`}>
                 <div className="min-w-0">
                   <b lang={l.code} className="block text-lg font-semibold">{l.native_name}</b>
-                  <span lang="en" className="text-[13px] text-muted">{l.english_name}{l.reviewer_name ? ` · ${f("tl.reviewer", { name: l.reviewer_name })}` : ""}</span>
+                  <span lang="en" className="text-[14px] text-muted">{l.english_name}{l.reviewer_name ? ` · ${f("tl.reviewer", { name: l.reviewer_name })}` : ""}</span>
                 </div>
                 <div>{l.is_source || none ? <div className="h-2 rounded-full bg-neutral-soft" /> : <Progress l={l} />}</div>
                 <div className="flex flex-col items-start gap-1.5">{tags}</div>
