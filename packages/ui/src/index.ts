@@ -29,3 +29,4 @@ export * from "./TitleBar";
 export * from "./NavProgress";
 export { useTheme, themeInitScript, type Theme } from "./theme";
 export * from "./outbox";
+export * from "./BottomNav";

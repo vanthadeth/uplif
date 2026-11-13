@@ -10,6 +10,8 @@
     "dev:admin": "pnpm --filter admin dev",
     "build:admin": "pnpm --filter admin build",
     "dev:staff": "pnpm --filter staff dev",
-    "build:staff": "pnpm --filter staff build"
+    "dev:sales": "pnpm --filter sales dev",
+    "build:staff": "pnpm --filter staff build",
+    "build:sales": "pnpm --filter sales build"
   }
 }
