@@ -1,4 +1,4 @@
-import { forwardRef, type ButtonHTMLAttributes } from "react";
+import { forwardRef, type AnchorHTMLAttributes, type ButtonHTMLAttributes } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "./cn";
 
@@ -39,3 +39,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     </button>
   );
 });
+
+/** A link that looks like a Button (sign-up and "open app" links). Same sizes and colors; size "lg" is for page heroes. */
+export function ButtonLink({ variant = "secondary", size = "md", className, ...rest }:
+  AnchorHTMLAttributes<HTMLAnchorElement> & { variant?: Exclude<ButtonVariant, "danger">; size?: "md" | "lg" }) {
+  return (
+    <a
+      className={cn(
+        "inline-flex items-center justify-center gap-2 rounded-control border font-semibold transition-[background-color,transform] active:scale-[0.98]",
+        size === "lg" ? "min-h-13 rounded-card px-7 text-lg" : "min-h-(--control-h) px-4",
+        variants[variant], className,
+      )}
+      {...rest}
+    />
+  );
+}
