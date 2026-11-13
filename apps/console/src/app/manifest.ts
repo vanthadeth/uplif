@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "UPLIF Console",
-    short_name: "UPLIF",
+    name: "UPLIF Admin",
+    short_name: "UPLIF Admin",
     description: "Business management made simple",
     start_url: "/",
     scope: "/",
