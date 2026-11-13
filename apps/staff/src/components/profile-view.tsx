@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { SignInMethods, type SignInMethodsData } from "@uplif/auth";
 import { Check, Info, MessageCircle, Phone } from "lucide-react";
 import { Button, Card, DetailGroup, DetailRow, PhotoHero, QuickAction, Reveal, Tabs } from "@uplif/ui";
@@ -32,28 +32,6 @@ export function ProfileView({ methods, failed, personal: initial }: { methods: S
   const [tab, setTab] = useState("info");
   const [personal, setPersonal] = useState<Personal | null>(initial);
   const [linking, setLinking] = useState(false);
-  // The photo header shrinks to 4:3 once the page is scrolled. Two thresholds stop it flickering, and the scroll position is
-  // adjusted by the height that changed so the content under it does not jump.
-  const [compact, setCompact] = useState(false);
-  const heroRef = useRef<HTMLDivElement>(null);
-  const was = useRef(false);
-  useEffect(() => {
-    const on = () => {
-      const y = window.scrollY;
-      const next = was.current ? y > 40 : y > 200;
-      if (next !== was.current) {
-        const before = heroRef.current?.getBoundingClientRect().height ?? 0;
-        was.current = next;
-        setCompact(next);
-        requestAnimationFrame(() => {
-          const after = heroRef.current?.getBoundingClientRect().height ?? before;
-          if (after !== before) window.scrollBy(0, after - before);
-        });
-      }
-    };
-    window.addEventListener("scroll", on, { passive: true });
-    return () => window.removeEventListener("scroll", on);
-  }, []);
   const none = t("st.profile.none");
   const since = profile?.employment_date ? new Date(`${profile.employment_date}T00:00:00`) : null;
   const date = since ? new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" }).format(since) : null;
@@ -69,18 +47,19 @@ export function ProfileView({ methods, failed, personal: initial }: { methods: S
   }
   return (
     <div className="flex flex-col gap-4 p-4 pb-6">
-      <Reveal className="sticky top-2 z-20">
-        <div ref={heroRef}>
-        <PhotoHero compact={compact} name={name || "?"} src={picture.src} busy={picture.busy} title={name}
+      <Reveal>
+        <PhotoHero name={name || "?"} src={picture.src} busy={picture.busy} title={name}
           subtitle={[position ?? t("st.bar.role"), branch].filter(Boolean).join(" · ")}
           changeLabel={t("st.photo.change")} removeLabel={t("st.photo.remove")}
           onPick={(f) => void picture.change(f)} onRemove={() => void picture.remove()}>
-          {date && <p className={`m-0 text-white/80 ${compact ? "truncate text-xs" : "mt-1 text-sm"}`}>{t("st.profile.since")} {date}{tenure ? ` · ${tenure}` : ""}</p>}
+          {date && <p className="m-0 mt-1 text-sm text-white/80">{t("st.profile.since")} {date}{tenure ? ` · ${tenure}` : ""}</p>}
         </PhotoHero>
-        </div>
       </Reveal>
+      {/* The photo scrolls away with the page; once it has, the tabs stay at the top. */}
+      <div className="sticky top-0 z-20 -mx-4 bg-ground px-4">
       <Tabs label={t("st.profile.tabs")} value={tab} onChange={setTab}
         items={[{ id: "info", label: t("st.profile.tabInfo") }, { id: "work", label: t("st.profile.work") }, { id: "accounts", label: t("st.profile.tabAccounts") }]} />
+      </div>
       {tab === "info" ? (
         <Reveal><div role="tabpanel" id="panel-info" aria-labelledby="tab-info" className="flex flex-col gap-3">
           <PersonalInfo personal={personal} fullName={name} onSaved={setPersonal} />
