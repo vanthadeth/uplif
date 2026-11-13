@@ -72,7 +72,7 @@ export function PoliciesView({ rows }: { rows: PolicyRow[] }) {
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[22px] font-bold tracking-tight">{t("pol.title")}</h1>
+          <h1 className="text-[24px] font-bold tracking-tight">{t("pol.title")}</h1>
           <p className="mt-1 max-w-[66ch] text-muted">{t("pol.subtitle")}</p>
         </div>
         <Button variant="primary" className="w-full sm:w-auto" onClick={() => edit("new")}><Plus className="size-[18px]" aria-hidden />{t(conduct ? "pol.addConduct" : "pol.add")}</Button>
@@ -85,7 +85,7 @@ export function PoliciesView({ rows }: { rows: PolicyRow[] }) {
 
       {shown.length === 0 ? (
         <div className="rounded-card border border-line bg-surface px-4 py-9 text-center text-muted">
-          <b className="mb-1 block text-[15px] text-ink">{t(conduct ? "pol.emptyConduct" : "pol.empty")}</b>{t(conduct ? "pol.emptyConductBody" : "pol.emptyBody")}
+          <b className="mb-1 block text-[16px] text-ink">{t(conduct ? "pol.emptyConduct" : "pol.empty")}</b>{t(conduct ? "pol.emptyConductBody" : "pol.emptyBody")}
         </div>
       ) : (
         <div className="overflow-hidden rounded-card border border-line bg-surface">
@@ -144,7 +144,7 @@ export function PoliciesView({ rows }: { rows: PolicyRow[] }) {
               onChange={(html) => { setDraft((d) => d && { ...d, body: html }); setError(undefined); }} />
             <RichEditor key={`${draft.id ?? "new"}-local`} label={t("pol.bodyLocal")} value={draft.bodyLocal} labels={labels}
               onChange={(html) => setDraft((d) => d && { ...d, bodyLocal: html })} />
-            {error && <p role="alert" className="m-0 text-[13px] font-semibold text-danger">{error}</p>}
+            {error && <p role="alert" className="m-0 text-[14px] font-semibold text-danger">{error}</p>}
           </div>
         )}
       </SidePanel>

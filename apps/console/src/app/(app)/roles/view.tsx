@@ -167,11 +167,11 @@ export function RolesView({ companyId, roles, permissions, catalog, counts, canM
       <div className="grid items-start gap-5 lg:grid-cols-[16.25rem_minmax(0,1fr)]">
         <nav aria-label={t("roles.title")} className="flex gap-2 overflow-x-auto pb-1 lg:sticky lg:top-0 lg:flex-col lg:overflow-visible lg:pb-0">
           <div className="contents lg:flex lg:flex-col lg:gap-1.5">
-            <p className="hidden px-1 pt-1 text-[11px] font-semibold text-muted lg:block">{t("roles.group.system")}</p>
+            <p className="hidden px-1 pt-1 text-[13px] font-semibold text-muted lg:block">{t("roles.group.system")}</p>
             <ul className="flex gap-2 lg:flex-col lg:gap-1.5">{systemRoles.map(row)}</ul>
             {customRoles.length > 0 && (
               <>
-                <p className="hidden px-1 pt-2 text-[11px] font-semibold text-muted lg:block">{t("roles.group.custom")}</p>
+                <p className="hidden px-1 pt-2 text-[13px] font-semibold text-muted lg:block">{t("roles.group.custom")}</p>
                 <ul className="flex gap-2 lg:flex-col lg:gap-1.5">{customRoles.map(row)}</ul>
               </>
             )}
@@ -182,7 +182,7 @@ export function RolesView({ companyId, roles, permissions, catalog, counts, canM
           <Card className="flex flex-col gap-4 p-4 sm:p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="break-words text-[22px] font-bold leading-tight">{label(role)}</h2>
+                <h2 className="break-words text-[24px] font-bold leading-tight">{label(role)}</h2>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-muted">
                   <Badge tone={isOwner ? "warning" : role.is_system ? "info" : "neutral"}>
                     {isOwner ? <><Lock className="size-3" aria-hidden />{t("roles.fixed")}</> : role.is_system ? t("roles.system") : t("roles.custom")}
@@ -203,7 +203,7 @@ export function RolesView({ companyId, roles, permissions, catalog, counts, canM
                 <div><b className="block">{t("roles.ownerTitle")}</b>{t("roles.ownerBody")}</div>
               </div>
             )}
-            {role.is_system && !isOwner && <p className="text-[13px] text-muted">{t("roles.sysNote")}</p>}
+            {role.is_system && !isOwner && <p className="text-[14px] text-muted">{t("roles.sysNote")}</p>}
 
             {!role.is_system && canManage && (
               <div className="grid items-end gap-3 border-t border-line pt-4 sm:grid-cols-[1fr_1fr_auto]">
@@ -217,14 +217,14 @@ export function RolesView({ companyId, roles, permissions, catalog, counts, canM
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
                 <div className="min-w-[220px] flex-1 leading-relaxed">
                   <b className="block font-semibold">{t("roles.delete")}</b>
-                  <span className="text-[13px] text-muted">{people > 0 ? `${t("roles.delUse")} ${peopleText(people)}.` : t("roles.delBody")}</span>
+                  <span className="text-[14px] text-muted">{people > 0 ? `${t("roles.delUse")} ${peopleText(people)}.` : t("roles.delBody")}</span>
                 </div>
                 <Button variant="danger" disabled={people > 0} onClick={() => setConfirmDelete(true)}>{t("roles.delete")}</Button>
               </div>
             )}
           </Card>
 
-          <p className="flex items-center gap-2 text-[13px] text-muted"><Info className="size-4 shrink-0" aria-hidden />{fixed && isOwner ? t("roles.ownerFixed") : t("roles.imm")}</p>
+          <p className="flex items-center gap-2 text-[14px] text-muted"><Info className="size-4 shrink-0" aria-hidden />{fixed && isOwner ? t("roles.ownerFixed") : t("roles.imm")}</p>
 
           {groups.map((g) => (
             <Card key={g.id} className="overflow-hidden">
@@ -236,7 +236,7 @@ export function RolesView({ companyId, roles, permissions, catalog, counts, canM
                 <div key={c.key} className="grid items-center gap-2 border-t border-line px-4 py-3 first:border-t-0 md:grid-cols-[minmax(0,1fr)_auto] md:gap-4">
                   <div className="min-w-0 leading-snug">
                     <b className="font-medium">{pick(locale, c.description, c.description_local)}</b>
-                    <code className="mt-0.5 block break-all text-[11px] text-muted">{c.key}</code>
+                    <code className="mt-0.5 block break-all text-[13px] text-muted">{c.key}</code>
                   </div>
                   <div className="md:w-48">
                     <Select bare disabled={fixed} label={`${pick(locale, c.description, c.description_local)}: ${t("roles.scope")}`}
@@ -248,7 +248,7 @@ export function RolesView({ companyId, roles, permissions, catalog, counts, canM
               ))}
             </Card>
           ))}
-          <p className="text-[13px] leading-relaxed text-muted">{t("roles.cap")}</p>
+          <p className="text-[14px] leading-relaxed text-muted">{t("roles.cap")}</p>
         </div>
       </div>
 

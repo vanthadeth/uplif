@@ -36,7 +36,7 @@ export function Review({ language, initial }: { language: LanguageRow; initial: 
       <div role="group" aria-label={t("tl.r.all")} className="flex flex-wrap gap-2">
         {chips.map(([id, label]) => (
           <button key={id} type="button" aria-pressed={filter === id} onClick={() => setFilter(id)}
-            className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-[13px] ${filter === id ? "border-primary bg-primary-soft font-semibold text-primary-ink" : "border-line-strong bg-surface font-medium"}`}>
+            className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-[14px] ${filter === id ? "border-primary bg-primary-soft font-semibold text-primary-ink" : "border-line-strong bg-surface font-medium"}`}>
             {t(label)} <em className="not-italic tabular-nums opacity-70">{counts[id]}</em>
           </button>
         ))}

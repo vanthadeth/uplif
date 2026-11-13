@@ -52,7 +52,7 @@ export function DraftOverridesDialog({ catalog, value, onChange, onClose }: Prop
             ))}
           </ul>
         )}
-        <h3 className="text-[15px] font-semibold">{t("ovr.add")}</h3>
+        <h3 className="text-[16px] font-semibold">{t("ovr.add")}</h3>
         <Select label={t("ovr.permission")} value={key} onChange={(e) => setKey(e.target.value)}>
           <option value="">—</option>
           {free.map((p) => <option key={p.key} value={p.key}>{pick(locale, p.description, p.description_local)}</option>)}

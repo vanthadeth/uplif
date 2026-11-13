@@ -12,7 +12,7 @@ export interface FieldShellProps {
 export function FieldShell({ label, hint, error, id, children }: FieldShellProps) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-[13px] font-semibold text-ink-2">{label}</label>
+      <label htmlFor={id} className="text-[14px] font-semibold text-ink-2">{label}</label>
       {children}
       {error ? (
         <span id={`${id}-msg`} className="text-xs text-danger-ink">{error}</span>

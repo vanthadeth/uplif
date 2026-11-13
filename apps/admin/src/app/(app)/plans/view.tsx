@@ -135,7 +135,7 @@ export function PlansView({ plans, failed }: { plans: Plan[]; failed: boolean })
               <Input label="Users" inputMode="numeric" value={form.users} error={errors.users} onChange={(e) => set({ users: e.target.value })} />
             </div>
             <fieldset className="flex flex-col gap-2">
-              <legend className="mb-1 text-[13px] font-semibold text-ink-2">Modules</legend>
+              <legend className="mb-1 text-[14px] font-semibold text-ink-2">Modules</legend>
               {MODULES.map((m) => (
                 <label key={m.id} className="flex min-h-11 items-center gap-3">
                   <input type="checkbox" className="size-5" checked={form.modules.includes(m.id)}

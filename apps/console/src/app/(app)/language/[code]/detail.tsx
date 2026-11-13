@@ -60,7 +60,7 @@ export function StringDetail({ code, stringKey, source, isReviewer, onChanged }:
 
   return (
     <div className="flex flex-col gap-3">
-      {kind ? <p className="m-0 text-[13px] leading-relaxed text-muted"><KindBadge kind={kind} /> {t(kindBody(kind))}</p> : <p className="m-0 text-[13px] text-muted">{t("tl.s.none")}</p>}
+      {kind ? <p className="m-0 text-[14px] leading-relaxed text-muted"><KindBadge kind={kind} /> {t(kindBody(kind))}</p> : <p className="m-0 text-[14px] text-muted">{t("tl.s.none")}</p>}
       <div className="flex flex-col gap-2">
         {order.map((r) => (
           <div key={r.id} className={`grid grid-cols-[44px_minmax(0,1fr)] items-center gap-3 rounded-card border bg-surface p-2.5 sm:grid-cols-[44px_minmax(0,1fr)_auto] ${r.is_shown ? "border-primary shadow-[0_0_0_1px_var(--color-primary)]" : "border-line"}`}>
@@ -70,10 +70,10 @@ export function StringDetail({ code, stringKey, source, isReviewer, onChanged }:
                 className={`grid size-11 place-items-center rounded-xl border disabled:opacity-60 ${r.i_voted ? "border-primary bg-primary text-white" : "border-line-strong bg-surface text-muted hover:bg-ground hover:text-ink"}`}>
                 <ChevronUp className="size-5" aria-hidden="true" />
               </button>
-              {r.i_voted && <span className="text-[11px] text-muted">{t("tl.s.voted")}</span>}
+              {r.i_voted && <span className="text-[13px] text-muted">{t("tl.s.voted")}</span>}
             </div>
             <div className="flex min-w-0 flex-col gap-1.5">
-              <span lang={code} className="break-words text-[15px] leading-relaxed"><Tokens text={r.text} /></span>
+              <span lang={code} className="break-words text-[16px] leading-relaxed"><Tokens text={r.text} /></span>
               <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
                 {r.origin === "machine"
                   ? <span className="inline-flex items-center gap-1 rounded-full bg-neutral-soft px-2 py-0.5 font-semibold"><Bot className="size-3.5" aria-hidden="true" />{t("tl.s.machine")}</span>
@@ -85,8 +85,8 @@ export function StringDetail({ code, stringKey, source, isReviewer, onChanged }:
               <div className="col-span-2 flex items-center justify-between gap-2 sm:col-span-1 sm:flex-col sm:items-end">
                 <span className="text-base font-bold tabular-nums">{f((r.votes ?? 0) === 1 ? "tl.s.vote1" : "tl.s.votes", { count: r.votes ?? 0 })}</span>
                 {r.is_pinned
-                  ? <Button className="min-h-10 px-3 text-[13px] !border-primary !bg-primary-soft !text-primary-ink" disabled={busy} onClick={() => act("i18n_unpin", { p_lang: code, p_key: stringKey }, "tl.t.unpin")}><Pin className="size-4" aria-hidden="true" />{t("tl.s.pinned")} · {t("tl.s.unpin")}</Button>
-                  : <Button className="min-h-10 px-3 text-[13px]" disabled={busy} onClick={() => act("i18n_pin", { p_lang: code, p_key: stringKey, p_suggestion: r.id }, "tl.t.pin")}><Pin className="size-4" aria-hidden="true" />{t("tl.s.show")}</Button>}
+                  ? <Button className="min-h-10 px-3 text-[14px] !border-primary !bg-primary-soft !text-primary-ink" disabled={busy} onClick={() => act("i18n_unpin", { p_lang: code, p_key: stringKey }, "tl.t.unpin")}><Pin className="size-4" aria-hidden="true" />{t("tl.s.pinned")} · {t("tl.s.unpin")}</Button>
+                  : <Button className="min-h-10 px-3 text-[14px]" disabled={busy} onClick={() => act("i18n_pin", { p_lang: code, p_key: stringKey, p_suggestion: r.id }, "tl.t.pin")}><Pin className="size-4" aria-hidden="true" />{t("tl.s.show")}</Button>}
               </div>
             )}
           </div>
@@ -94,12 +94,12 @@ export function StringDetail({ code, stringKey, source, isReviewer, onChanged }:
       </div>
       {need.length > 0 && <p className="m-0 text-xs text-muted">{t("tl.s.keep")} {need.map((x) => <span key={x} className="mx-0.5 inline-block rounded-md bg-warning-soft px-1.5 font-mono text-warning-ink">{x}</span>)}</p>}
       <form onSubmit={add} className="flex flex-col gap-2">
-        <label htmlFor={`ns-${stringKey}`} className="text-[13px] font-semibold">{t("tl.s.addTitle")}</label>
+        <label htmlFor={`ns-${stringKey}`} className="text-[14px] font-semibold">{t("tl.s.addTitle")}</label>
         <textarea id={`ns-${stringKey}`} lang={code} value={draft} onChange={(e) => { setDraft(e.target.value); setError(""); }} maxLength={2000} rows={3}
           className={`min-h-[72px] w-full resize-y rounded-control border bg-surface px-3 py-2 text-ink ${error ? "border-danger" : "border-line-strong"}`} />
         {error && <p role="alert" className="m-0 text-xs leading-snug text-danger-ink">{error}</p>}
         <div className="flex flex-wrap items-center gap-2">
-          <Button type="submit" variant="primary" className="min-h-10 px-3 text-[13px]" disabled={busy || !draft.trim()}><Plus className="size-[18px]" aria-hidden="true" />{t("tl.s.addBtn")}</Button>
+          <Button type="submit" variant="primary" className="min-h-10 px-3 text-[14px]" disabled={busy || !draft.trim()}><Plus className="size-[18px]" aria-hidden="true" />{t("tl.s.addBtn")}</Button>
           <span className="text-xs text-muted">{t("tl.s.addHint")}</span>
         </div>
         {!isReviewer && <p className="m-0 text-xs text-muted">{t("tl.w.hideNote")}</p>}

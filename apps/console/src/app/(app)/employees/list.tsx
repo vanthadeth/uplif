@@ -120,7 +120,7 @@ export function EmployeeList({ employees, departments, positions, branches, memb
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[22px] font-bold tracking-tight">{t("emp.title")}</h1>
+          <h1 className="text-[24px] font-bold tracking-tight">{t("emp.title")}</h1>
           <p className="mt-1 max-w-[62ch] text-muted">{t("emp.subtitle")}</p>
         </div>
         {canManage ? add : <Badge tone="neutral"><Lock className="size-3" aria-hidden />{t("branches.viewOnly")}</Badge>}
@@ -135,7 +135,7 @@ export function EmployeeList({ employees, departments, positions, branches, memb
 
       {employees.length === 0 ? (
         <div className="rounded-card border border-line bg-surface px-4 py-9 text-center text-muted">
-          <b className="mb-1 block text-[15px] text-ink">{t("emp.empty")}</b>
+          <b className="mb-1 block text-[16px] text-ink">{t("emp.empty")}</b>
           {t("emp.emptyBody")}
           {canManage && <div className="mt-3.5">{add}</div>}
         </div>
@@ -148,13 +148,13 @@ export function EmployeeList({ employees, departments, positions, branches, memb
           </label>
           <div className="overflow-hidden rounded-card border border-line bg-surface">
             {shown.length === 0 ? (
-              <div className="px-4 py-9 text-center text-muted"><b className="mb-1 block text-[15px] text-ink">{t("emp.noMatch")}</b>{t("emp.noMatchBody")}</div>
+              <div className="px-4 py-9 text-center text-muted"><b className="mb-1 block text-[16px] text-ink">{t("emp.noMatch")}</b>{t("emp.noMatchBody")}</div>
             ) : shown.map((e) => (
               <div key={e.id} className={`grid min-h-[68px] grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1.5 border-t border-line px-4 py-3.5 first:border-t-0 ${e.status === "left" ? "[&_.nm]:text-muted" : ""}`}>
                 <div className="nm min-w-0 leading-snug">
-                  <b className="block break-words text-[15px] font-semibold">{pick(locale, e.name, e.name_local)}{e.employee_no && <span className="ms-2 text-[13px] font-normal text-muted">#{e.employee_no}</span>}</b>
-                  <small className="block break-words text-[13px] text-muted">{[nm(positions, e.position_id), nm(departments, e.department_id), nm(branches, e.branch_id)].filter(Boolean).join(" · ") || "—"}</small>
-                  <small className="block break-words text-[13px] text-muted">
+                  <b className="block break-words text-[16px] font-semibold">{pick(locale, e.name, e.name_local)}{e.employee_no && <span className="ms-2 text-[14px] font-normal text-muted">#{e.employee_no}</span>}</b>
+                  <small className="block break-words text-[14px] text-muted">{[nm(positions, e.position_id), nm(departments, e.department_id), nm(branches, e.branch_id)].filter(Boolean).join(" · ") || "—"}</small>
+                  <small className="block break-words text-[14px] text-muted">
                     {e.reports_to_id ? `${t("emp.reports")}: ${empName(e.reports_to_id)}` : ""}
                     {directReports[e.id] ? `${e.reports_to_id ? " · " : ""}${t("emp.team").replace("{n}", n(directReports[e.id]))}` : ""}
                     {e.employment_date ? ` · ${fmtDate(locale, e.employment_date)}` : ""}
@@ -212,7 +212,7 @@ export function EmployeeList({ employees, departments, positions, branches, memb
           <Select label={t("emp.status")} value={f.status} onChange={(e) => set({ status: e.target.value as Status })}>
             {(["active", "on_leave", "left"] as const).map((s) => <option key={s} value={s}>{t(statusKey[s])}</option>)}
           </Select>
-          {f.status === "left" && <p className="text-[13px] leading-snug text-muted">{t("emp.leftNote")}</p>}
+          {f.status === "left" && <p className="text-[14px] leading-snug text-muted">{t("emp.leftNote")}</p>}
         </div>
       </Modal>
 

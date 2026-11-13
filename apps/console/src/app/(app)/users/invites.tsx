@@ -109,7 +109,7 @@ export function InvitesTab({ invitations, employees, members, roles, branches, c
   if (invitations.length === 0) {
     return (
       <div className="rounded-card border border-line bg-surface px-4 py-9 text-center text-muted">
-        <b className="mb-1 block text-[15px] text-ink">{t("users.noInvites")}</b>{t("users.noInvitesBody")}
+        <b className="mb-1 block text-[16px] text-ink">{t("users.noInvites")}</b>{t("users.noInvitesBody")}
         {canInvite && <div className="mt-3.5"><Button variant="primary" onClick={onNew}><Plus className="size-[18px]" aria-hidden />{t("users.invite")}</Button></div>}
       </div>
     );
@@ -126,13 +126,13 @@ export function InvitesTab({ invitations, employees, members, roles, branches, c
       <div role="group" aria-label={t("common.status")} className="flex flex-wrap gap-2">
         {filters.map((f) => (
           <button key={f.id} type="button" aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}
-            className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3 text-[13px] ${filter === f.id ? "border-primary bg-primary-soft font-semibold text-primary-ink" : "border-line-strong bg-surface font-medium"}`}>
+            className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3 text-[14px] ${filter === f.id ? "border-primary bg-primary-soft font-semibold text-primary-ink" : "border-line-strong bg-surface font-medium"}`}>
             {t(f.label)} <em className="not-italic tabular-nums opacity-70">{n(count(f.id))}</em>
           </button>
         ))}
       </div>
       <div role="tabpanel" className="overflow-hidden rounded-card border border-line bg-surface">
-        <div aria-hidden className={`hidden items-center gap-4 border-b border-line bg-ground px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted md:grid ${cols}`}>
+        <div aria-hidden className={`hidden items-center gap-4 border-b border-line bg-ground px-4 py-2.5 text-[13px] font-semibold uppercase tracking-wider text-muted md:grid ${cols}`}>
           <span>{t("inv.h.person")}</span><span>{t("inv.h.access")}</span><span>{t("inv.h.by")}</span><span>{t("inv.h.status")}</span>{canInvite && <span />}
         </div>
         {shown.length === 0 && <p className="px-4 py-9 text-center text-muted">{t("users.noInvites")}</p>}

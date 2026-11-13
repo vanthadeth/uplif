@@ -97,23 +97,23 @@ export function InviteView({ token, preview, signedIn }: { token: string; previe
       <>
         <h1 className="text-xl font-semibold">{fill(t("inv.a.title"), { company })}</h1>
         <dl className="grid gap-3 rounded-card border border-line bg-ground p-4 leading-snug">
-          <div><dt className="text-[11px] font-semibold uppercase tracking-wider text-muted">{t("inv.a.joiningAs")}</dt><dd><b className="font-semibold">{person}</b>{position && <span className="text-muted"> · {position}</span>}</dd></div>
-          <div><dt className="text-[11px] font-semibold uppercase tracking-wider text-muted">{t("inv.a.access")}</dt>
+          <div><dt className="text-[13px] font-semibold uppercase tracking-wider text-muted">{t("inv.a.joiningAs")}</dt><dd><b className="font-semibold">{person}</b>{position && <span className="text-muted"> · {position}</span>}</dd></div>
+          <div><dt className="text-[13px] font-semibold uppercase tracking-wider text-muted">{t("inv.a.access")}</dt>
             <dd className="flex flex-col gap-0.5">{access.map((a, i) => <span key={i}><b className="font-semibold">{a.role}</b> <em className="not-italic text-muted">· {a.branch}</em></span>)}</dd></div>
-          {preview.invited_by && <div><dt className="text-[11px] font-semibold uppercase tracking-wider text-muted">{t("inv.a.by")}</dt><dd>{preview.invited_by}</dd></div>}
-          {preview.expires_at && <div><dt className="text-[11px] font-semibold uppercase tracking-wider text-muted">{t("invite.expires")}</dt><dd className="tabular-nums">{fmtDate(locale, preview.expires_at)}</dd></div>}
+          {preview.invited_by && <div><dt className="text-[13px] font-semibold uppercase tracking-wider text-muted">{t("inv.a.by")}</dt><dd>{preview.invited_by}</dd></div>}
+          {preview.expires_at && <div><dt className="text-[13px] font-semibold uppercase tracking-wider text-muted">{t("invite.expires")}</dt><dd className="tabular-nums">{fmtDate(locale, preview.expires_at)}</dd></div>}
         </dl>
         {preview.note && <p className="rounded-control bg-primary-soft p-3 leading-snug text-primary-ink">{preview.note}</p>}
         {error && <p role="alert" className="text-danger-ink">{error}</p>}
         {signedIn ? (
           <>
-            <p className="text-[13px] text-muted">{t("inv.a.signedIn")}</p>
+            <p className="text-[14px] text-muted">{t("inv.a.signedIn")}</p>
             <Button variant="primary" className="min-h-12 w-full" loading={busy} onClick={accept}>{fill(t("inv.a.join"), { company })}</Button>
           </>
         ) : (
           <Link href={`/login?next=${encodeURIComponent(`/invite/${token}`)}`} className={button}>{t("inv.a.continue")}</Link>
         )}
-        <p className="text-[13px] leading-snug text-muted">{fill(t("inv.a.notYou"), { name: person, company })}</p>
+        <p className="text-[14px] leading-snug text-muted">{fill(t("inv.a.notYou"), { name: person, company })}</p>
       </>
     );
   }

@@ -176,7 +176,7 @@ export function LearnTestsView({ canManage, canRead, tests, results }: { canMana
             {draft.questions.length < 50 && (
               <div><Button onClick={() => setDraft({ ...draft, questions: [...draft.questions, blankQuestion()] })}><Plus className="size-4" aria-hidden />{t("lt.q.add")}</Button></div>
             )}
-            {error && <p role="alert" className="m-0 text-[13px] font-semibold text-danger">{error}</p>}
+            {error && <p role="alert" className="m-0 text-[14px] font-semibold text-danger">{error}</p>}
           </div>
         )}
       </SidePanel>

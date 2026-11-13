@@ -111,7 +111,7 @@ export function LinkReady({ link, company, title, body, onClose }: { link: strin
           <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
           <div><b className="block">{t("inv.onceTitle")}</b>{body ?? t("inv.onceBody")}</div>
         </div>
-        <input readOnly value={link} aria-label={t("invite.linkTitle")} onFocus={(e) => e.currentTarget.select()} className="h-(--control-h) w-full rounded-control border border-line-strong bg-ground px-3 font-mono text-[13px]" />
+        <input readOnly value={link} aria-label={t("invite.linkTitle")} onFocus={(e) => e.currentTarget.select()} className="h-(--control-h) w-full rounded-control border border-line-strong bg-ground px-3 font-mono text-[14px]" />
         <div className="flex flex-wrap gap-2">
           <Button variant="primary" onClick={copy}><Check className="size-4" aria-hidden />{t("invite.copy")}</Button>
           <a href={`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer"
@@ -261,7 +261,7 @@ export function InvitePanel({ companyId, companyName, employees, positions, role
           </div>
 
           <fieldset className="flex flex-col gap-3">
-            <legend className="mb-1 text-[13px] font-semibold text-muted">{t("inv.roles")}</legend>
+            <legend className="mb-1 text-[14px] font-semibold text-muted">{t("inv.roles")}</legend>
             {rows.map((r, i) => (
               <div key={r.id} className="grid grid-cols-1 items-end gap-2 sm:grid-cols-[1fr_1fr_auto]">
                 <Select label={t("invite.role")} value={r.roleId} onChange={(e) => setRow(r.id, { roleId: e.target.value })}>
@@ -295,7 +295,7 @@ export function InvitePanel({ companyId, companyName, employees, positions, role
             </Select>
             <Input label={t("inv.note")} value={note} maxLength={300} onChange={(e) => setNote(e.target.value)} hint={t("inv.noteHint")} />
           </div>
-          {personName && !blocked && <p className="text-[13px] text-muted">{t("inv.for")}: <b className="font-semibold text-ink">{personName}</b> · {t("invite.expires")} {fmtDate(locale, new Date(Date.now() + days * 86_400_000).toISOString())}</p>}
+          {personName && !blocked && <p className="text-[14px] text-muted">{t("inv.for")}: <b className="font-semibold text-ink">{personName}</b> · {t("invite.expires")} {fmtDate(locale, new Date(Date.now() + days * 86_400_000).toISOString())}</p>}
           {error && employeeId && !(employeeId === NEW && !newName.trim()) && <p role="alert" className="text-danger-ink">{error}</p>}
         </div>
       </Modal>

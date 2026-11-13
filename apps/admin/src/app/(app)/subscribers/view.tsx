@@ -34,7 +34,7 @@ export function SubscribersView({ subscribers, plans, failed }: { subscribers: S
             <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by status">
               {FILTERS.map((f) => (
                 <button key={f} type="button" aria-pressed={filter === f} onClick={() => setFilter(f)}
-                  className="min-h-9 rounded-full border border-line-strong bg-surface px-3 text-[13px] font-medium aria-pressed:border-primary aria-pressed:bg-primary-soft aria-pressed:font-semibold aria-pressed:text-primary-ink">
+                  className="min-h-9 rounded-full border border-line-strong bg-surface px-3 text-[14px] font-medium aria-pressed:border-primary aria-pressed:bg-primary-soft aria-pressed:font-semibold aria-pressed:text-primary-ink">
                   {f === "all" ? "All" : STATUS[f].label} <span className="text-muted tabular-nums">{counts[f] ?? 0}</span>
                 </button>
               ))}

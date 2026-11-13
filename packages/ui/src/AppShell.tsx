@@ -138,7 +138,7 @@ export function AppShell(p: ShellProps) {
               {!rail && (
                 <button
                   type="button" aria-expanded={!folded.includes(g.id)} aria-controls={`nav-${g.id}`} onClick={() => toggleGroup(g.id)}
-                  className="flex min-h-9 w-full items-center justify-between gap-2 rounded-[10px] px-3 pb-1 pt-2.5 text-start text-[11px] font-semibold uppercase tracking-wide text-(--sb-muted) transition-colors hover:text-(--sb-fg) [&:lang(km)]:normal-case [&:lang(km)]:tracking-normal"
+                  className="flex min-h-9 w-full items-center justify-between gap-2 rounded-[10px] px-3 pb-1 pt-2.5 text-start text-[13px] font-semibold uppercase tracking-wide text-(--sb-muted) transition-colors hover:text-(--sb-fg) [&:lang(km)]:normal-case [&:lang(km)]:tracking-normal"
                 >
                   <span className="min-w-0 truncate">{g.label}</span>
                   <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-200", folded.includes(g.id) && "-rotate-90 rtl:rotate-90")} aria-hidden="true" />
