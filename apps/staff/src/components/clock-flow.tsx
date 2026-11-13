@@ -222,8 +222,8 @@ export function ClockFlow({ kind, onClose, onSaved }: { kind: "in" | "out"; onCl
   }
 
   return (
-    <div role="dialog" aria-modal="true" aria-label={t("st.step.photo")} className="fixed inset-0 z-50 overflow-y-auto bg-navy text-white">
-      <div className="mx-auto flex min-h-dvh max-w-md flex-col gap-3 p-4">
+    <div role="dialog" aria-modal="true" aria-label={t("st.step.photo")} className="fixed inset-x-0 top-0 z-50 h-dvh overflow-y-auto bg-navy text-white">
+      <div className="mx-auto flex h-full min-h-110 max-w-md flex-col gap-3 px-4 pb-0 pt-[max(1rem,env(safe-area-inset-top))]">
         <header className="flex items-center gap-3">
           <button type="button" onClick={close} disabled={step === "sending"} aria-label={t("st.step.cancel")} className="grid size-11 place-items-center rounded-control bg-white/15 hover:bg-white/25 disabled:opacity-50"><X className="size-5" aria-hidden /></button>
           <div><h2 className="text-lg font-bold">{t("st.step.photo")}</h2>
@@ -254,10 +254,10 @@ export function ClockFlow({ kind, onClose, onSaved }: { kind: "in" | "out"; onCl
           </div>
         )}
 
-        <div hidden={step === "locate"} className="relative mx-auto aspect-3/4 w-full flex-1 overflow-hidden rounded-3xl bg-[#141c30]" style={{ maxHeight: "58dvh" }}>
+        <div hidden={step === "locate"} className="relative mx-auto min-h-48 w-full flex-1 overflow-hidden rounded-3xl bg-[#141c30]">
           {step === "camera" && (
             <>
-              <video ref={videoRef} playsInline muted className="size-full -scale-x-100 object-cover" />
+              <video ref={videoRef} playsInline muted className="absolute inset-0 size-full -scale-x-100 object-cover" />
               {!cameraError && (
                 <>
                   <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 aspect-3/4 w-[62%] -translate-x-1/2 -translate-y-[52%] rounded-full border-[3px] border-dashed border-white/75" />
@@ -269,7 +269,7 @@ export function ClockFlow({ kind, onClose, onSaved }: { kind: "in" | "out"; onCl
           {photo && step !== "camera" && (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={photo.url} alt="" className="size-full -scale-x-100 object-cover" />
+              <img src={photo.url} alt="" className="absolute inset-0 size-full -scale-x-100 object-cover" />
               <span className="absolute left-3 top-3 rounded-full bg-success-soft px-3 py-0.5 text-xs font-semibold text-success-ink">{t("st.step.taken")}</span>
             </>
           )}
@@ -283,7 +283,7 @@ export function ClockFlow({ kind, onClose, onSaved }: { kind: "in" | "out"; onCl
 
         {error && <p role="alert" className="rounded-card bg-danger-soft p-3 text-danger-ink">{error}</p>}
 
-        <div className="mt-auto flex flex-col items-center gap-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="mt-auto flex shrink-0 flex-col items-center gap-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {step === "locate" && settled && (
             <div className="flex w-full flex-col gap-2">
               <Button variant="primary" className="h-14 w-full bg-white! text-lg text-ink! hover:bg-white/90!" onClick={() => setStep("camera")}><Camera className="size-5" aria-hidden />{t("st.locate.continue")}</Button>
