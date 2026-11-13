@@ -8,12 +8,12 @@ import { fill } from "@/lib/messages";
 import { useFormat } from "@/lib/use-format";
 
 interface Policy {
-  policy_id: string; version_id: string; version: number; title: string; title_local: string | null; body: string; body_local: string | null;
+  policy_id: string; kind: "policy" | "conduct"; version_id: string; version: number; title: string; title_local: string | null; body: string; body_local: string | null;
   published_at: string; acknowledged_at: string | null; confirmed_earlier: boolean;
 }
 
 /** Company policies: the list, a policy to read, and the confirmation for the current version. */
-export function PoliciesView() {
+export function PoliciesView({ kind = "policy" }: { kind?: "policy" | "conduct" }) {
   const { t, locale } = useI18n();
   const { tag } = useFormat();
   const toast = useToast();
@@ -27,8 +27,8 @@ export function PoliciesView() {
     setFailed(false);
     const { data, error } = await createClient().rpc("my_policies");
     if (error) { setFailed(true); return; }
-    setRows(data as Policy[]);
-  }, []);
+    setRows((data as Policy[]).filter((r) => r.kind === kind));
+  }, [kind]);
   useEffect(() => { void load(); }, [load]);
 
   const local = (en: string, loc: string | null) => (locale !== "en" && loc) || en;
@@ -36,7 +36,7 @@ export function PoliciesView() {
 
   if (failed) return <ErrorState title={t("st.learn.error")} action={<Button onClick={() => void load()}>{t("st.retry")}</Button>} />;
   if (!rows) return <div className="flex flex-col gap-3" role="status" aria-label={t("st.learn.loading")}><Skeleton className="h-16" /><Skeleton className="h-16" /></div>;
-  if (rows.length === 0) return <EmptyState title={t("st.learn.empty.title")} body={t("st.learn.empty.body")} />;
+  if (rows.length === 0) return <EmptyState title={t(kind === "conduct" ? "st.learn.conduct.empty.title" : "st.learn.policies.empty.title")} body={t(kind === "conduct" ? "st.learn.conduct.empty.body" : "st.learn.policies.empty.body")} />;
 
   const open = rows.find((r) => r.policy_id === openId) ?? null;
   const todo = rows.filter((r) => !r.acknowledged_at).length;
@@ -73,7 +73,7 @@ export function PoliciesView() {
           <div className="flex flex-col gap-3">
             <label className="flex items-start gap-3 leading-snug">
               <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 size-5 shrink-0" />
-              <span>{t("st.policy.confirm")}</span>
+              <span>{t(kind === "conduct" ? "st.policy.confirmConduct" : "st.policy.confirm")}</span>
             </label>
             <Button variant="primary" className="h-14 w-full text-lg" disabled={!agreed} loading={busy} onClick={() => void confirm(open)}>{t("st.policy.confirmBtn")}</Button>
           </div>

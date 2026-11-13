@@ -127,5 +127,23 @@ select throws_ok($$select * from public.policy_ack_status((select pid from pol))
 select throws_ok($$select public.acknowledge_policy((select id from public.policy_versions where version = 2))$$, 'P0002', null, 'other company cannot confirm our policy');
 reset role;
 
+-- ===== code of conduct is a second kind of the same thing =====
+select pg_temp.as_user(1);
+set local role authenticated;
+select lives_ok($$select public.save_policy(null, 'Code of conduct', null, 'Be kind.', null, 'conduct')$$, 'owner publishes a code of conduct');
+select throws_ok($$select public.save_policy(null, 'X', null, 'Y', null, 'bogus')$$, '22023', null, 'an unknown kind is refused');
+select is((select kind from public.company_policies where title = 'Code of conduct'), 'conduct', 'it is stored as conduct');
+reset role;
+select throws_ok($$update public.company_policies set kind = 'policy' where title = 'Code of conduct'$$, '42501', null, 'the kind cannot be changed afterwards');
+select pg_temp.as_user(2);
+set local role authenticated;
+select is((select kind from public.my_policies() where title = 'Code of conduct'), 'conduct', 'staff see it with its kind');
+select lives_ok($$select public.acknowledge_policy((select version_id from public.my_policies() where kind = 'conduct'))$$, 'staff confirm it');
+reset role;
+select pg_temp.as_user(5);
+set local role authenticated;
+select is((select count(*)::int from public.my_policies() where kind = 'conduct'), 0, 'other company does not see our code of conduct');
+reset role;
+
 select * from finish();
 rollback;

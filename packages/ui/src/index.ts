@@ -10,6 +10,7 @@ export * from "./PhotoHero";
 export * from "./image";
 export * from "./Card";
 export * from "./DetailGroup";
+export * from "./HubTile";
 export * from "./Table";
 export * from "./Toggle";
 export * from "./Tabs";

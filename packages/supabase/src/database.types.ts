@@ -1054,9 +1054,9 @@ export type Database = {
         Relationships: []
       }
       company_policies: {
-        Row: { archived: boolean; company_id: string; created_at: string; created_by: string | null; id: string; title: string; title_local: string | null; updated_at: string }
-        Insert: { archived?: boolean; company_id?: string; created_at?: string; created_by?: string | null; id?: string; title?: string; title_local?: string | null; updated_at?: string }
-        Update: { archived?: boolean; company_id?: string; created_at?: string; created_by?: string | null; id?: string; title?: string; title_local?: string | null; updated_at?: string }
+        Row: { archived: boolean; kind: "policy" | "conduct"; company_id: string; created_at: string; created_by: string | null; id: string; title: string; title_local: string | null; updated_at: string }
+        Insert: { archived?: boolean; kind?: "policy" | "conduct"; company_id?: string; created_at?: string; created_by?: string | null; id?: string; title?: string; title_local?: string | null; updated_at?: string }
+        Update: { archived?: boolean; kind?: "policy" | "conduct"; company_id?: string; created_at?: string; created_by?: string | null; id?: string; title?: string; title_local?: string | null; updated_at?: string }
         Relationships: []
       }
       policy_versions: {
@@ -1188,7 +1188,7 @@ export type Database = {
         Returns: { year: number; holiday_count: number; provisional: boolean }[]
       }
       save_policy: {
-        Args: { p_id: string | null; p_title: string; p_title_local: string | null; p_body: string; p_body_local: string | null }
+        Args: { p_id: string | null; p_title: string; p_title_local: string | null; p_body: string; p_body_local: string | null; p_kind?: "policy" | "conduct" }
         Returns: string
       }
       archive_policy: {
@@ -1292,7 +1292,7 @@ export type Database = {
       }
       my_policies: {
         Args: Record<string, never>
-        Returns: { policy_id: string; version_id: string; version: number; title: string; title_local: string | null; body: string; body_local: string | null; published_at: string; acknowledged_at: string | null; confirmed_earlier: boolean }[]
+        Returns: { policy_id: string; kind: "policy" | "conduct"; version_id: string; version: number; title: string; title_local: string | null; body: string; body_local: string | null; published_at: string; acknowledged_at: string | null; confirmed_earlier: boolean }[]
       }
       acknowledge_policy: {
         Args: { p_version_id: string }
