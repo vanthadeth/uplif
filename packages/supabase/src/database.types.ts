@@ -223,6 +223,38 @@ export type Database = {
         }
         Relationships: []
       }
+      position_descriptions: {
+        Row: {
+          company_id: string
+          position_id: string
+          summary: string | null
+          summary_local: string | null
+          duties: string | null
+          duties_local: string | null
+          updated_at: string
+        }
+        Insert: Record<string, never>
+        Update: Record<string, never>
+        Relationships: []
+      }
+      career_events: {
+        Row: {
+          id: string
+          company_id: string
+          employee_id: string
+          kind: Database["public"]["Enums"]["career_event_kind"]
+          event_date: string
+          from_name: string | null
+          from_name_local: string | null
+          to_name: string
+          to_name_local: string | null
+          note: string | null
+          created_at: string
+        }
+        Insert: Record<string, never>
+        Update: Record<string, never>
+        Relationships: []
+      }
       performance_reviews: {
         Row: {
           id: string
@@ -1184,6 +1216,22 @@ export type Database = {
         Args: { p_employee_id: string; p_period: string; p_scores: unknown; p_comment: string | null }
         Returns: number
       }
+      save_position_description: {
+        Args: { p_position_id: string; p_summary: string | null; p_summary_local: string | null; p_duties: string | null; p_duties_local: string | null }
+        Returns: undefined
+      }
+      my_job_description: {
+        Args: Record<string, never>
+        Returns: { position_name: string; position_name_local: string | null; summary: string | null; summary_local: string | null; duties: string | null; duties_local: string | null }[]
+      }
+      record_career_event: {
+        Args: { p_employee_id: string; p_kind: Database["public"]["Enums"]["career_event_kind"]; p_position_id: string; p_date: string; p_note: string | null }
+        Returns: string
+      }
+      my_career: {
+        Args: Record<string, never>
+        Returns: { id: string; kind: Database["public"]["Enums"]["career_event_kind"]; event_date: string; from_name: string | null; from_name_local: string | null; to_name: string; to_name_local: string | null; note: string | null }[]
+      }
       my_kpis: {
         Args: Record<string, never>
         Returns: { name: string; name_local: string | null; weight: number; last_score: number | null; last_period: string | null }[]
@@ -1492,6 +1540,7 @@ export type Database = {
       }
     }
     Enums: {
+      career_event_kind: "promotion" | "transfer"
       geofence_mode: "off" | "flag" | "block"
       attendance_kind: "in" | "out"
       data_scope: "own" | "team" | "branch" | "company"
