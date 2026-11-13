@@ -1192,6 +1192,26 @@ export type Database = {
         Args: Record<string, never>
         Returns: { period: string; overall_percent: number; comment: string | null; reviewed_at: string }[]
       }
+      request_amendment: {
+        Args: { p_date: string; p_in: string | null; p_out: string | null; p_reason: string }
+        Returns: string
+      }
+      cancel_amendment: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      my_amendments: {
+        Args: Record<string, never>
+        Returns: { id: string; work_date: string; in_time: string | null; out_time: string | null; reason: string; status: string; decision_note: string | null; created_at: string }[]
+      }
+      amendment_review_list: {
+        Args: { p_status?: string }
+        Returns: { id: string; employee_id: string; employee_name: string; employee_name_local: string | null; work_date: string; in_time: string | null; out_time: string | null; reason: string; status: string; decision_note: string | null; created_at: string }[]
+      }
+      decide_amendment: {
+        Args: { p_id: string; p_approve: boolean; p_note: string | null }
+        Returns: undefined
+      }
       my_policies: {
         Args: Record<string, never>
         Returns: { policy_id: string; version_id: string; version: number; title: string; title_local: string | null; body: string; body_local: string | null; published_at: string; acknowledged_at: string | null; confirmed_earlier: boolean }[]
