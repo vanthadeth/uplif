@@ -1,6 +1,6 @@
 import { cn } from "./cn";
 
-const sizes = { sm: "size-7 text-xs", md: "size-9 text-sm", lg: "size-12 text-base" } as const;
+const sizes = { sm: "size-7 text-xs", md: "size-9 text-sm", lg: "size-12 text-base", xl: "size-24 text-3xl" } as const;
 
 function initials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
