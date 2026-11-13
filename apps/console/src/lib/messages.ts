@@ -1380,6 +1380,9 @@ export const en = {
   "rte.link": "Link",
   "rte.linkUrl": "Link address",
   "rte.linkApply": "Add link",
+  "shell.group.time": "Time and leave",
+  "shell.group.growth": "Growth and learning",
+  "shell.group.admin": "Administration",
 } as const;
 
 export type MessageKey = keyof typeof en;
@@ -2765,6 +2768,9 @@ export const km: Partial<Record<MessageKey, string>> = {
   "rte.link": "តំណ",
   "rte.linkUrl": "អាសយដ្ឋានតំណ",
   "rte.linkApply": "បន្ថែមតំណ",
+  "shell.group.time": "ពេលវេលា និងច្បាប់ឈប់សម្រាក",
+  "shell.group.growth": "ការអភិវឌ្ឍ និងការរៀន",
+  "shell.group.admin": "ការគ្រប់គ្រង",
 };
 
 /**

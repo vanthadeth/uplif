@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ChevronLeft, ChevronRight, ChevronsUpDown, Menu, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronsUpDown, Menu, X } from "lucide-react";
 import { cn } from "./cn";
 
 export interface NavItem { id: string; label: string; icon: ReactNode }
@@ -49,10 +49,20 @@ const row = "relative flex min-h-11 w-full items-center gap-3 rounded-[10px] px-
 export function AppShell(p: ShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [drawer, setDrawer] = useState(false);
+  /** Ids of the groups the person folded; kept in this browser. */
+  const [folded, setFolded] = useState<string[]>([]);
 
   useEffect(() => {
     try { setCollapsed(localStorage.getItem("uplif.rail") === "1"); } catch {}
+    try { const v = JSON.parse(localStorage.getItem("uplif.navfold") ?? "[]"); if (Array.isArray(v)) setFolded(v.filter((x) => typeof x === "string")); } catch {}
   }, []);
+  function toggleGroup(id: string) {
+    setFolded((f) => {
+      const n = f.includes(id) ? f.filter((x) => x !== id) : [...f, id];
+      try { localStorage.setItem("uplif.navfold", JSON.stringify(n)); } catch {}
+      return n;
+    });
+  }
   function toggleRail() {
     setCollapsed((c) => { try { localStorage.setItem("uplif.rail", c ? "0" : "1"); } catch {} return !c; });
   }
@@ -65,6 +75,17 @@ export function AppShell(p: ShellProps) {
 
   const rail = collapsed && !drawer;
   const groups = p.groups.filter((g) => g.items.length > 0);
+  // Going to a section opens its group, so the page you are on is never hidden in a folded group.
+  const activeGroup = groups.find((g) => g.items.some((n) => n.id === p.activeId))?.id;
+  useEffect(() => {
+    if (!activeGroup) return;
+    setFolded((f) => {
+      if (!f.includes(activeGroup)) return f;
+      const n = f.filter((x) => x !== activeGroup);
+      try { localStorage.setItem("uplif.navfold", JSON.stringify(n)); } catch {}
+      return n;
+    });
+  }, [activeGroup, p.activeId]);
   return (
     <div className="flex min-h-dvh">
       {drawer && <div className="fixed inset-0 z-30 bg-(--sb-scrim) md:hidden" onClick={() => setDrawer(false)} aria-hidden="true" />}
@@ -114,8 +135,17 @@ export function AppShell(p: ShellProps) {
         <nav aria-label={p.navLabel} className={cn("flex-1 overflow-y-auto px-2 pb-2 pt-1", rail && "flex flex-col items-center")}>
           {groups.map((g, gi) => (
             <div key={g.id} className={cn("flex flex-col gap-0.5", gi > 0 && "mt-1.5", rail && gi > 0 && "mt-2 w-11 border-t border-(--sb-line) pt-2")}>
-              {!rail && <div className="px-3 pb-1.5 pt-3 text-[11px] font-semibold uppercase tracking-wide text-(--sb-muted) [&:lang(km)]:normal-case [&:lang(km)]:tracking-normal">{g.label}</div>}
-              <ul className="flex flex-col gap-0.5">
+              {!rail && (
+                <button
+                  type="button" aria-expanded={!folded.includes(g.id)} aria-controls={`nav-${g.id}`} onClick={() => toggleGroup(g.id)}
+                  className="flex min-h-9 w-full items-center justify-between gap-2 rounded-[10px] px-3 pb-1 pt-2.5 text-start text-[11px] font-semibold uppercase tracking-wide text-(--sb-muted) transition-colors hover:text-(--sb-fg) [&:lang(km)]:normal-case [&:lang(km)]:tracking-normal"
+                >
+                  <span className="min-w-0 truncate">{g.label}</span>
+                  <ChevronDown className={cn("size-4 shrink-0 transition-transform duration-200", folded.includes(g.id) && "-rotate-90 rtl:rotate-90")} aria-hidden="true" />
+                </button>
+              )}
+              <div id={`nav-${g.id}`} className={cn("grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none", !rail && folded.includes(g.id) ? "grid-rows-[0fr]" : "grid-rows-[1fr]")} inert={!rail && folded.includes(g.id) ? true : undefined}>
+              <ul className="flex min-h-0 flex-col gap-0.5 overflow-hidden">
                 {g.items.map((n) => {
                   const on = n.id === p.activeId;
                   return (
@@ -145,6 +175,7 @@ export function AppShell(p: ShellProps) {
                   );
                 })}
               </ul>
+              </div>
             </div>
           ))}
         </nav>
