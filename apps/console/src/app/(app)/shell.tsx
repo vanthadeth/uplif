@@ -86,8 +86,10 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userEmai
   const visible = nav.map((n) => routes[n.id]);
   const groupIds: [string, MessageKey, string[]][] = [
     ["workspace", "shell.group.workspace", ["dashboard", "company", "branches"]],
-    ["people", "shell.group.people", ["users", "roles", "employees", "departments", "positions", "working-time", "holidays", "attendance", "corrections", "leave", "performance", "career"]],
-    ["records", "shell.group.records", ["policies", "learn-tests", "audit", "support"]],
+    ["people", "shell.group.people", ["users", "roles", "employees", "departments", "positions"]],
+    ["time", "shell.group.time", ["working-time", "holidays", "attendance", "leave", "corrections"]],
+    ["growth", "shell.group.growth", ["career", "performance", "learn-tests", "policies"]],
+    ["admin", "shell.group.admin", ["audit", "support"]],
   ];
   const groups: NavGroup[] = groupIds.map(([id, label, ids]) => ({ id, label: t(label), items: nav.filter((n) => ids.includes(n.id)) }));
 

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Archive, ArchiveRestore, Check, Pencil, Plus } from "lucide-react";
-import { Badge, Button, Input, SidePanel, Tabs, Textarea, Toggle, useToast } from "@uplif/ui";
+import { Badge, Button, Input, RichEditor, RichText, SidePanel, Tabs, Toggle, richPlainText, toRichHtml, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fmtDate, pick } from "@/lib/format";
@@ -13,7 +13,7 @@ export interface PolicyRow {
   id: string; kind: "policy" | "conduct"; title: string; title_local: string | null; archived: boolean;
   version: number; body: string; body_local: string | null; published_at: string; people: Person[];
 }
-interface Draft { id: string | null; kind: "policy" | "conduct"; title: string; titleLocal: string; body: string; bodyLocal: string }
+interface Draft { id: string | null; kind: "policy" | "conduct"; title: string; titleLocal: string; body: string; bodyLocal: string; origBody: string; origBodyLocal: string }
 
 export function PoliciesView({ rows }: { rows: PolicyRow[] }) {
   const { t, locale } = useI18n();
@@ -25,6 +25,7 @@ export function PoliciesView({ rows }: { rows: PolicyRow[] }) {
   const [showArchived, setShowArchived] = useState(false);
   const [kind, setKind] = useState<"policy" | "conduct">("policy");
   const [open, setOpen] = useState<PolicyRow | null>(null);
+  const labels = { bold: t("rte.bold"), italic: t("rte.italic"), underline: t("rte.underline"), heading: t("rte.heading"), bullets: t("rte.bullets"), numbers: t("rte.numbers"), link: t("rte.link"), linkUrl: t("rte.linkUrl"), linkApply: t("rte.linkApply") };
   const f = (k: MessageKey, v: Record<string, string | number>) => t(k).replace(/\{(\w+)\}/g, (m, x) => (x in v ? String(v[x]) : m));
 
   const ofKind = rows.filter((r) => r.kind === kind);
@@ -34,17 +35,20 @@ export function PoliciesView({ rows }: { rows: PolicyRow[] }) {
 
   function edit(r: PolicyRow | "new") {
     setError(undefined);
-    setDraft(r === "new" ? { id: null, kind, title: "", titleLocal: "", body: "", bodyLocal: "" }
-      : { id: r.id, kind: r.kind, title: r.title, titleLocal: r.title_local ?? "", body: r.body, bodyLocal: r.body_local ?? "" });
+    setDraft(r === "new" ? { id: null, kind, title: "", titleLocal: "", body: "", bodyLocal: "", origBody: "", origBodyLocal: "" }
+      : { id: r.id, kind: r.kind, title: r.title, titleLocal: r.title_local ?? "", body: r.body, bodyLocal: r.body_local ?? "", origBody: r.body, origBodyLocal: r.body_local ?? "" });
   }
 
   async function save() {
     if (!draft) return;
-    if (!draft.title.trim() || !draft.body.trim()) return setError(t("pol.errTitle"));
+    if (!draft.title.trim() || !richPlainText(draft.body)) return setError(t("pol.errTitle"));
+    // An unchanged text keeps its stored form, so editing only the title never publishes a new version.
+    const keep = (now: string, was: string) => (toRichHtml(now) === toRichHtml(was) ? was : now);
+    const bodyLocal = richPlainText(draft.bodyLocal) ? keep(draft.bodyLocal, draft.origBodyLocal) : null;
     setBusy(true);
     const { error: err } = await createClient().rpc("save_policy", {
       p_id: draft.id, p_title: draft.title.trim(), p_title_local: draft.titleLocal.trim() || null,
-      p_body: draft.body, p_body_local: draft.bodyLocal.trim() ? draft.bodyLocal : null, p_kind: draft.kind,
+      p_body: keep(draft.body, draft.origBody), p_body_local: bodyLocal, p_kind: draft.kind,
     });
     setBusy(false);
     if (err) return setError(t(err.code === "42501" ? "common.forbidden" : "common.saveError"));
@@ -112,7 +116,7 @@ export function PoliciesView({ rows }: { rows: PolicyRow[] }) {
         {open && (
           <div className="flex flex-col gap-4">
             <span className="text-sm text-muted">{f("pol.version", { n: open.version })}</span>
-            <p className="m-0 whitespace-pre-wrap break-words leading-relaxed">{pick(locale, open.body, open.body_local)}</p>
+            <RichText html={pick(locale, open.body, open.body_local)} />
             <h3 className="m-0 mt-2 text-sm font-semibold">{t("pol.who")}</h3>
             {open.people.length === 0 ? <p className="m-0 text-sm text-muted">{t("pol.noPeople")}</p> : (
               <ul className="m-0 list-none overflow-hidden rounded-card border border-line p-0">
@@ -136,8 +140,10 @@ export function PoliciesView({ rows }: { rows: PolicyRow[] }) {
           <div className="flex flex-col gap-4">
             <Input label={t("pol.name")} value={draft.title} maxLength={200} onChange={(e) => { setDraft({ ...draft, title: e.target.value }); setError(undefined); }} />
             <Input label={t("pol.nameLocal")} value={draft.titleLocal} maxLength={200} onChange={(e) => setDraft({ ...draft, titleLocal: e.target.value })} />
-            <Textarea label={t("pol.body")} rows={10} value={draft.body} maxLength={20000} onChange={(e) => { setDraft({ ...draft, body: e.target.value }); setError(undefined); }} hint={draft.id ? t("pol.bodyHint") : undefined} />
-            <Textarea label={t("pol.bodyLocal")} rows={10} value={draft.bodyLocal} maxLength={20000} onChange={(e) => setDraft({ ...draft, bodyLocal: e.target.value })} />
+            <RichEditor key={draft.id ?? "new"} label={t("pol.body")} value={draft.body} labels={labels} hint={draft.id ? t("pol.bodyHint") : undefined}
+              onChange={(html) => { setDraft((d) => d && { ...d, body: html }); setError(undefined); }} />
+            <RichEditor key={`${draft.id ?? "new"}-local`} label={t("pol.bodyLocal")} value={draft.bodyLocal} labels={labels}
+              onChange={(html) => setDraft((d) => d && { ...d, bodyLocal: html })} />
             {error && <p role="alert" className="m-0 text-[13px] font-semibold text-danger">{error}</p>}
           </div>
         )}

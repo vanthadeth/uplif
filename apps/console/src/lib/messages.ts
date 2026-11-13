@@ -1371,6 +1371,18 @@ export const en = {
   "pol.editConduct": "Edit code of conduct",
   "pol.emptyConduct": "No code of conduct yet",
   "pol.emptyConductBody": "Publish your code of conduct. Staff will see it in UPLIF Me under Learn and confirm it.",
+  "rte.bold": "Bold",
+  "rte.italic": "Italic",
+  "rte.underline": "Underline",
+  "rte.heading": "Heading",
+  "rte.bullets": "Bulleted list",
+  "rte.numbers": "Numbered list",
+  "rte.link": "Link",
+  "rte.linkUrl": "Link address",
+  "rte.linkApply": "Add link",
+  "shell.group.time": "Time and leave",
+  "shell.group.growth": "Growth and learning",
+  "shell.group.admin": "Administration",
 } as const;
 
 export type MessageKey = keyof typeof en;
@@ -2747,6 +2759,18 @@ export const km: Partial<Record<MessageKey, string>> = {
   "pol.editConduct": "កែក្រមសីលធម៌",
   "pol.emptyConduct": "មិនទាន់មានក្រមសីលធម៌",
   "pol.emptyConductBody": "ផ្សព្វផ្សាយក្រមសីលធម៌របស់អ្នក។ បុគ្គលិកនឹងឃើញវានៅក្នុង UPLIF Me ក្រោមផ្នែកចំណេះដឹង ហើយបញ្ជាក់។",
+  "rte.bold": "ដិត",
+  "rte.italic": "ទ្រេត",
+  "rte.underline": "គូសបន្ទាត់ក្រោម",
+  "rte.heading": "ចំណងជើង",
+  "rte.bullets": "បញ្ជីមានចំណុច",
+  "rte.numbers": "បញ្ជីមានលេខ",
+  "rte.link": "តំណ",
+  "rte.linkUrl": "អាសយដ្ឋានតំណ",
+  "rte.linkApply": "បន្ថែមតំណ",
+  "shell.group.time": "ពេលវេលា និងច្បាប់ឈប់សម្រាក",
+  "shell.group.growth": "ការអភិវឌ្ឍ និងការរៀន",
+  "shell.group.admin": "ការគ្រប់គ្រង",
 };
 
 /**
