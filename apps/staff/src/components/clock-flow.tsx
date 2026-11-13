@@ -221,11 +221,70 @@ export function ClockFlow({ kind, onClose, onSaved }: { kind: "in" | "out"; onCl
     );
   }
 
+  // Camera, confirm and sending: the camera fills the screen and the header and buttons float over it on flat dark bars,
+  // so the shutter or Confirm button is always on screen and nothing scrolls.
+  if (step === "camera" || step === "preview" || step === "sending") {
+    const cam = step === "camera";
+    return (
+      <div role="dialog" aria-modal="true" aria-label={t("st.step.photo")} className="fixed inset-x-0 top-0 z-50 h-dvh overflow-hidden bg-navy text-white">
+        <div className="relative mx-auto h-full max-w-md overflow-hidden bg-[#141c30]">
+          {cam && (
+            <>
+              <video ref={videoRef} playsInline muted className="absolute inset-0 size-full -scale-x-100 object-cover" />
+              {!cameraError && (
+                <div className="pointer-events-none absolute left-1/2 top-[44%] flex w-[66%] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-4">
+                  <span aria-hidden className="aspect-3/4 w-full rounded-full border-[3px] border-white shadow-[0_0_0_1200px_rgba(10,16,32,0.6)]" />
+                  <span className="whitespace-nowrap rounded-full bg-navy/70 px-3.5 py-1.5 text-sm">{t("st.step.hint")}</span>
+                </div>
+              )}
+            </>
+          )}
+          {photo && !cam && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={photo.url} alt="" className="absolute inset-0 size-full -scale-x-100 object-cover" />
+          )}
+          {cam && cameraError && (
+            <p role="alert" className="absolute inset-x-4 top-1/2 -translate-y-1/2 rounded-card bg-danger-soft p-4 text-danger-ink">{t(cameraError === "none" ? "st.camera.none" : "st.camera.denied")}</p>
+          )}
+
+          <header className="absolute inset-x-0 top-0 flex flex-col gap-2.5 bg-navy/60 px-4 pb-3 pt-[max(1rem,env(safe-area-inset-top))]">
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={close} disabled={step === "sending"} aria-label={t("st.step.cancel")} className="grid size-11 shrink-0 place-items-center rounded-full bg-white/15 hover:bg-white/25 disabled:opacity-50"><X className="size-5" aria-hidden /></button>
+              <div className="min-w-0 flex-1"><h2 className="m-0 text-lg font-bold">{t("st.step.photo")}</h2>
+                <p className="m-0 text-sm text-white/75">{fill(t(kind === "in" ? "st.step.kind.in" : "st.step.kind.out"), { time: time(openedAt.current) })}</p></div>
+              {!cam && <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-success-soft px-3 py-1 text-xs font-semibold text-success-ink"><Check className="size-4" aria-hidden />{t("st.step.taken")}</span>}
+            </div>
+            <p className={`m-0 flex items-start gap-2 rounded-xl px-3 py-2 text-sm ${gpsGood ? "bg-[#4ade80]/15" : "bg-[#f59e0b]/20"}`} aria-live="polite">
+              <MapPin className={`mt-0.5 size-5 shrink-0 ${gpsGood ? "text-[#7be0a5]" : "text-[#fbbf24]"}`} aria-hidden />
+              <span className="min-w-0"><b>{gpsTitle}</b>{gpsSub && <span className="text-white/75"> {gpsSub}</span>}</span>
+            </p>
+          </header>
+
+          <footer className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2.5 bg-navy/60 px-5 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-4">
+            {error && <p role="alert" className="m-0 w-full rounded-card bg-danger-soft p-3 text-danger-ink">{error}</p>}
+            {cam ? (
+              <>
+                <button type="button" disabled={!!cameraError} onClick={take} aria-label={t("st.step.take")} className="grid size-19 place-items-center rounded-full border-4 border-white disabled:opacity-40"><span className="size-14 rounded-full bg-white" /></button>
+                <span className="text-sm text-white/75">{t("st.step.take")}</span>
+              </>
+            ) : (
+              <div className="flex w-full flex-col gap-2.5">
+                <Button variant="primary" className="h-14 w-full bg-white! text-lg text-ink! hover:bg-white/90!" loading={step === "sending"} onClick={send}>{t(kind === "in" ? "st.step.send" : "st.step.sendOut")}</Button>
+                <Button className="w-full border-white/25! bg-white/15! text-white! hover:bg-white/25!" disabled={step === "sending"} onClick={retake}><RefreshCw className="size-4" aria-hidden />{t("st.step.retake")}</Button>
+                {step === "sending" && <span className="mx-auto"><Spinner label={t("st.sending")} /></span>}
+              </div>
+            )}
+          </footer>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div role="dialog" aria-modal="true" aria-label={t("st.step.photo")} className="fixed inset-x-0 top-0 z-50 h-dvh overflow-hidden bg-navy text-white">
       <div className="mx-auto flex h-full max-w-md flex-col gap-3 px-4 pb-0 pt-[max(1rem,env(safe-area-inset-top))]">
         <header className="flex shrink-0 items-center gap-3">
-          <button type="button" onClick={close} disabled={step === "sending"} aria-label={t("st.step.cancel")} className="grid size-11 place-items-center rounded-control bg-white/15 hover:bg-white/25 disabled:opacity-50"><X className="size-5" aria-hidden /></button>
+          <button type="button" onClick={close} aria-label={t("st.step.cancel")} className="grid size-11 place-items-center rounded-control bg-white/15 hover:bg-white/25 disabled:opacity-50"><X className="size-5" aria-hidden /></button>
           <div><h2 className="text-lg font-bold">{t("st.step.photo")}</h2>
             <p className="text-sm text-white/75">{fill(t(kind === "in" ? "st.step.kind.in" : "st.step.kind.out"), { time: time(openedAt.current) })}</p></div>
         </header>
@@ -254,34 +313,6 @@ export function ClockFlow({ kind, onClose, onSaved }: { kind: "in" | "out"; onCl
           </div>
         )}
 
-        <div hidden={step === "locate"} className="relative mx-auto min-h-0 w-full flex-1 overflow-hidden rounded-3xl bg-[#141c30]">
-          {step === "camera" && (
-            <>
-              <video ref={videoRef} playsInline muted className="absolute inset-0 size-full -scale-x-100 object-cover" />
-              {!cameraError && (
-                <>
-                  <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 aspect-3/4 w-[62%] -translate-x-1/2 -translate-y-[52%] rounded-full border-[3px] border-dashed border-white/75" />
-                  <span className="absolute inset-x-0 bottom-3 text-center text-sm">{t("st.step.hint")}</span>
-                </>
-              )}
-            </>
-          )}
-          {photo && step !== "camera" && (
-            <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={photo.url} alt="" className="absolute inset-0 size-full -scale-x-100 object-cover" />
-              <span className="absolute left-3 top-3 rounded-full bg-success-soft px-3 py-0.5 text-xs font-semibold text-success-ink">{t("st.step.taken")}</span>
-            </>
-          )}
-        </div>
-        {step !== "locate" && cameraError && <p role="alert" className="shrink-0 rounded-card bg-danger-soft p-3 text-danger-ink">{t(cameraError === "none" ? "st.camera.none" : "st.camera.denied")}</p>}
-
-        {step !== "locate" && <p className="flex shrink-0 items-start gap-3 rounded-card bg-white/12 p-3" aria-live="polite">
-          <MapPin className={`mt-0.5 size-5 shrink-0 ${gpsGood ? "text-[#7be0a5]" : gps.status === "getting" ? "text-white/70" : "text-[#f2b64f]"}`} aria-hidden />
-          <span><b className="block text-sm">{gpsTitle}</b>{gpsSub && <span className="text-xs text-white/75">{gpsSub}</span>}</span>
-        </p>}
-
-        {error && <p role="alert" className="shrink-0 rounded-card bg-danger-soft p-3 text-danger-ink">{error}</p>}
 
         <div className="mt-auto flex shrink-0 flex-col items-center gap-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {step === "locate" && settled && (
@@ -292,19 +323,6 @@ export function ClockFlow({ kind, onClose, onSaved }: { kind: "in" | "out"; onCl
           )}
           {step === "locate" && !settled && (
             <Button disabled className="h-14 w-full border-white/25! bg-white/15! text-lg text-white!"><Camera className="size-5" aria-hidden />{t("st.locate.continue")}</Button>
-          )}
-          {step === "camera" && (
-            <>
-              <button type="button" disabled={!!cameraError} onClick={take} aria-label={t("st.step.take")} className="grid size-19 place-items-center rounded-full border-4 border-white disabled:opacity-40"><span className="size-14 rounded-full bg-white" /></button>
-              <span className="text-sm text-white/75">{t("st.step.take")}</span>
-            </>
-          )}
-          {(step === "preview" || step === "sending") && (
-            <div className="flex w-full flex-col gap-2">
-              <Button variant="primary" className="h-14 w-full bg-white! text-lg text-ink! hover:bg-white/90!" loading={step === "sending"} onClick={send}>{t(kind === "in" ? "st.step.send" : "st.step.sendOut")}</Button>
-              <Button className="w-full border-white/25! bg-white/15! text-white! hover:bg-white/25!" disabled={step === "sending"} onClick={retake}><RefreshCw className="size-4" aria-hidden />{t("st.step.retake")}</Button>
-              {step === "sending" && <span className="mx-auto"><Spinner label={t("st.sending")} /></span>}
-            </div>
           )}
         </div>
       </div>
