@@ -222,9 +222,9 @@ export function ClockFlow({ kind, onClose, onSaved }: { kind: "in" | "out"; onCl
   }
 
   return (
-    <div role="dialog" aria-modal="true" aria-label={t("st.step.photo")} className="fixed inset-x-0 top-0 z-50 h-dvh overflow-y-auto bg-navy text-white">
-      <div className="mx-auto flex h-full min-h-110 max-w-md flex-col gap-3 px-4 pb-0 pt-[max(1rem,env(safe-area-inset-top))]">
-        <header className="flex items-center gap-3">
+    <div role="dialog" aria-modal="true" aria-label={t("st.step.photo")} className="fixed inset-x-0 top-0 z-50 h-dvh overflow-hidden bg-navy text-white">
+      <div className="mx-auto flex h-full max-w-md flex-col gap-3 px-4 pb-0 pt-[max(1rem,env(safe-area-inset-top))]">
+        <header className="flex shrink-0 items-center gap-3">
           <button type="button" onClick={close} disabled={step === "sending"} aria-label={t("st.step.cancel")} className="grid size-11 place-items-center rounded-control bg-white/15 hover:bg-white/25 disabled:opacity-50"><X className="size-5" aria-hidden /></button>
           <div><h2 className="text-lg font-bold">{t("st.step.photo")}</h2>
             <p className="text-sm text-white/75">{fill(t(kind === "in" ? "st.step.kind.in" : "st.step.kind.out"), { time: time(openedAt.current) })}</p></div>
@@ -254,7 +254,7 @@ export function ClockFlow({ kind, onClose, onSaved }: { kind: "in" | "out"; onCl
           </div>
         )}
 
-        <div hidden={step === "locate"} className="relative mx-auto min-h-48 w-full flex-1 overflow-hidden rounded-3xl bg-[#141c30]">
+        <div hidden={step === "locate"} className="relative mx-auto min-h-0 w-full flex-1 overflow-hidden rounded-3xl bg-[#141c30]">
           {step === "camera" && (
             <>
               <video ref={videoRef} playsInline muted className="absolute inset-0 size-full -scale-x-100 object-cover" />
@@ -274,14 +274,14 @@ export function ClockFlow({ kind, onClose, onSaved }: { kind: "in" | "out"; onCl
             </>
           )}
         </div>
-        {step !== "locate" && cameraError && <p role="alert" className="rounded-card bg-danger-soft p-3 text-danger-ink">{t(cameraError === "none" ? "st.camera.none" : "st.camera.denied")}</p>}
+        {step !== "locate" && cameraError && <p role="alert" className="shrink-0 rounded-card bg-danger-soft p-3 text-danger-ink">{t(cameraError === "none" ? "st.camera.none" : "st.camera.denied")}</p>}
 
-        {step !== "locate" && <p className="flex items-start gap-3 rounded-card bg-white/12 p-3" aria-live="polite">
+        {step !== "locate" && <p className="flex shrink-0 items-start gap-3 rounded-card bg-white/12 p-3" aria-live="polite">
           <MapPin className={`mt-0.5 size-5 shrink-0 ${gpsGood ? "text-[#7be0a5]" : gps.status === "getting" ? "text-white/70" : "text-[#f2b64f]"}`} aria-hidden />
           <span><b className="block text-sm">{gpsTitle}</b>{gpsSub && <span className="text-xs text-white/75">{gpsSub}</span>}</span>
         </p>}
 
-        {error && <p role="alert" className="rounded-card bg-danger-soft p-3 text-danger-ink">{error}</p>}
+        {error && <p role="alert" className="shrink-0 rounded-card bg-danger-soft p-3 text-danger-ink">{error}</p>}
 
         <div className="mt-auto flex shrink-0 flex-col items-center gap-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {step === "locate" && settled && (
