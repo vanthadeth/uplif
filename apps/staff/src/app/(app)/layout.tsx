@@ -19,7 +19,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <OutboxProvider>
       <NotificationsProvider>
       <PictureProvider>
-        <div className="mx-auto min-h-dvh max-w-md pb-[calc(5rem+env(safe-area-inset-bottom))]"><AppBar />{children}</div>
+        <div className="mx-auto min-h-dvh max-w-md pb-[calc(6.5rem+env(safe-area-inset-bottom))]"><AppBar />{children}</div>
         <TabBar />
       </PictureProvider>
       </NotificationsProvider>
