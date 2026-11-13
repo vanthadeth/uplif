@@ -4,14 +4,14 @@ import { Camera, Trash2 } from "lucide-react";
 import { Avatar } from "./Avatar";
 
 /** An avatar with a camera button to choose a new picture and, when there is one, a button to remove it. The caller does the upload. */
-export function AvatarEdit({ name, src, changeLabel, removeLabel, busy, onPick, onRemove }: {
-  name: string; src?: string; changeLabel: string; removeLabel: string; busy?: boolean;
+export function AvatarEdit({ name, src, size = "lg", changeLabel, removeLabel, busy, onPick, onRemove }: {
+  name: string; src?: string; size?: "lg" | "xl"; changeLabel: string; removeLabel: string; busy?: boolean;
   onPick: (file: File) => void; onRemove?: () => void;
 }) {
   const input = useRef<HTMLInputElement>(null);
   return (
     <div className="relative shrink-0" aria-busy={busy}>
-      <div className={busy ? "opacity-60 transition-opacity" : "transition-opacity"}><Avatar name={name} src={src} size="lg" /></div>
+      <div className={busy ? "opacity-60 transition-opacity" : "transition-opacity"}><Avatar name={name} src={src} size={size} /></div>
       <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" hidden
         onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) onPick(f); }} />
       <button type="button" aria-label={changeLabel} disabled={busy} onClick={() => input.current?.click()}
