@@ -17,7 +17,7 @@ export function TitleBar({ name, greeting, searchLabel, notifLabel, soonLabel, a
         <Avatar name={name || "?"} size="lg" />
         <div className="min-w-0 leading-snug">
           <div className="truncate text-base font-semibold">{name}</div>
-          <div className="truncate text-[13px] text-muted">{greeting}</div>
+          <div className="truncate text-[14px] text-muted">{greeting}</div>
         </div>
       </div>
       <button type="button" aria-disabled="true" aria-label={`${searchLabel} (${soonLabel})`} title={`${searchLabel}: ${soonLabel}`} className={inert}>

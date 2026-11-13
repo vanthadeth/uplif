@@ -36,9 +36,9 @@ export function HolidayNotice({ notice, variant, onReview }: { notice: HolidayNo
   );
   const body = (
     <>
-      <b className="block text-[15px] font-semibold">{f("hol.notice.title")}</b>
-      <span className="block text-[13px] leading-snug text-muted">{f("hol.notice.body")}</span>
-      {notice.provisional && <span className="block text-[13px] leading-snug text-warning-ink">{t("hol.notice.provisional")}</span>}
+      <b className="block text-[16px] font-semibold">{f("hol.notice.title")}</b>
+      <span className="block text-[14px] leading-snug text-muted">{f("hol.notice.body")}</span>
+      {notice.provisional && <span className="block text-[14px] leading-snug text-warning-ink">{t("hol.notice.provisional")}</span>}
     </>
   );
   if (variant === "banner") {
@@ -52,7 +52,7 @@ export function HolidayNotice({ notice, variant, onReview }: { notice: HolidayNo
   return (
     <Card><CardBody className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="m-0 flex items-center gap-2 text-[15px] font-semibold"><CalendarDays className="size-5 text-primary" aria-hidden />{f("hol.notice.cardTitle")}</h2>
+        <h2 className="m-0 flex items-center gap-2 text-[16px] font-semibold"><CalendarDays className="size-5 text-primary" aria-hidden />{f("hol.notice.cardTitle")}</h2>
         <Badge tone="info">{f("hol.notice.count")}</Badge>
       </div>
       <div className="flex flex-col gap-0.5">{body}</div>

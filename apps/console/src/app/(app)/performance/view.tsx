@@ -166,7 +166,7 @@ export function PerformanceView({ canReview, canManage, kpis, positions }: { can
                 value={vals[r.kpi_id] ?? ""} onChange={(e) => { setVals({ ...vals, [r.kpi_id]: e.target.value }); setError(undefined); }} />
             ))}
             <Textarea label={t("pf.rev.comment")} rows={3} maxLength={2000} value={comment} onChange={(e) => setComment(e.target.value)} />
-            {error && <p role="alert" className="m-0 text-[13px] font-semibold text-danger">{error}</p>}
+            {error && <p role="alert" className="m-0 text-[14px] font-semibold text-danger">{error}</p>}
           </div>
         )}
       </SidePanel>
@@ -182,7 +182,7 @@ export function PerformanceView({ canReview, canManage, kpis, positions }: { can
             <Input label={t("pf.kpi.nameLocal")} value={draft.nameLocal} maxLength={120} onChange={(e) => setDraft({ ...draft, nameLocal: e.target.value })} />
             <Input label={t("pf.kpi.weight")} inputMode="numeric" value={draft.weight} onChange={(e) => { setDraft({ ...draft, weight: e.target.value }); setError(undefined); }} />
             <Toggle checked={draft.active} label={t("pf.kpi.active")} onChange={(v) => setDraft({ ...draft, active: v })} />
-            {error && <p role="alert" className="m-0 text-[13px] font-semibold text-danger">{error}</p>}
+            {error && <p role="alert" className="m-0 text-[14px] font-semibold text-danger">{error}</p>}
           </div>
         )}
       </SidePanel>

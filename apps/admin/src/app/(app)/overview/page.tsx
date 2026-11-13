@@ -54,7 +54,7 @@ export default async function OverviewPage() {
         {stats.map(({ icon: Icon, label, value, sub }) => (
           <Card key={label}>
             <CardBody className="flex flex-col gap-2">
-              <span className="flex items-center gap-2 text-[13px] font-medium text-muted"><Icon className="size-[18px]" aria-hidden="true" />{label}</span>
+              <span className="flex items-center gap-2 text-[14px] font-medium text-muted"><Icon className="size-[18px]" aria-hidden="true" />{label}</span>
               <span className="text-3xl font-bold tabular-nums">{value}</span>
               <span className="text-xs text-muted">{sub}</span>
             </CardBody>

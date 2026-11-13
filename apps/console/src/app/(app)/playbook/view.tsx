@@ -134,7 +134,7 @@ export function PlaybookView({ rows, positions, companyId }: { rows: GuideRow[];
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[22px] font-bold tracking-tight">{t("pb.title")}</h1>
+          <h1 className="text-[24px] font-bold tracking-tight">{t("pb.title")}</h1>
           <p className="mt-1 max-w-[66ch] text-muted">{t("pb.subtitle")}</p>
         </div>
         <Button variant="primary" className="w-full sm:w-auto" onClick={() => edit("new")}><Plus className="size-[18px]" aria-hidden />{t("pb.add")}</Button>
@@ -144,7 +144,7 @@ export function PlaybookView({ rows, positions, companyId }: { rows: GuideRow[];
 
       {shown.length === 0 ? (
         <div className="rounded-card border border-line bg-surface px-4 py-9 text-center text-muted">
-          <b className="mb-1 block text-[15px] text-ink">{t("pb.empty")}</b>{t("pb.emptyBody")}
+          <b className="mb-1 block text-[16px] text-ink">{t("pb.empty")}</b>{t("pb.emptyBody")}
         </div>
       ) : (
         <div className="overflow-hidden rounded-card border border-line bg-surface">
@@ -215,7 +215,7 @@ export function PlaybookView({ rows, positions, companyId }: { rows: GuideRow[];
             </div>
 
             <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
-              <legend className="mb-1 p-0 text-[13px] font-semibold text-ink-2">{t("pb.audience")}</legend>
+              <legend className="mb-1 p-0 text-[14px] font-semibold text-ink-2">{t("pb.audience")}</legend>
               <label className="flex min-h-10 items-center gap-2"><input type="radio" name="aud" checked={draft.positionIds.length === 0} onChange={() => setDraft({ ...draft, positionIds: [] })} />{t("pb.audienceAll")}</label>
               <label className="flex min-h-10 items-center gap-2"><input type="radio" name="aud" checked={draft.positionIds.length > 0} disabled={positions.length === 0}
                 onChange={() => setDraft({ ...draft, positionIds: positions.slice(0, 1).map((p) => p.id) })} />{t("pb.audiencePositions")}</label>
@@ -267,7 +267,7 @@ export function PlaybookView({ rows, positions, companyId }: { rows: GuideRow[];
                 <RichEditor key={`${s.key}-l`} label={t("pb.bodyLocal")} value={s.body_local} labels={labels} minHeight={120} onChange={(html) => setStep(s.key, { body_local: html })} />
 
                 <div className="flex flex-col gap-2">
-                  <span className="text-[13px] font-semibold text-ink-2">{t("pb.picture")}</span>
+                  <span className="text-[14px] font-semibold text-ink-2">{t("pb.picture")}</span>
                   {s.image_path && <Pic path={s.image_path} className="aspect-video w-full rounded-control border border-line bg-ground object-cover" />}
                   <div className="flex flex-wrap gap-2">
                     <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-control border border-line-strong px-3 font-semibold hover:bg-ground">
@@ -280,7 +280,7 @@ export function PlaybookView({ rows, positions, companyId }: { rows: GuideRow[];
               </section>
             ))}
             <Button onClick={() => setDraft({ ...draft, steps: [...draft.steps, blankStep()] })}><Plus className="size-4" aria-hidden />{t("pb.addStep")}</Button>
-            {error && <p role="alert" className="m-0 text-[13px] font-semibold text-danger">{error}</p>}
+            {error && <p role="alert" className="m-0 text-[14px] font-semibold text-danger">{error}</p>}
           </div>
         )}
       </SidePanel>

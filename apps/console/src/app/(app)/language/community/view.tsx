@@ -44,16 +44,16 @@ export function Community({ languages, stats }: { languages: LanguageRow[]; stat
           <li key={title}>
             <Card className="h-full"><CardBody className="flex gap-3">
               <span className="grid size-8 flex-none place-items-center rounded-full bg-primary-soft font-bold text-primary-ink">{i + 1}</span>
-              <div><b className="block">{t(title)}</b><p className="m-0 text-[13px] leading-relaxed text-muted">{t(body)}</p></div>
+              <div><b className="block">{t(title)}</b><p className="m-0 text-[14px] leading-relaxed text-muted">{t(body)}</p></div>
             </CardBody></Card>
           </li>
         ))}
       </ol>
 
-      <h2 className="m-0 text-[15px] font-semibold">{t("tl.c.yours")}</h2>
+      <h2 className="m-0 text-[16px] font-semibold">{t("tl.c.yours")}</h2>
       <div className="grid grid-cols-3 gap-3">
         {([["tl.c.sug", stats.suggestions], ["tl.c.vote", stats.votes], ["tl.c.shown", stats.shown]] as const).map(([k, n]) => (
-          <Card key={k}><CardBody><b className="block text-2xl tabular-nums">{n}</b><span className="text-[13px] text-muted">{t(k)}</span></CardBody></Card>
+          <Card key={k}><CardBody><b className="block text-2xl tabular-nums">{n}</b><span className="text-[14px] text-muted">{t(k)}</span></CardBody></Card>
         ))}
       </div>
 
@@ -67,7 +67,7 @@ export function Community({ languages, stats }: { languages: LanguageRow[]; stat
         </div>
       )}
 
-      <h2 className="m-0 text-[15px] font-semibold">{t("tl.c.langs")}</h2>
+      <h2 className="m-0 text-[16px] font-semibold">{t("tl.c.langs")}</h2>
       <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3 p-0">
         {languages.filter((l) => !l.is_source).map((l) => {
           const none = (l.machine_status === "none" || l.machine_status === "unavailable") && l.pinned + l.voted + l.machine === 0;
@@ -75,7 +75,7 @@ export function Community({ languages, stats }: { languages: LanguageRow[]; stat
             <li key={l.code}>
               <Card className="h-full"><CardBody className="flex h-full flex-col gap-3">
                 <div className="flex items-start justify-between gap-2">
-                  <div><b lang={l.code} className="block text-lg">{l.native_name}</b><span lang="en" className="text-[13px] text-muted">{l.english_name}</span></div>
+                  <div><b lang={l.code} className="block text-lg">{l.native_name}</b><span lang="en" className="text-[14px] text-muted">{l.english_name}</span></div>
                   {l.is_reviewer ? <Badge2 tone="bg-primary-soft text-primary-ink" icon={<ShieldCheck className="size-3.5" aria-hidden="true" />}>{t("tl.c.youReview")}</Badge2>
                     : none ? <Badge2 tone="bg-neutral-soft text-ink-2" icon={<Clock className="size-3.5" aria-hidden="true" />}>{t("tl.tag.none")}</Badge2>
                     : l.reviewer_name ? <Badge2 tone="bg-primary-soft text-primary-ink" icon={<ShieldCheck className="size-3.5" aria-hidden="true" />}>{t("tl.tag.reviewer")}</Badge2>
@@ -98,7 +98,7 @@ export function Community({ languages, stats }: { languages: LanguageRow[]; stat
         className="flex flex-col gap-3 rounded-card border border-dashed border-line-strong p-4"
         onSubmit={(e) => { e.preventDefault(); void run("new", createLanguage(code, native, english), native); }}
       >
-        <div><b className="block">{t("tl.c.addTitle")}</b><span className="text-[13px] text-muted">{f("tl.c.addBody", { total })}</span></div>
+        <div><b className="block">{t("tl.c.addTitle")}</b><span className="text-[14px] text-muted">{f("tl.c.addBody", { total })}</span></div>
         <div className="grid gap-3 sm:grid-cols-3">
           <Input label={t("tl.c.name")} value={native} onChange={(e) => setNative(e.target.value)} maxLength={60} required />
           <Input label={t("tl.c.nameEn")} value={english} onChange={(e) => setEnglish(e.target.value)} maxLength={60} />

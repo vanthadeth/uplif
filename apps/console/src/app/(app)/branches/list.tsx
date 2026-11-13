@@ -117,7 +117,7 @@ export function BranchList({ branches, people, companyId, canCreate, canUpdate }
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[22px] font-bold tracking-tight">{t("branches.title")}</h1>
+          <h1 className="text-[24px] font-bold tracking-tight">{t("branches.title")}</h1>
           <p className="mt-1 max-w-[62ch] text-muted">{t("branches.subtitle")}</p>
         </div>
         {readOnly ? <Badge tone="neutral"><Lock className="size-3" aria-hidden />{t("branches.viewOnly")}</Badge>
@@ -133,7 +133,7 @@ export function BranchList({ branches, people, companyId, canCreate, canUpdate }
 
       {branches.length === 0 ? (
         <div className="rounded-card border border-line bg-surface px-4 py-9 text-center text-muted">
-          <b className="mb-1 block text-[15px] text-ink">{t("branches.empty")}</b>
+          <b className="mb-1 block text-[16px] text-ink">{t("branches.empty")}</b>
           {t("branches.emptyBody")}
           {canCreate && <div className="mt-3.5"><Button variant="primary" onClick={() => open("new")}><Plus className="size-[18px]" aria-hidden />{t("branches.add")}</Button></div>}
         </div>
@@ -148,7 +148,7 @@ export function BranchList({ branches, people, companyId, canCreate, canUpdate }
             <div role="group" aria-label={t("common.status")} className="flex flex-wrap gap-2">
               {(["all", "active", "inactive"] as const).map((f) => (
                 <button key={f} type="button" aria-pressed={filter === f} onClick={() => setFilter(f)}
-                  className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3 text-[13px] ${filter === f ? "border-primary bg-primary-soft font-semibold text-primary-ink" : "border-line-strong bg-surface font-medium"}`}>
+                  className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3 text-[14px] ${filter === f ? "border-primary bg-primary-soft font-semibold text-primary-ink" : "border-line-strong bg-surface font-medium"}`}>
                   {t(`branches.filter.${f}`)} <em className="not-italic tabular-nums opacity-70">{counts[f].toLocaleString(locale === "km" ? "km-KH" : "en")}</em>
                 </button>
               ))}
@@ -158,19 +158,19 @@ export function BranchList({ branches, people, companyId, canCreate, canUpdate }
           <div className="overflow-hidden rounded-card border border-line bg-surface">
             {shown.length === 0 ? (
               <div className="px-4 py-9 text-center text-muted">
-                <b className="mb-1 block text-[15px] text-ink">{t("branches.noMatch")}</b>{t("branches.noMatchBody")}
+                <b className="mb-1 block text-[16px] text-ink">{t("branches.noMatch")}</b>{t("branches.noMatchBody")}
                 <div className="mt-3"><Button onClick={() => { setQuery(""); setFilter("all"); }}>{t("branches.clearSearch")}</Button></div>
               </div>
             ) : (
               <>
-                <div aria-hidden className={`hidden items-center gap-4 border-b border-line bg-ground px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted md:grid ${grid}`}>
+                <div aria-hidden className={`hidden items-center gap-4 border-b border-line bg-ground px-4 py-2.5 text-[13px] font-semibold uppercase tracking-wider text-muted md:grid ${grid}`}>
                   <span>{t("branches.name")}</span><span>{t("common.status")}</span><span>{peopleVisible ? t("branches.people") : ""}</span><span>{t("branches.created")}</span>{!readOnly && <span />}
                 </div>
                 {shown.map((b) => (
                   <div key={b.id} className={`grid min-h-[68px] grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1.5 border-t border-line px-4 py-3.5 first:border-t-0 md:gap-x-4 ${grid} ${b.is_active ? "" : "[&_.nm]:text-muted"}`}>
                     <div className="nm min-w-0 leading-snug">
-                      <b className="block break-words text-[15px] font-semibold">{label(b)}</b>
-                      {other(b) && <small className="block break-words text-[13px] text-muted">{other(b)}</small>}
+                      <b className="block break-words text-[16px] font-semibold">{label(b)}</b>
+                      {other(b) && <small className="block break-words text-[14px] text-muted">{other(b)}</small>}
                     </div>
                     <span className="col-start-2 row-start-1 md:col-start-auto md:row-start-auto">
                       {b.is_active ? <Badge tone="success"><Check className="me-1 size-3" aria-hidden />{t("status.active")}</Badge> : <Badge tone="neutral"><X className="me-1 size-3" aria-hidden />{t("status.inactive")}</Badge>}
@@ -206,7 +206,7 @@ export function BranchList({ branches, people, companyId, canCreate, canUpdate }
           <Input label={t("branches.nameLocal")} value={nameLocal} maxLength={120} onChange={(e) => setNameLocal(e.target.value)} hint={t("branches.nameLocalHint")} />
           <fieldset className="flex flex-col gap-3 rounded-control border border-line p-3">
             <legend className="px-1 font-semibold">{t("branches.location")}</legend>
-            <p className="text-[13px] text-muted">{t("branches.locationHint")}</p>
+            <p className="text-[14px] text-muted">{t("branches.locationHint")}</p>
             <div className="grid gap-3 sm:grid-cols-2">
               <Input label={t("branches.lat")} inputMode="decimal" value={lat} onChange={(e) => setLat(e.target.value)} />
               <Input label={t("branches.lon")} inputMode="decimal" value={lon} onChange={(e) => setLon(e.target.value)} />
@@ -229,7 +229,7 @@ export function BranchList({ branches, people, companyId, canCreate, canUpdate }
           {deactivating && <p className="font-semibold">{label(deactivating)}</p>}
           <p className="leading-relaxed text-muted">{t("branches.deactivateBody")}</p>
           {lastActive && (
-            <div role="alert" className="flex items-start gap-2 rounded-control bg-warning-soft p-3 text-[13px] leading-snug text-warning-ink">
+            <div role="alert" className="flex items-start gap-2 rounded-control bg-warning-soft p-3 text-[14px] leading-snug text-warning-ink">
               <Info className="mt-0.5 size-4 shrink-0" aria-hidden /><span>{t("branches.lastActive")}</span>
             </div>
           )}
