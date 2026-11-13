@@ -6,7 +6,6 @@ import "@fontsource/noto-sans-khmer/700.css";
 import "./globals.css";
 import { themeInitScript } from "@uplif/ui";
 import { I18nProvider } from "@/lib/i18n";
-import { RegisterServiceWorker } from "@/components/register-sw";
 
 const description = "Attendance, field sales, orders and stock for small shops, in apps your team can install on their phones.";
 
@@ -16,7 +15,6 @@ export const metadata: Metadata = {
   applicationName: "UPLIF",
   openGraph: { title: "UPLIF: Business management made simple", description, type: "website", siteName: "UPLIF" },
   icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
-  appleWebApp: { capable: true, title: "UPLIF", statusBarStyle: "default" },
 };
 export const viewport: Viewport = {
   themeColor: [{ media: "(prefers-color-scheme: light)", color: "#1D5FD1" }, { media: "(prefers-color-scheme: dark)", color: "#111A2B" }],
@@ -28,7 +26,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head><script dangerouslySetInnerHTML={{ __html: themeInitScript }} /></head>
       <body>
         <I18nProvider>{children}</I18nProvider>
-        <RegisterServiceWorker />
       </body>
     </html>
   );
