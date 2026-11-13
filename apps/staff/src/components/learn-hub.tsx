@@ -1,14 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, ClipboardCheck, ScrollText, ShieldCheck } from "lucide-react";
+import { BookOpenCheck, ChevronRight, ClipboardCheck, ScrollText, ShieldCheck } from "lucide-react";
 import { HubTile, Skeleton } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
 
-interface Counts { tests: number | null; policies: number | null; conduct: number | null; policyTotal: number; conductTotal: number; testTotal: number }
-const NONE: Counts = { tests: null, policies: null, conduct: null, policyTotal: 0, conductTotal: 0, testTotal: 0 };
+interface Counts { guides: number | null; guideTotal: number; tests: number | null; policies: number | null; conduct: number | null; policyTotal: number; conductTotal: number; testTotal: number }
+const NONE: Counts = { guides: null, guideTotal: 0, tests: null, policies: null, conduct: null, policyTotal: 0, conductTotal: 0, testTotal: 0 };
 
 /** The Learn landing page: what needs attention, then a tile for each part of Learn. */
 export function LearnHub() {
@@ -18,11 +18,14 @@ export function LearnHub() {
   useEffect(() => {
     let live = true;
     const db = createClient();
-    void Promise.all([db.rpc("my_policies"), db.rpc("my_learn_tests")]).then(([p, tt]) => {
+    void Promise.all([db.rpc("my_policies"), db.rpc("my_learn_tests"), db.rpc("my_playbooks")]).then(([p, tt, pb]) => {
       if (!live) return;
       const pol = p.error ? [] : p.data;
       const tests = tt.error ? [] : tt.data;
+      const guides = pb.error ? [] : pb.data;
       setC({
+        guides: pb.error ? null : guides.filter((r) => !r.done_at).length,
+        guideTotal: guides.length,
         tests: tt.error ? null : tests.filter((r) => r.status !== "passed").length,
         policies: p.error ? null : pol.filter((r) => r.kind === "policy" && !r.acknowledged_at).length,
         conduct: p.error ? null : pol.filter((r) => r.kind === "conduct" && !r.acknowledged_at).length,
@@ -41,6 +44,7 @@ export function LearnHub() {
     return todo > 0 ? fill(t(todoKey), { n: todo }) : t("st.learn.sub.allDone");
   };
   const attention = [
+    k.guides ? { href: "/learn/playbook", text: fill(t("st.learn.attn.guides"), { n: k.guides }) } : null,
     k.tests ? { href: "/learn/tests", text: fill(t("st.learn.attn.tests"), { n: k.tests }) } : null,
     k.policies ? { href: "/learn/policies", text: fill(t("st.learn.attn.policies"), { n: k.policies }) } : null,
     k.conduct ? { href: "/learn/conduct", text: t("st.learn.attn.conduct") } : null,
@@ -63,6 +67,7 @@ export function LearnHub() {
         </section>
       )}
       <div className="grid grid-cols-2 gap-3">
+        <HubTile as={Link} href="/learn/playbook" icon={<BookOpenCheck className="size-6" />} title={t("st.learn.tile.playbook")} sub={sub(k.guides, k.guideTotal, "st.learn.sub.todo")} alert={!!k.guides} />
         <HubTile as={Link} href="/learn/tests" icon={<ClipboardCheck className="size-6" />} title={t("st.learn.tile.tests")} sub={sub(k.tests, k.testTotal, "st.learn.sub.todo")} alert={!!k.tests} />
         <HubTile as={Link} href="/learn/policies" icon={<ScrollText className="size-6" />} title={t("st.learn.tile.policies")} sub={sub(k.policies, k.policyTotal, "st.learn.todo")} alert={!!k.policies} />
         <HubTile as={Link} href="/learn/conduct" icon={<ShieldCheck className="size-6" />} title={t("st.learn.tile.conduct")} sub={sub(k.conduct, k.conductTotal, "st.learn.todo")} alert={!!k.conduct} />
