@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Archive, ArchiveRestore, Check, Pencil, Plus } from "lucide-react";
-import { Badge, Button, Input, SidePanel, Textarea, Toggle, useToast } from "@uplif/ui";
+import { Badge, Button, Input, SidePanel, Tabs, Textarea, Toggle, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fmtDate, pick } from "@/lib/format";
@@ -10,10 +10,10 @@ import type { MessageKey } from "@/lib/messages";
 
 interface Person { employee_id: string; name: string; name_local: string | null; acknowledged_at: string | null }
 export interface PolicyRow {
-  id: string; title: string; title_local: string | null; archived: boolean;
+  id: string; kind: "policy" | "conduct"; title: string; title_local: string | null; archived: boolean;
   version: number; body: string; body_local: string | null; published_at: string; people: Person[];
 }
-interface Draft { id: string | null; title: string; titleLocal: string; body: string; bodyLocal: string }
+interface Draft { id: string | null; kind: "policy" | "conduct"; title: string; titleLocal: string; body: string; bodyLocal: string }
 
 export function PoliciesView({ rows }: { rows: PolicyRow[] }) {
   const { t, locale } = useI18n();
@@ -23,16 +23,19 @@ export function PoliciesView({ rows }: { rows: PolicyRow[] }) {
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [kind, setKind] = useState<"policy" | "conduct">("policy");
   const [open, setOpen] = useState<PolicyRow | null>(null);
   const f = (k: MessageKey, v: Record<string, string | number>) => t(k).replace(/\{(\w+)\}/g, (m, x) => (x in v ? String(v[x]) : m));
 
-  const shown = rows.filter((r) => showArchived || !r.archived);
-  const hasArchived = rows.some((r) => r.archived);
+  const ofKind = rows.filter((r) => r.kind === kind);
+  const shown = ofKind.filter((r) => showArchived || !r.archived);
+  const hasArchived = ofKind.some((r) => r.archived);
+  const conduct = kind === "conduct";
 
   function edit(r: PolicyRow | "new") {
     setError(undefined);
-    setDraft(r === "new" ? { id: null, title: "", titleLocal: "", body: "", bodyLocal: "" }
-      : { id: r.id, title: r.title, titleLocal: r.title_local ?? "", body: r.body, bodyLocal: r.body_local ?? "" });
+    setDraft(r === "new" ? { id: null, kind, title: "", titleLocal: "", body: "", bodyLocal: "" }
+      : { id: r.id, kind: r.kind, title: r.title, titleLocal: r.title_local ?? "", body: r.body, bodyLocal: r.body_local ?? "" });
   }
 
   async function save() {
@@ -41,7 +44,7 @@ export function PoliciesView({ rows }: { rows: PolicyRow[] }) {
     setBusy(true);
     const { error: err } = await createClient().rpc("save_policy", {
       p_id: draft.id, p_title: draft.title.trim(), p_title_local: draft.titleLocal.trim() || null,
-      p_body: draft.body, p_body_local: draft.bodyLocal.trim() ? draft.bodyLocal : null,
+      p_body: draft.body, p_body_local: draft.bodyLocal.trim() ? draft.bodyLocal : null, p_kind: draft.kind,
     });
     setBusy(false);
     if (err) return setError(t(err.code === "42501" ? "common.forbidden" : "common.saveError"));
@@ -68,14 +71,17 @@ export function PoliciesView({ rows }: { rows: PolicyRow[] }) {
           <h1 className="text-[22px] font-bold tracking-tight">{t("pol.title")}</h1>
           <p className="mt-1 max-w-[66ch] text-muted">{t("pol.subtitle")}</p>
         </div>
-        <Button variant="primary" className="w-full sm:w-auto" onClick={() => edit("new")}><Plus className="size-[18px]" aria-hidden />{t("pol.add")}</Button>
+        <Button variant="primary" className="w-full sm:w-auto" onClick={() => edit("new")}><Plus className="size-[18px]" aria-hidden />{t(conduct ? "pol.addConduct" : "pol.add")}</Button>
       </div>
+
+      <Tabs label={t("pol.tabsLabel")} value={kind} onChange={(id) => setKind(id as "policy" | "conduct")}
+        items={[{ id: "policy", label: t("pol.tabPolicies") }, { id: "conduct", label: t("pol.tabConduct") }]} />
 
       {hasArchived && <Toggle checked={showArchived} label={t("pol.showArchived")} onChange={setShowArchived} />}
 
       {shown.length === 0 ? (
         <div className="rounded-card border border-line bg-surface px-4 py-9 text-center text-muted">
-          <b className="mb-1 block text-[15px] text-ink">{t("pol.empty")}</b>{t("pol.emptyBody")}
+          <b className="mb-1 block text-[15px] text-ink">{t(conduct ? "pol.emptyConduct" : "pol.empty")}</b>{t(conduct ? "pol.emptyConductBody" : "pol.emptyBody")}
         </div>
       ) : (
         <div className="overflow-hidden rounded-card border border-line bg-surface">
@@ -124,7 +130,7 @@ export function PoliciesView({ rows }: { rows: PolicyRow[] }) {
         )}
       </SidePanel>
 
-      <SidePanel open={draft !== null} onClose={() => setDraft(null)} closeLabel={t("common.close")} title={draft?.id ? t("pol.edit") : t("pol.add")}
+      <SidePanel open={draft !== null} onClose={() => setDraft(null)} closeLabel={t("common.close")} title={draft ? t(draft.id ? (draft.kind === "conduct" ? "pol.editConduct" : "pol.edit") : (draft.kind === "conduct" ? "pol.addConduct" : "pol.add")) : ""}
         footer={<><Button onClick={() => setDraft(null)}>{t("common.cancel")}</Button><Button variant="primary" loading={busy} onClick={save}>{t("pol.save")}</Button></>}>
         {draft && (
           <div className="flex flex-col gap-4">

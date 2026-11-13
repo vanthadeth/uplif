@@ -1364,6 +1364,13 @@ export const en = {
   "cr.pr.err.need": "Choose a person, a new position and a date.",
   "cr.pr.err.same": "They already hold that position.",
   "cr.pr.err.date": "The date cannot be in the future or before they joined.",
+  "pol.tabsLabel": "Type",
+  "pol.tabPolicies": "Policies",
+  "pol.tabConduct": "Code of conduct",
+  "pol.addConduct": "New code of conduct",
+  "pol.editConduct": "Edit code of conduct",
+  "pol.emptyConduct": "No code of conduct yet",
+  "pol.emptyConductBody": "Publish your code of conduct. Staff will see it in UPLIF Me under Learn and confirm it.",
 } as const;
 
 export type MessageKey = keyof typeof en;
@@ -2733,6 +2740,13 @@ export const km: Partial<Record<MessageKey, string>> = {
   "cr.pr.err.need": "សូមជ្រើសរើសបុគ្គល មុខតំណែងថ្មី និងកាលបរិច្ឆេទ។",
   "cr.pr.err.same": "ពួកគេកាន់មុខតំណែងនោះរួចហើយ។",
   "cr.pr.err.date": "កាលបរិច្ឆេទមិនអាចនៅអនាគត ឬមុនពេលពួកគេចូលបានទេ។",
+  "pol.tabsLabel": "ប្រភេទ",
+  "pol.tabPolicies": "គោលនយោបាយ",
+  "pol.tabConduct": "ក្រមសីលធម៌",
+  "pol.addConduct": "ក្រមសីលធម៌ថ្មី",
+  "pol.editConduct": "កែក្រមសីលធម៌",
+  "pol.emptyConduct": "មិនទាន់មានក្រមសីលធម៌",
+  "pol.emptyConductBody": "ផ្សព្វផ្សាយក្រមសីលធម៌របស់អ្នក។ បុគ្គលិកនឹងឃើញវានៅក្នុង UPLIF Me ក្រោមផ្នែកចំណេះដឹង ហើយបញ្ជាក់។",
 };
 
 /**

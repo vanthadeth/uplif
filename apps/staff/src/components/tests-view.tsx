@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { Check, ChevronRight } from "lucide-react";
-import { Badge, Button, ErrorState, ProgressBar, Reveal, Skeleton, useToast } from "@uplif/ui";
+import { Badge, Button, EmptyState, ErrorState, ProgressBar, Reveal, Skeleton, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
@@ -18,7 +18,7 @@ const TONE = { new: "info", failed: "warning", passed: "success", due_soon: "war
 const LABEL = { new: "st.test.new", failed: "st.test.failed", passed: "st.test.passed", due_soon: "st.test.dueSoon", overdue: "st.test.overdue" } as const;
 
 /** Learn tests: the list, one question at a time, and the result. The server grades; the right answers never reach the phone. */
-export function TestsView() {
+export function TestsView({ showEmpty = false }: { showEmpty?: boolean }) {
   const { t, locale } = useI18n();
   const { tag } = useFormat();
   const toast = useToast();
@@ -62,7 +62,7 @@ export function TestsView() {
 
   if (failed) return <ErrorState title={t("st.test.error")} action={<Button onClick={() => void load()}>{t("st.retry")}</Button>} />;
   if (!rows) return <div className="flex flex-col gap-3" role="status" aria-label={t("st.test.loading")}><Skeleton className="h-16" /></div>;
-  if (rows.length === 0 && !taking) return null;
+  if (rows.length === 0 && !taking) return showEmpty ? <EmptyState title={t("st.learn.tests.empty.title")} body={t("st.learn.tests.empty.body")} /> : null;
 
   if (taking && result) {
     return (
