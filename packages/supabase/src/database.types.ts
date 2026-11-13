@@ -1059,6 +1059,30 @@ export type Database = {
         Update: { archived?: boolean; kind?: "policy" | "conduct"; company_id?: string; created_at?: string; created_by?: string | null; id?: string; title?: string; title_local?: string | null; updated_at?: string }
         Relationships: []
       }
+      playbook_guides: {
+        Row: { archived: boolean; company_id: string; created_at: string; created_by: string | null; id: string; read_minutes: number | null; title: string; title_local: string | null; topic: string | null; updated_at: string }
+        Insert: { archived?: boolean; company_id?: string; created_at?: string; created_by?: string | null; id?: string; read_minutes?: number | null; title?: string; title_local?: string | null; topic?: string | null; updated_at?: string }
+        Update: { archived?: boolean; company_id?: string; created_at?: string; created_by?: string | null; id?: string; read_minutes?: number | null; title?: string; title_local?: string | null; topic?: string | null; updated_at?: string }
+        Relationships: []
+      }
+      playbook_steps: {
+        Row: { body: string; body_local: string | null; company_id: string; guide_id: string; id: string; image_path: string | null; position: number; skip_condition: string | null; skip_condition_local: string | null; skip_if: boolean; title: string; title_local: string | null }
+        Insert: { body?: string; body_local?: string | null; company_id?: string; guide_id?: string; id?: string; image_path?: string | null; position?: number; skip_condition?: string | null; skip_condition_local?: string | null; skip_if?: boolean; title?: string; title_local?: string | null }
+        Update: { body?: string; body_local?: string | null; company_id?: string; guide_id?: string; id?: string; image_path?: string | null; position?: number; skip_condition?: string | null; skip_condition_local?: string | null; skip_if?: boolean; title?: string; title_local?: string | null }
+        Relationships: []
+      }
+      playbook_guide_positions: {
+        Row: { company_id: string; guide_id: string; position_id: string }
+        Insert: { company_id?: string; guide_id?: string; position_id?: string }
+        Update: { company_id?: string; guide_id?: string; position_id?: string }
+        Relationships: []
+      }
+      playbook_progress: {
+        Row: { company_id: string; done_at: string; employee_id: string; guide_id: string }
+        Insert: { company_id?: string; done_at?: string; employee_id?: string; guide_id?: string }
+        Update: { company_id?: string; done_at?: string; employee_id?: string; guide_id?: string }
+        Relationships: []
+      }
       policy_versions: {
         Row: { body: string; body_local: string | null; company_id: string; id: string; policy_id: string; published_at: string; published_by: string | null; version: number }
         Insert: { body?: string; body_local?: string | null; company_id?: string; id?: string; policy_id?: string; published_at?: string; published_by?: string | null; version?: number }
@@ -1190,6 +1214,30 @@ export type Database = {
       save_policy: {
         Args: { p_id: string | null; p_title: string; p_title_local: string | null; p_body: string; p_body_local: string | null; p_kind?: "policy" | "conduct" }
         Returns: string
+      }
+      save_playbook: {
+        Args: { p_id: string | null; p_title: string; p_title_local: string | null; p_topic: string | null; p_read_minutes: number | null; p_position_ids: string[] | null; p_steps: Json }
+        Returns: string
+      }
+      archive_playbook: {
+        Args: { p_id: string; p_archived: boolean }
+        Returns: undefined
+      }
+      playbook_progress_status: {
+        Args: { p_guide_id: string }
+        Returns: { employee_id: string; name: string; name_local: string | null; done_at: string | null }[]
+      }
+      my_playbooks: {
+        Args: Record<string, never>
+        Returns: { guide_id: string; title: string; title_local: string | null; topic: string | null; read_minutes: number | null; step_count: number; done_at: string | null }[]
+      }
+      my_playbook_steps: {
+        Args: { p_guide_id: string }
+        Returns: { step_position: number; title: string; title_local: string | null; skip_if: boolean; skip_condition: string | null; skip_condition_local: string | null; body: string; body_local: string | null; image_path: string | null }[]
+      }
+      set_playbook_done: {
+        Args: { p_guide_id: string; p_done: boolean }
+        Returns: undefined
       }
       archive_policy: {
         Args: { p_id: string; p_archived: boolean }

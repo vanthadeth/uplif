@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useOptimistic, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Award, Briefcase, Building2, CalendarCheck, CalendarClock, CalendarDays, CalendarOff, ClipboardList, FilePenLine, GraduationCap, TrendingUp, GitBranch, IdCard, LayoutDashboard, LogOut, Network, Moon, Repeat, ShieldCheck, LifeBuoy, KeyRound, ScrollText, Sun, Users } from "lucide-react";
+import { Award, BookOpenCheck, Briefcase, Building2, CalendarCheck, CalendarClock, CalendarDays, CalendarOff, ClipboardList, FilePenLine, GraduationCap, TrendingUp, GitBranch, IdCard, LayoutDashboard, LogOut, Network, Moon, Repeat, ShieldCheck, LifeBuoy, KeyRound, ScrollText, Sun, Users } from "lucide-react";
 import { AppShell, Avatar, LanguagePicker, type NavGroup, type NavItem, type UtilityItem } from "@uplif/ui";
 import { useI18n, type Locale } from "@/lib/i18n";
 import { isLocale } from "@/lib/languages";
@@ -13,7 +13,7 @@ import { pick } from "@/lib/format";
 import { NavProgress } from "@/components/nav-progress";
 import { TitleBar } from "@/components/title-bar";
 
-const routes: Record<string, string> = { dashboard: "/dashboard", company: "/company", branches: "/branches", users: "/users", roles: "/roles", employees: "/employees", departments: "/departments", positions: "/positions", "working-time": "/working-time", attendance: "/attendance", holidays: "/holidays", leave: "/leave", performance: "/performance", career: "/career", corrections: "/corrections", "learn-tests": "/learn-tests", policies: "/policies", audit: "/audit", support: "/support" };
+const routes: Record<string, string> = { dashboard: "/dashboard", company: "/company", branches: "/branches", users: "/users", roles: "/roles", employees: "/employees", departments: "/departments", positions: "/positions", "working-time": "/working-time", attendance: "/attendance", holidays: "/holidays", leave: "/leave", performance: "/performance", career: "/career", corrections: "/corrections", "learn-tests": "/learn-tests", playbook: "/playbook", policies: "/policies", audit: "/audit", support: "/support" };
 // A section shows in the menu when the user holds any of these permissions. This only tidies the menu:
 // the database enforces access on every read and write regardless.
 const needs: Record<string, string[] | undefined> = {
@@ -32,6 +32,7 @@ const needs: Record<string, string[] | undefined> = {
   corrections: ["attendance.amendment.review"],
   career: ["career.record.manage"],
   policies: ["learn.policy.manage"],
+  playbook: ["learn.playbook.manage"],
   "learn-tests": ["learn.test.manage", "learn.result.read"],
   audit: ["org.audit.read"],
 };
@@ -76,6 +77,7 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userEmai
     { id: "corrections", label: t("nav.corrections"), icon: <FilePenLine /> },
     { id: "career", label: t("nav.career"), icon: <Award /> },
     { id: "performance", label: t("nav.performance"), icon: <TrendingUp /> },
+    { id: "playbook", label: t("nav.playbook"), icon: <BookOpenCheck /> },
     { id: "policies", label: t("nav.policies"), icon: <ScrollText /> },
     { id: "learn-tests", label: t("nav.tests"), icon: <GraduationCap /> },
     { id: "audit", label: t("nav.audit"), icon: <ClipboardList /> },
@@ -88,7 +90,7 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userEmai
     ["workspace", "shell.group.workspace", ["dashboard", "company", "branches"]],
     ["people", "shell.group.people", ["users", "roles", "employees", "departments", "positions"]],
     ["time", "shell.group.time", ["working-time", "holidays", "attendance", "leave", "corrections"]],
-    ["growth", "shell.group.growth", ["career", "performance", "learn-tests", "policies"]],
+    ["growth", "shell.group.growth", ["career", "performance", "playbook", "learn-tests", "policies"]],
     ["admin", "shell.group.admin", ["audit", "support"]],
   ];
   const groups: NavGroup[] = groupIds.map(([id, label, ids]) => ({ id, label: t(label), items: nav.filter((n) => ids.includes(n.id)) }));
