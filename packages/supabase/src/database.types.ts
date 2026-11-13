@@ -255,6 +255,18 @@ export type Database = {
         Update: Record<string, never>
         Relationships: []
       }
+      notifications: {
+        Row: { id: string; company_id: string; employee_id: string; kind: string; data: Record<string, unknown>; created_at: string; read_at: string | null }
+        Insert: Record<string, never>
+        Update: Record<string, never>
+        Relationships: []
+      }
+      notification_settings: {
+        Row: { company_id: string; employee_id: string; in_app: boolean; updated_at: string }
+        Insert: Record<string, never>
+        Update: Record<string, never>
+        Relationships: []
+      }
       performance_reviews: {
         Row: {
           id: string
@@ -1232,6 +1244,14 @@ export type Database = {
         Args: Record<string, never>
         Returns: { id: string; kind: Database["public"]["Enums"]["career_event_kind"]; event_date: string; from_name: string | null; from_name_local: string | null; to_name: string; to_name_local: string | null; note: string | null }[]
       }
+      my_notifications: {
+        Args: { p_limit?: number }
+        Returns: { id: string; kind: string; data: Record<string, unknown>; created_at: string; read_at: string | null }[]
+      }
+      my_unread_notifications: { Args: Record<string, never>; Returns: number }
+      mark_notifications_read: { Args: { p_ids?: string[] | null }; Returns: undefined }
+      my_notification_setting: { Args: Record<string, never>; Returns: boolean }
+      set_my_notification_setting: { Args: { p_on: boolean }; Returns: undefined }
       my_kpis: {
         Args: Record<string, never>
         Returns: { name: string; name_local: string | null; weight: number; last_score: number | null; last_period: string | null }[]
