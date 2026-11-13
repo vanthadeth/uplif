@@ -8,6 +8,7 @@ import { useI18n } from "@/lib/i18n";
 import { fill, type MessageKey } from "@/lib/messages";
 import { useFormat } from "@/lib/use-format";
 import { useNotifications } from "@/components/notifications-context";
+import { disablePush, enablePush, pushOnHere, pushSupported, VAPID_PUBLIC_KEY } from "@/lib/push";
 
 interface Note { id: string; kind: string; data: Record<string, unknown>; created_at: string; read_at: string | null }
 
@@ -29,6 +30,8 @@ export default function NotificationsPage() {
   const [items, setItems] = useState<Note[] | null>(null);
   const [on, setOn] = useState<boolean | null>(null);
   const [failed, setFailed] = useState(false);
+  const [push, setPush] = useState<boolean | null>(null);
+  const [pushNote, setPushNote] = useState<"" | "denied" | "unsupported" | "error">("");
 
   const load = useCallback(async () => {
     setFailed(false);
@@ -38,6 +41,22 @@ export default function NotificationsPage() {
     setItems(n.data as Note[]); setOn(s.data as boolean);
   }, []);
   useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    if (!VAPID_PUBLIC_KEY) return;
+    if (!pushSupported()) { setPushNote("unsupported"); return; }
+    if (Notification.permission === "denied") setPushNote("denied");
+    void pushOnHere().then(setPush);
+  }, []);
+
+  async function togglePush(v: boolean) {
+    setPushNote("");
+    if (v) {
+      const r = await enablePush();
+      if (r === "ok") setPush(true); else setPushNote(r);
+    } else {
+      if (await disablePush()) setPush(false); else setPushNote("error");
+    }
+  }
 
   const day = (iso: unknown, o: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" }) => new Date(`${String(iso).slice(0, 10)}T00:00:00`).toLocaleDateString(tag, o);
   const text = (n: Note): string => {
@@ -78,6 +97,18 @@ export default function NotificationsPage() {
               <Toggle checked={on} onChange={(v) => void toggle(v)} label={t("st.notif.toggle")} />
               <p className="m-0 text-sm text-muted">{t("st.notif.toggle.hint")}</p>
             </Card>
+            {VAPID_PUBLIC_KEY && (
+              <Card className="flex flex-col gap-1 p-4">
+                {pushNote === "unsupported" ? <p className="m-0 text-sm text-muted">{t("st.push.unsupported")}</p> : (
+                  <>
+                    <Toggle checked={push === true} disabled={push === null || pushNote === "denied"} onChange={(v) => void togglePush(v)} label={t("st.push.toggle")} />
+                    <p className="m-0 text-sm text-muted">{t("st.push.hint")}</p>
+                    {pushNote === "denied" && <p role="status" className="m-0 text-sm font-semibold text-warning-ink">{t("st.push.denied")}</p>}
+                    {pushNote === "error" && <p role="alert" className="m-0 text-sm font-semibold text-danger">{t("st.push.error")}</p>}
+                  </>
+                )}
+              </Card>
+            )}
             {items.length === 0 ? <EmptyState title={t("st.notif.empty.title")} body={t("st.notif.empty.body")} /> : (
               <>
                 {unread > 0 && <div className="flex justify-end"><Button onClick={() => void markAll()}><CircleCheck className="size-4" aria-hidden />{t("st.notif.markAll")}</Button></div>}

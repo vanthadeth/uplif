@@ -50,3 +50,32 @@ self.addEventListener("fetch", (event) => {
     );
   }
 });
+
+// Phone alerts. The message carries no details, only that something is waiting; the app shows the rest.
+self.addEventListener("push", (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch { data = {}; }
+  const title = typeof data.title === "string" && data.title ? data.title : "UPLIF Me";
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: typeof data.body === "string" ? data.body : "",
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      tag: "uplif-update",
+      data: { url: typeof data.url === "string" && data.url.startsWith("/") ? data.url : "/notifications" },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || "/notifications";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      for (const c of list) {
+        if ("focus" in c) { c.navigate(url).catch(() => {}); return c.focus(); }
+      }
+      return self.clients.openWindow(url);
+    }),
+  );
+});

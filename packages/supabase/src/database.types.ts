@@ -1252,6 +1252,9 @@ export type Database = {
       mark_notifications_read: { Args: { p_ids?: string[] | null }; Returns: undefined }
       my_notification_setting: { Args: Record<string, never>; Returns: boolean }
       set_my_notification_setting: { Args: { p_on: boolean }; Returns: undefined }
+      save_push_subscription: { Args: { p_endpoint: string; p_p256dh: string; p_auth: string; p_user_agent?: string | null }; Returns: undefined }
+      remove_push_subscription: { Args: { p_endpoint: string }; Returns: undefined }
+      my_push_registered: { Args: { p_endpoint: string }; Returns: boolean }
       my_kpis: {
         Args: Record<string, never>
         Returns: { name: string; name_local: string | null; weight: number; last_score: number | null; last_period: string | null }[]
