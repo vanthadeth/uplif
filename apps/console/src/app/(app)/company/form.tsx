@@ -29,7 +29,7 @@ function Section({ first, title, description, children }: { first?: boolean; tit
     <section className={`grid items-start gap-4 md:grid-cols-[minmax(0,280px)_minmax(0,1fr)] md:gap-x-8 ${first ? "" : "border-t border-line pt-6"}`}>
       <div>
         <h2 className="text-base font-semibold">{title}</h2>
-        <p className="mt-1 text-[13px] leading-normal text-muted">{description}</p>
+        <p className="mt-1 text-[14px] leading-normal text-muted">{description}</p>
       </div>
       <Card className="flex flex-col gap-5 p-4 sm:p-5">{children}</Card>
     </section>
@@ -157,7 +157,7 @@ export function CompanyForm({ company, settings, currencies, canProfile, canSett
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[22px] font-bold tracking-tight">{t("company.title")}</h1>
+          <h1 className="text-[24px] font-bold tracking-tight">{t("company.title")}</h1>
           <p className="mt-1 max-w-[62ch] text-muted">{t("company.subtitle")}</p>
         </div>
         {readOnly ? <Badge tone="neutral"><Lock className="size-3" aria-hidden />{t("company.viewOnly")}</Badge>
@@ -207,7 +207,7 @@ export function CompanyForm({ company, settings, currencies, canProfile, canSett
               <b className="font-semibold text-ink">{home}</b><span>{displayName("currency", home, locale)}</span>
             </Locked>
             <div role="group" aria-labelledby="oc">
-              <span id="oc" className="mb-1.5 block text-[13px] font-semibold text-ink-2">{t("company.otherCurrencies")}</span>
+              <span id="oc" className="mb-1.5 block text-[14px] font-semibold text-ink-2">{t("company.otherCurrencies")}</span>
               <div className="flex flex-col">
                 {currencyOptions.map((c, i) => (
                   <div key={c} className={`flex min-h-14 items-center gap-3 ${i ? "border-t border-line" : ""}`}>
@@ -235,7 +235,7 @@ export function CompanyForm({ company, settings, currencies, canProfile, canSett
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0 leading-snug">
               <b className="block font-semibold">{t("company.stockVisibility")}</b>
-              <small className="block text-[13px] text-muted">{t("company.stockHint")}</small>
+              <small className="block text-[14px] text-muted">{t("company.stockHint")}</small>
             </div>
             <Switch checked={v.stock} onChange={(x) => set("stock", x)} label={t("company.stockVisibility")} />
           </div>
@@ -247,19 +247,19 @@ export function CompanyForm({ company, settings, currencies, canProfile, canSett
       <Section title={t("company.attendance")} description={t("company.attendanceDesc")}>
         {canSettings ? (
           <div role="radiogroup" aria-labelledby="retl" aria-describedby="days-h">
-            <span id="retl" className="mb-1.5 block text-[13px] font-semibold text-ink-2">{t("company.retentionLabel")}</span>
+            <span id="retl" className="mb-1.5 block text-[14px] font-semibold text-ink-2">{t("company.retentionLabel")}</span>
             <div className="flex flex-wrap gap-2.5">
               {retentionOptions.map((d) => {
                 const on = daysNum === d;
                 return (
                   <button key={d} type="button" role="radio" aria-checked={on} onClick={() => set("days", String(d))}
-                    className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 text-[13px] ${on ? "border-primary bg-primary-soft font-semibold text-primary-ink" : "border-line-strong bg-surface font-medium"}`}>
+                    className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 text-[14px] ${on ? "border-primary bg-primary-soft font-semibold text-primary-ink" : "border-line-strong bg-surface font-medium"}`}>
                     {on && <Check className="size-3.5" strokeWidth={2.4} aria-hidden />}{d} {t("company.days")}
                   </button>
                 );
               })}
             </div>
-            {showErrors && errors.days && <p role="alert" className="mt-1.5 text-[13px] font-medium text-danger-ink">{errors.days}</p>}
+            {showErrors && errors.days && <p role="alert" className="mt-1.5 text-[14px] font-medium text-danger-ink">{errors.days}</p>}
             <p id="days-h" className="mt-1.5 text-xs text-muted">{t("company.retentionHint")}</p>
           </div>
         ) : (
@@ -267,7 +267,7 @@ export function CompanyForm({ company, settings, currencies, canProfile, canSett
         )}
       </Section>
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pb-2 text-[13px] text-muted">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pb-2 text-[14px] text-muted">
         <ClipboardList className="size-4" aria-hidden />
         <span>{t("company.auditNote")}</span>
         <Link href="/audit" className="inline-flex min-h-9 items-center gap-1 rounded-control px-1.5 font-semibold text-link hover:bg-ground">

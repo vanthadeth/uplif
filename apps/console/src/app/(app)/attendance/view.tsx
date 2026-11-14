@@ -36,7 +36,7 @@ export function AttendanceSettingsView({ settings }: { settings: Settings }) {
   return (
     <div className="flex max-w-2xl flex-col gap-5">
       <div>
-        <h1 className="text-[22px] font-bold tracking-tight">{t("att.title")}</h1>
+        <h1 className="text-[24px] font-bold tracking-tight">{t("att.title")}</h1>
         <p className="mt-1 max-w-[62ch] text-muted">{t("att.subtitle")}</p>
       </div>
       <Card><CardBody className="flex flex-col gap-5">
@@ -49,7 +49,7 @@ export function AttendanceSettingsView({ settings }: { settings: Settings }) {
         <Input label={t("att.dayStart")} hint={t("att.dayStartHint")} inputMode="numeric" value={dayStart} onChange={(e) => setDayStart(e.target.value)} />
         <div className="flex flex-col gap-1">
           <Toggle checked={noSelfie} onChange={setNoSelfie} label={t("att.noSelfie")} />
-          <p className="text-[13px] text-muted">{t("att.noSelfieHint")}</p>
+          <p className="text-[14px] text-muted">{t("att.noSelfieHint")}</p>
         </div>
         <div className="border-t border-line pt-4 text-muted">
           <b className="block text-ink">{fill(t("att.retention"), { n: settings.selfie_retention_days })}</b>

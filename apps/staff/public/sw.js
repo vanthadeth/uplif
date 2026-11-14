@@ -1,6 +1,6 @@
 // UPLIF service worker. It never stores pages, API calls or Supabase responses, because those
 // are tenant data. It keeps only static build files and icons, plus one offline fallback page.
-const VERSION = "v1";
+const VERSION = "v2";
 const STATIC_CACHE = `uplif-static-${VERSION}`;
 const OFFLINE_URL = "/offline.html";
 

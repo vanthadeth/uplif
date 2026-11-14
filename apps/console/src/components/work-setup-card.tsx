@@ -34,11 +34,11 @@ export function WorkSetupCard() {
   return (
     <Card><CardBody className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="m-0 flex items-center gap-2 text-[15px] font-semibold"><CalendarClock className="size-5 text-primary" aria-hidden />{t("wt.setup.title")}</h2>
+        <h2 className="m-0 flex items-center gap-2 text-[16px] font-semibold"><CalendarClock className="size-5 text-primary" aria-hidden />{t("wt.setup.title")}</h2>
         <Badge tone="info">{t("wt.setup.time")}</Badge>
       </div>
       <div role="radiogroup" aria-labelledby="wt-setup-q" className="flex flex-col gap-2">
-        <b id="wt-setup-q" className="text-[13px] font-semibold text-ink-2">{t("wt.setup.q1")}</b>
+        <b id="wt-setup-q" className="text-[14px] font-semibold text-ink-2">{t("wt.setup.q1")}</b>
         <div className="flex flex-wrap gap-2">
           {choices.map((c) => (
             <button key={c.id} type="button" role="radio" aria-checked={pattern === c.id} onClick={() => setPattern(c.id)}
@@ -48,7 +48,7 @@ export function WorkSetupCard() {
           ))}
         </div>
       </div>
-      <p className="m-0 text-[13px] leading-snug text-muted">{t("wt.setup.hint")}</p>
+      <p className="m-0 text-[14px] leading-snug text-muted">{t("wt.setup.hint")}</p>
       <div className="flex flex-wrap justify-end gap-2">
         <Button disabled={busy} onClick={() => go("mon_fri_sat_half")}>{t("wt.setup.skip")}</Button>
         <Button variant="primary" loading={busy} onClick={() => go(pattern)}>{t("wt.setup.go")}</Button>

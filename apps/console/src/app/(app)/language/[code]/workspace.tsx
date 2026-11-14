@@ -52,7 +52,7 @@ export function Workspace({ language, initial }: { language: LanguageRow; initia
       <div role="group" aria-label={t("tl.col.shown")} className="flex flex-wrap gap-2">
         {chips.map(([id, label]) => (
           <button key={id} type="button" aria-pressed={filter === id} onClick={() => setFilter(id)}
-            className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-[13px] ${filter === id ? "border-primary bg-primary-soft font-semibold text-primary-ink" : "border-line-strong bg-surface font-medium"}`}>
+            className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-[14px] ${filter === id ? "border-primary bg-primary-soft font-semibold text-primary-ink" : "border-line-strong bg-surface font-medium"}`}>
             {t(label)} <em className="not-italic tabular-nums opacity-70">{counts[id]}</em>
           </button>
         ))}
@@ -60,7 +60,7 @@ export function Workspace({ language, initial }: { language: LanguageRow; initia
 
       {shown.length === 0 ? <EmptyState title={t("tl.w.emptyTitle")} body={t("tl.w.emptyBody")} /> : (
         <div className="overflow-hidden rounded-card border border-line bg-surface">
-          <div className="hidden grid-cols-[200px_minmax(0,1fr)_minmax(0,1.2fr)_130px] gap-4 border-b border-line bg-neutral-soft px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-muted md:grid">
+          <div className="hidden grid-cols-[200px_minmax(0,1fr)_minmax(0,1.2fr)_130px] gap-4 border-b border-line bg-neutral-soft px-4 py-3 text-[13px] font-semibold uppercase tracking-wide text-muted md:grid">
             <span>{t("tl.col.key")}</span><span>{t("tl.col.source")}</span><span>{t("tl.col.shown")}</span><span>{t("tl.col.sug")}</span>
           </div>
           <ul className="m-0 list-none p-0">
@@ -76,7 +76,7 @@ export function Workspace({ language, initial }: { language: LanguageRow; initia
                       {r.shown_text ? <span lang={language.code}><Tokens text={r.shown_text} /></span> : <span className="text-muted">{t("tl.w.nothing")}</span>}
                       {r.kind && <KindBadge kind={r.kind} />}
                     </span>
-                    <span className="text-[13px] text-muted">{f(r.suggestion_count === 1 ? "tl.s.count1" : "tl.s.count", { count: r.suggestion_count })}</span>
+                    <span className="text-[14px] text-muted">{f(r.suggestion_count === 1 ? "tl.s.count1" : "tl.s.count", { count: r.suggestion_count })}</span>
                   </button>
                   {on && <div className="px-4 pb-4"><StringDetail code={language.code} stringKey={r.string_key} source={r.source_text} isReviewer={language.is_reviewer} onChanged={refresh} /></div>}
                 </li>
@@ -85,7 +85,7 @@ export function Workspace({ language, initial }: { language: LanguageRow; initia
           </ul>
         </div>
       )}
-      <p className="m-0 text-[13px] text-muted">{f("tl.w.showing", { shown: shown.length, total: rows.length })}</p>
+      <p className="m-0 text-[14px] text-muted">{f("tl.w.showing", { shown: shown.length, total: rows.length })}</p>
     </div>
   );
 }

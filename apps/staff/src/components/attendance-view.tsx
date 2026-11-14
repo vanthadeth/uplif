@@ -113,15 +113,15 @@ export function AttendanceView() {
     const l = leaveByDay.get(k);
     if (!l) return null;
     return l.status === "approved"
-      ? <b className="rounded-full bg-primary-soft px-1.5 text-[10px] text-link">{l.code}</b>
-      : <b className="rounded-full border border-dashed border-primary px-1.5 text-[10px] text-link">{l.code}</b>;
+      ? <b className="rounded-full bg-primary-soft px-1.5 text-[13px] text-link">{l.code}</b>
+      : <b className="rounded-full border border-dashed border-primary px-1.5 text-[13px] text-link">{l.code}</b>;
   };
   const mark = (k: string, past: boolean) => {
     const r = result.get(k);
     if (holidayName(k)) return null;
     if (leaveByDay.has(k) && !(byDay.get(k)?.length)) return pill(k);
     if (r?.status === "absent") return <b className="text-xs text-danger">A</b>;
-    if (r?.status === "late") return <b className="text-[11px] text-warning">{r.late_min}m</b>;
+    if (r?.status === "late") return <b className="text-[13px] text-warning">{r.late_min}m</b>;
     if (r?.status === "on_time" || r?.status === "extra" || r?.status === "early_leave") return <Check className="size-4 text-success" aria-hidden />;
     return past && (byDay.get(k)?.length ?? 0) > 0 ? <Check className="size-4 text-success" aria-hidden /> : null;
   };

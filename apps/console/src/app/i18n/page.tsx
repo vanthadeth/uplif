@@ -18,7 +18,7 @@ export default async function I18nReview({ searchParams }: { searchParams: Promi
         {keys.length} strings, {keys.length - missing.length} translated, {missing.length} missing. Khmer strings are drafts until the Khmer reviewer approves them.
       </p>
       <form method="get" className="my-4 flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-[13px] font-semibold">Search
+        <label className="flex flex-col gap-1 text-[14px] font-semibold">Search
           <input name="q" defaultValue={sp.q ?? ""} className="h-(--control-h) rounded-control border border-line-strong bg-surface px-3 font-normal" />
         </label>
         <label className="flex items-center gap-2"><input type="checkbox" name="missing" value="1" defaultChecked={sp.missing === "1"} /> Only missing Khmer</label>
@@ -26,7 +26,7 @@ export default async function I18nReview({ searchParams }: { searchParams: Promi
       </form>
       <div className="overflow-x-auto rounded-card border border-line bg-surface">
         <table className="w-full text-start">
-          <thead className="bg-ground text-start text-[13px] text-ink-2">
+          <thead className="bg-ground text-start text-[14px] text-ink-2">
             <tr><th className="p-3 text-start">Key</th><th className="p-3 text-start">English (source)</th><th className="p-3 text-start">ខ្មែរ (draft)</th></tr>
           </thead>
           <tbody>

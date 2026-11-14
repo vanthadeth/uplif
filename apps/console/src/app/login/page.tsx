@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, CardBody, Input, LanguagePicker } from "@uplif/ui";
 import { isLocale } from "@/lib/languages";
@@ -49,8 +49,13 @@ export default function LoginPage() {
   }
 
   function nextPath() {
-    return safeNext(new URLSearchParams(location.search).get("next")) ?? "/";
+    // After a plain sign-in, people choose a company (or create one). Invites and deep links keep their own destination.
+    return safeNext(new URLSearchParams(location.search).get("next")) ?? "/companies";
   }
+
+  // Signing in to accept an invitation: remind people who already use UPLIF to use the same way as before.
+  const [isInvite, setIsInvite] = useState(false);
+  useEffect(() => { setIsInvite((safeNext(new URLSearchParams(location.search).get("next")) ?? "").startsWith("/invite/")); }, []);
 
   // Same sign-in calls in every UPLIF app (packages/auth), so linked accounts work everywhere.
   const google = () => startGoogleSignIn(nextPath());
@@ -89,6 +94,7 @@ export default function LoginPage() {
             ? <Button onClick={telegram}>{t("auth.telegram")}</Button>
             : <Button disabled title={t("auth.telegramSoon")}>{t("auth.telegram")}</Button>}
           {error && !phoneEnabled && <p role="alert" className="text-danger-ink">{error}</p>}
+          {isInvite && <p className="rounded-control bg-warning-soft p-3 text-[14px] leading-snug text-warning-ink">{t("auth.inviteHint")}</p>}
         </CardBody>
       </Card>
     </main>

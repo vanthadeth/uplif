@@ -44,12 +44,12 @@ export function TimeAndLeave({ employee, week, today, schedules, allSchedules, b
 
   return (
     <div className="flex flex-col gap-5">
-      <Link href="/employees" className="inline-flex items-center gap-1.5 self-start text-[13px] font-semibold text-primary-ink"><ArrowLeft className="size-4" aria-hidden />{t("wt.emp.back")}</Link>
+      <Link href="/employees" className="inline-flex items-center gap-1.5 self-start text-[14px] font-semibold text-primary-ink"><ArrowLeft className="size-4" aria-hidden />{t("wt.emp.back")}</Link>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Avatar name={name} />
           <div>
-            <h1 className="text-[22px] font-bold tracking-tight">{name}</h1>
+            <h1 className="text-[24px] font-bold tracking-tight">{name}</h1>
             <p className="m-0 flex items-center gap-1.5 text-muted"><CalendarClock className="size-4" aria-hidden />{t("wt.emp.title")}</p>
           </div>
         </div>
@@ -61,35 +61,35 @@ export function TimeAndLeave({ employee, week, today, schedules, allSchedules, b
       ) : (
         <>
           <Card><CardBody className="flex flex-col gap-1.5">
-            <small className="text-[13px] text-muted">{t("wt.emp.eff")}</small>
+            <small className="text-[14px] text-muted">{t("wt.emp.eff")}</small>
             {sched ? (
               <>
-                <b className="text-[17px]">{pick(locale, sched.name, sched.name_local)}</b>
-                <small className="text-[13px] text-muted">{t(source)}</small>
+                <b className="text-[18px]">{pick(locale, sched.name, sched.name_local)}</b>
+                <small className="text-[14px] text-muted">{t(source)}</small>
               </>
             ) : first?.day_kind === "not_employed" ? (
               <b>{t("wt.emp.notEmployed")}</b>
             ) : (
               <>
                 <b>{t("wt.emp.none")}</b>
-                <small className="text-[13px] text-muted">{t("wt.emp.noneBody")}</small>
+                <small className="text-[14px] text-muted">{t("wt.emp.noneBody")}</small>
               </>
             )}
           </CardBody></Card>
 
           <section aria-labelledby="wt-next" className="flex flex-col gap-2.5">
-            <h2 id="wt-next" className="m-0 text-[15px] font-semibold">{t("wt.emp.next")}</h2>
+            <h2 id="wt-next" className="m-0 text-[16px] font-semibold">{t("wt.emp.next")}</h2>
             <ul className="m-0 grid list-none grid-cols-7 gap-1.5 p-0">
               {week.map((d) => (
                 <li key={d.day} className={`min-w-0 rounded-control border px-1 py-1.5 text-center text-xs ${tile[d.day_kind] ?? "bg-surface"} ${d.day === today ? "border-primary" : "border-line"}`}
                   title={d.day_kind === "holiday" ? pick(locale, d.holiday_name ?? "", d.holiday_name_local) : d.start_time ? `${hhmm(d.start_time)}–${hhmm(d.end_time)}` : t(kindKey(d.day_kind))}>
                   <small className="block text-muted">{dow(d.day)}</small>
-                  <b className="block text-[13px]">{dom(d.day)}</b>
+                  <b className="block text-[14px]">{dom(d.day)}</b>
                   <small className="block text-muted">{d.day_kind === "work" || d.day_kind === "half" ? `${nf.format(d.hours)} h` : "–"}</small>
                 </li>
               ))}
             </ul>
-            <p className="m-0 text-[13px] text-muted">{t("hol.emp.hint")}</p>
+            <p className="m-0 text-[14px] text-muted">{t("hol.emp.hint")}</p>
             <div className="flex flex-wrap gap-2 text-xs text-muted">
               <Badge tone="neutral">{t("wt.emp.day.work")}</Badge><Badge tone="warning">{t("wt.emp.day.half")}</Badge><Badge tone="neutral">{t("wt.emp.day.off")}</Badge><Badge tone="info">{t("wt.emp.day.holiday")}</Badge>
             </div>

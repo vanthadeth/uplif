@@ -133,7 +133,7 @@ export function LeaveView() {
           </div>
           {single && (
             <div role="radiogroup" aria-label={t("st.leave.duration")} className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-semibold">{t("st.leave.duration")}</span>
+              <span className="text-[14px] font-semibold">{t("st.leave.duration")}</span>
               <div className="grid grid-cols-3 gap-1 rounded-control bg-primary-soft p-1">
                 {HALVES.map(({ id, key }) => (
                   <button key={id} type="button" role="radio" aria-checked={half === id} onClick={() => setHalf(id)}

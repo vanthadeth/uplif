@@ -162,7 +162,7 @@ export function WorkingTimeView({ companyId, canManage, timezone, today, schedul
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[22px] font-bold tracking-tight">{t("wt.title")}</h1>
+          <h1 className="text-[24px] font-bold tracking-tight">{t("wt.title")}</h1>
           <p className="mt-1 max-w-[66ch] text-muted">{t("wt.subtitle")}</p>
         </div>
         {canManage
@@ -180,7 +180,7 @@ export function WorkingTimeView({ companyId, canManage, timezone, today, schedul
       {/* Schedules */}
       {schedules.length === 0 ? (
         <div className="rounded-card border border-line bg-surface px-4 py-9 text-center text-muted">
-          <b className="mb-1 block text-[15px] text-ink">{t("wt.empty")}</b>{t("wt.emptyBody")}
+          <b className="mb-1 block text-[16px] text-ink">{t("wt.empty")}</b>{t("wt.emptyBody")}
         </div>
       ) : (
         <div className="overflow-hidden rounded-card border border-line bg-surface">
@@ -191,8 +191,8 @@ export function WorkingTimeView({ companyId, canManage, timezone, today, schedul
             return (
               <div key={s.id} className={`grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 border-t border-line px-4 py-3.5 first:border-t-0 ${s.is_active ? "" : "[&_.nm]:text-muted"}`}>
                 <div className="nm min-w-0 leading-snug">
-                  <b className="block break-words text-[15px] font-semibold">{pick(locale, s.name, s.name_local)}</b>
-                  <small className="block text-[13px] text-muted">{f("wt.hours", { n: nf.format(cur ? hoursByVersion[cur.id] ?? 0 : 0) })}</small>
+                  <b className="block break-words text-[16px] font-semibold">{pick(locale, s.name, s.name_local)}</b>
+                  <small className="block text-[14px] text-muted">{f("wt.hours", { n: nf.format(cur ? hoursByVersion[cur.id] ?? 0 : 0) })}</small>
                   <div className="mt-1.5 flex flex-wrap gap-1" aria-label={t("wt.title")}>
                     {WEEKDAYS.map((w) => {
                       const d = cd.find((x) => x.weekday === w);
@@ -205,7 +205,7 @@ export function WorkingTimeView({ companyId, canManage, timezone, today, schedul
                       );
                     })}
                   </div>
-                  {next && <small className="mt-1.5 block text-[13px] text-primary-ink">{f("wt.nextVersion", { date: fmtDate(locale, next.valid_from) })}</small>}
+                  {next && <small className="mt-1.5 block text-[14px] text-primary-ink">{f("wt.nextVersion", { date: fmtDate(locale, next.valid_from) })}</small>}
                 </div>
                 <div className="flex flex-col items-end gap-1.5">
                   {!s.is_active && <Badge tone="neutral">{t("wt.archived")}</Badge>}
@@ -229,8 +229,8 @@ export function WorkingTimeView({ companyId, canManage, timezone, today, schedul
         <Card><CardBody className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h2 className="m-0 text-[17px] font-semibold">{t("wt.a.title")}</h2>
-              <p className="m-0 text-[13px] text-muted">{t("wt.a.first")}</p>
+              <h2 className="m-0 text-[18px] font-semibold">{t("wt.a.title")}</h2>
+              <p className="m-0 text-[14px] text-muted">{t("wt.a.first")}</p>
             </div>
             {canManage && <Button onClick={() => setAssigning(true)}><Plus className="size-4" aria-hidden />{t("wt.a.add")}</Button>}
           </div>
@@ -239,7 +239,7 @@ export function WorkingTimeView({ companyId, canManage, timezone, today, schedul
               <div key={a.id} className={`grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 border-t border-line px-4 py-3 first:border-t-0 ${a.state === "history" ? "text-muted" : ""}`}>
                 <div className="min-w-0 leading-snug">
                   <div className="flex flex-wrap items-center gap-2"><Badge tone="neutral">{t(`wt.level.${a.scope}` as MessageKey)}</Badge><b className="break-words font-semibold">{targetName(a)}</b></div>
-                  <small className="mt-1 block text-[13px]">
+                  <small className="mt-1 block text-[14px]">
                     {a.schedule_id ? pick(locale, byId[a.schedule_id]?.name ?? "—", byId[a.schedule_id]?.name_local) : t("wt.a.inheritShort")}
                     {" · "}{a.effective_from === EPOCH ? t("wt.a.always") : a.state === "upcoming" ? f("wt.a.starts", { date: fmtDate(locale, a.effective_from) }) : f("wt.a.since", { date: fmtDate(locale, a.effective_from) })}
                   </small>
@@ -249,14 +249,14 @@ export function WorkingTimeView({ companyId, canManage, timezone, today, schedul
             ))}
           </div>
           {rows.some((r) => r.state === "history") && (
-            <button type="button" className="self-start text-[13px] font-semibold text-primary-ink underline" onClick={() => setHistory((h) => !h)}>{t(history ? "wt.a.hideHistory" : "wt.a.showHistory")}</button>
+            <button type="button" className="self-start text-[14px] font-semibold text-primary-ink underline" onClick={() => setHistory((h) => !h)}>{t(history ? "wt.a.hideHistory" : "wt.a.showHistory")}</button>
           )}
         </CardBody></Card>
       )}
 
       {/* Timezone */}
       <Card><CardBody className="flex flex-col gap-3">
-        <h2 className="m-0 text-[17px] font-semibold">{t("wt.tz.title")}</h2>
+        <h2 className="m-0 text-[18px] font-semibold">{t("wt.tz.title")}</h2>
         {canManage ? (
           <div className="flex flex-wrap items-end gap-3">
             <div className="min-w-[240px] flex-1 sm:max-w-sm">
@@ -278,10 +278,10 @@ export function WorkingTimeView({ companyId, canManage, timezone, today, schedul
             <Input label={t("wt.nameLocal")} value={draft.nameLocal} maxLength={80} onChange={(e) => setDraft({ ...draft, nameLocal: e.target.value })} hint={t("branches.nameLocalHint")} />
 
             <div className="flex items-center justify-between gap-2">
-              <b className="text-[13px] font-semibold text-ink-2">{t("wt.week")}</b>
+              <b className="text-[14px] font-semibold text-ink-2">{t("wt.week")}</b>
               <Badge tone={hours > 48 ? "warning" : "success"}>{f("wt.hours", { n: nf.format(hours) })}</Badge>
             </div>
-            {hours > 48 && <p className="m-0 text-[13px] leading-snug text-warning-ink">{t("wt.over48")}</p>}
+            {hours > 48 && <p className="m-0 text-[14px] leading-snug text-warning-ink">{t("wt.over48")}</p>}
             <div className="flex flex-col gap-2.5">
               {draft.days.map((d) => (
                 <div key={d.weekday} className="rounded-control border border-line p-3">
@@ -306,10 +306,10 @@ export function WorkingTimeView({ companyId, canManage, timezone, today, schedul
                 </div>
               ))}
             </div>
-            <p className="m-0 text-[13px] leading-snug text-muted">{t("wt.nightNote")}</p>
-            {error && draft.name.trim() && <p role="alert" className="m-0 text-[13px] text-danger-ink">{error}</p>}
+            <p className="m-0 text-[14px] leading-snug text-muted">{t("wt.nightNote")}</p>
+            {error && draft.name.trim() && <p role="alert" className="m-0 text-[14px] text-danger-ink">{error}</p>}
 
-            <b className="text-[13px] font-semibold text-ink-2">{t("wt.rules")}</b>
+            <b className="text-[14px] font-semibold text-ink-2">{t("wt.rules")}</b>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {ruleFields.map((r) => (
                 <Input key={r.key} label={t(r.label)} type="number" inputMode="numeric" min={0} max={720} value={String(draft.rules[r.key])}
@@ -324,7 +324,7 @@ export function WorkingTimeView({ companyId, canManage, timezone, today, schedul
             {draft.id && (
               <div className="flex flex-col gap-2 rounded-card bg-warning-soft p-3.5">
                 <b className="text-warning-ink">{t("wt.v.title")}</b>
-                <span className="text-[13px] leading-snug text-warning-ink">{t("wt.v.body")}</span>
+                <span className="text-[14px] leading-snug text-warning-ink">{t("wt.v.body")}</span>
                 <Input label={t("wt.v.from")} type="date" min={today} value={draft.from} onChange={(e) => setDraft({ ...draft, from: e.target.value })} />
               </div>
             )}

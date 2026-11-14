@@ -73,7 +73,7 @@ export function LeaveView({ canReview, canManage, requests, types }: {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-[22px] font-bold tracking-tight">{t("lv.title")}</h1>
+        <h1 className="text-[24px] font-bold tracking-tight">{t("lv.title")}</h1>
         <p className="mt-1 max-w-[66ch] text-muted">{t("lv.subtitle")}</p>
       </div>
 
@@ -84,7 +84,7 @@ export function LeaveView({ canReview, canManage, requests, types }: {
           <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
             {list.length === 0 ? (
               <div className="rounded-card border border-line bg-surface px-4 py-9 text-center text-muted">
-                {tab === "pending" ? <><b className="mb-1 block text-[15px] text-ink">{t("lv.empty.pending")}</b>{t("lv.empty.pendingBody")}</> : t("lv.empty.other")}
+                {tab === "pending" ? <><b className="mb-1 block text-[16px] text-ink">{t("lv.empty.pending")}</b>{t("lv.empty.pendingBody")}</> : t("lv.empty.other")}
               </div>
             ) : (
               <div className="overflow-hidden rounded-card border border-line bg-surface">
@@ -161,7 +161,7 @@ export function LeaveView({ canReview, canManage, requests, types }: {
             <Input label={t("lv.type.days")} inputMode="decimal" value={draft.days} onChange={(e) => { setDraft({ ...draft, days: e.target.value }); setError(undefined); }} />
             <Toggle checked={draft.paid} label={t("lv.type.paid")} onChange={(v) => setDraft({ ...draft, paid: v })} />
             <Toggle checked={draft.active} label={t("lv.type.active")} onChange={(v) => setDraft({ ...draft, active: v })} />
-            {error && <p role="alert" className="m-0 text-[13px] font-semibold text-danger">{error}</p>}
+            {error && <p role="alert" className="m-0 text-[14px] font-semibold text-danger">{error}</p>}
           </div>
         )}
       </SidePanel>

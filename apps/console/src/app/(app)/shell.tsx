@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 import { pick } from "@/lib/format";
 import { NavProgress } from "@/components/nav-progress";
 import { TitleBar } from "@/components/title-bar";
+import { AppsSwitcher } from "@/components/apps-switcher";
 
 const routes: Record<string, string> = { dashboard: "/dashboard", company: "/company", branches: "/branches", users: "/users", roles: "/roles", employees: "/employees", departments: "/departments", positions: "/positions", "working-time": "/working-time", attendance: "/attendance", holidays: "/holidays", leave: "/leave", performance: "/performance", career: "/career", corrections: "/corrections", "learn-tests": "/learn-tests", playbook: "/playbook", policies: "/policies", audit: "/audit", support: "/support" };
 // A section shows in the menu when the user holds any of these permissions. This only tidies the menu:
@@ -123,6 +124,7 @@ export function ConsoleShell({ companyName, companyNameLocal, userName, userEmai
   return (
     <AppShell
       company={{ name: shownName || "UPLIF", sub: t("dash.switch"), label: t("dash.switch"), onSwitch: () => router.push("/companies") }}
+      brand={(rail) => <AppsSwitcher current="admin" tone="sidebar" compact={rail} className="w-full" />}
       groups={groups} activeId={active}
       onNavigate={(id) => startTransition(() => { setShownPath(routes[id]); router.push(routes[id]); })}
       onPrefetch={(id) => { if (!pathname.startsWith(routes[id])) router.prefetch(routes[id]); }}
