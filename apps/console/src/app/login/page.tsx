@@ -49,7 +49,8 @@ export default function LoginPage() {
   }
 
   function nextPath() {
-    return safeNext(new URLSearchParams(location.search).get("next")) ?? "/";
+    // After a plain sign-in, people choose a company (or create one). Invites and deep links keep their own destination.
+    return safeNext(new URLSearchParams(location.search).get("next")) ?? "/companies";
   }
 
   // Signing in to accept an invitation: remind people who already use UPLIF to use the same way as before.
