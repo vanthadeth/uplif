@@ -657,6 +657,49 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_movements: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          location_id: string
+          note: string | null
+          reference: string | null
+          request_id: string
+          supplier_id: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      stock_ledger: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          location_id: string
+          movement_id: string
+          qty_delta: number
+          variant_id: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      stock_balances: {
+        Row: {
+          company_id: string
+          location_id: string
+          qty: number
+          updated_at: string
+          variant_id: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       suppliers: {
         Row: {
           address: string | null
@@ -1418,6 +1461,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      receive_stock: {
+        Args: { p_request_id: string; p_location_id: string; p_supplier_id: string | null; p_reference: string | null; p_note: string | null; p_lines: Json }
+        Returns: string
+      }
       set_item_main_image: { Args: { p_image_id: string }; Returns: undefined }
       save_work_schedule: {
         Args: { p_schedule_id: string | null; p_name: string; p_name_local: string | null; p_effective_from: string | null; p_rules: Json; p_days: Json }

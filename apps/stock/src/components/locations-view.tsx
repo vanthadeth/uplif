@@ -64,7 +64,7 @@ export function LocationsView({ locations, failed, companyId, canManage }: { loc
     setBusy(true);
     const { data, error } = await createClient().from("locations").delete().eq("id", s.id).select("id");
     setBusy(false);
-    if (error) return toast("error", error.code === "42501" ? t("sk.forbidden") : t("sk.saveError"));
+    if (error) return toast("error", error.code === "42501" ? t("sk.forbidden") : error.code === "23503" ? t("sk.inuse") : t("sk.saveError"));
     if (!data?.length) return toast("error", t("sk.forbidden"));
     setRemoving(null);
     toast("success", t("sk.loc.deleted"));

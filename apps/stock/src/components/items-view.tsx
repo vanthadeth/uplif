@@ -129,7 +129,7 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
     setBusy(true);
     const { data, error } = await createClient().from("items").delete().eq("id", i.id).select("id");
     setBusy(false);
-    if (error) return toast("error", error.code === "42501" ? t("sk.forbidden") : t("sk.saveError"));
+    if (error) return toast("error", error.code === "42501" ? t("sk.forbidden") : error.code === "23503" ? t("sk.inuse") : t("sk.saveError"));
     if (!data?.length) return toast("error", t("sk.forbidden"));
     // The picture rows went with the item; remove their files too.
     await Promise.all(images.filter((x) => x.item_id === i.id).map((x) => removePicture(x.image_path)));

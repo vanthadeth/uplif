@@ -10,3 +10,6 @@ export function money(locale: string, amount: number, currency: string): string 
     return `${amount} ${currency}`;
   }
 }
+
+/** A stock quantity: whole numbers stay whole, fractions keep up to three decimals. */
+export const qtyText = (locale: string, n: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 3 }).format(n);
