@@ -939,6 +939,7 @@ export type Database = {
           packs: Json
           properties: Json
           price: number
+          reorder_level: number | null
           sku: string | null
           updated_at: string
         }
@@ -959,6 +960,7 @@ export type Database = {
           packs?: Json
           properties?: Json
           price?: number
+          reorder_level?: number | null
           sku?: string | null
           updated_at?: string
         }
@@ -979,6 +981,7 @@ export type Database = {
           packs?: Json
           properties?: Json
           price?: number
+          reorder_level?: number | null
           sku?: string | null
           updated_at?: string
         }

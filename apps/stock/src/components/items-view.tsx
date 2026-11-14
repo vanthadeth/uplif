@@ -15,14 +15,14 @@ import { ItemProperties, type PropGroup } from "@/components/item-properties";
 export type Pack = { name: string; qty: number };
 export interface Item {
   id: string; sku: string | null; name: string; name_local: string | null; description: string | null; description_local: string | null;
-  category_id: string | null; brand_id: string | null; base_uom: string; packs: Pack[]; properties: PropGroup[]; price: number; currency_code: string; is_active: boolean;
+  category_id: string | null; brand_id: string | null; base_uom: string; packs: Pack[]; properties: PropGroup[]; price: number; currency_code: string; reorder_level: number | null; is_active: boolean;
 }
 interface Cat { id: string; parent_id: string | null; name: string; name_local: string | null; is_active: boolean }
 interface Brand { id: string; name: string; name_local: string | null; is_active: boolean }
 
-const blank = { name: "", name_local: "", description: "", description_local: "", sku: "", category_id: "", brand_id: "", base_uom: "pcs", price: "0", cost: "" };
+const blank = { name: "", name_local: "", description: "", description_local: "", sku: "", category_id: "", brand_id: "", base_uom: "pcs", price: "0", cost: "", reorder: "" };
 type PackRow = { name: string; qty: string };
-type Errors = { name?: string; uom?: string; price?: string; cost?: string; packs?: string; sku?: string };
+type Errors = { reorder?: string; name?: string; uom?: string; price?: string; cost?: string; packs?: string; sku?: string };
 
 /** The item list: search, add, edit, hide and delete. Pictures, variants and options come in later pieces. */
 export function ItemsView({ items, images, variants, categories, brands, currency, failed, companyId, canManage, canViewCost, costs }: {
@@ -79,7 +79,7 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
     setEditing(i);
     setForm(i === "new" ? { ...blank } : {
       name: i.name, name_local: i.name_local ?? "", description: i.description ?? "", description_local: i.description_local ?? "",
-      sku: i.sku ?? "", category_id: i.category_id ?? "", brand_id: i.brand_id ?? "", base_uom: i.base_uom, price: String(i.price), cost: costs[i.id] === undefined ? "" : String(costs[i.id]),
+      sku: i.sku ?? "", category_id: i.category_id ?? "", brand_id: i.brand_id ?? "", base_uom: i.base_uom, price: String(i.price), cost: costs[i.id] === undefined ? "" : String(costs[i.id]), reorder: i.reorder_level === null ? "" : String(i.reorder_level),
     });
     setPacks(i === "new" ? [] : i.packs.map((p) => ({ name: p.name, qty: String(p.qty) })));
     setActive(i === "new" ? true : i.is_active);
@@ -91,6 +91,8 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
     if (!form.name.trim()) return setErrors({ name: t("sk.item.nameRequired") });
     if (!form.base_uom.trim()) return setErrors({ uom: t("sk.item.uomRequired") });
     if (!Number.isFinite(price) || price < 0) return setErrors({ price: t("sk.item.priceInvalid") });
+    const reorder = form.reorder.trim() === "" ? null : Number(form.reorder);
+    if (reorder !== null && (!Number.isFinite(reorder) || reorder < 0)) return setErrors({ reorder: t("sk.item.reorderInvalid") });
     const cost = form.cost.trim() === "" ? null : Number(form.cost);
     if (canViewCost && cost !== null && (!Number.isFinite(cost) || cost < 0)) return setErrors({ cost: t("sk.cost.invalid") });
     const cleanPacks = packs.filter((p) => p.name.trim() || p.qty.trim());
@@ -100,7 +102,7 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
     const values = {
       sku: form.sku.trim() || null, name: form.name.trim(), name_local: form.name_local.trim() || null,
       description: form.description.trim() || null, description_local: form.description_local.trim() || null,
-      category_id: form.category_id || null, brand_id: form.brand_id || null, base_uom: form.base_uom.trim(), packs: parsed, price,
+      category_id: form.category_id || null, brand_id: form.brand_id || null, base_uom: form.base_uom.trim(), packs: parsed, price, reorder_level: reorder,
     };
     const supabase = createClient();
     const res = editing === "new"
@@ -238,6 +240,7 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
               </p>}
             </div>
           )}
+          <Input label={t("sk.item.reorder")} hint={t("sk.item.reorderHint")} type="number" inputMode="decimal" min={0} step="any" value={form.reorder} onChange={set("reorder")} error={errors.reorder} />
           <Input label={t("sk.item.uom")} hint={t("sk.item.uomHint")} value={form.base_uom} maxLength={30} onChange={set("base_uom")} error={errors.uom} />
 
           <fieldset className="flex flex-col gap-3 rounded-card border border-line p-3">

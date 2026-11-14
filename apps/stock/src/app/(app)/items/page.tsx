@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function ItemsPage() {
   const [state, supabase] = await Promise.all([getStockState(), createClient()]);
   const [items, categories, brands, home, pics, vars, costRows] = await Promise.all([
-    supabase.from("items").select("id, sku, name, name_local, description, description_local, category_id, brand_id, base_uom, packs, properties, price, currency_code, is_active").order("name"),
+    supabase.from("items").select("id, sku, name, name_local, description, description_local, category_id, brand_id, base_uom, packs, properties, price, currency_code, reorder_level, is_active").order("name"),
     supabase.from("categories").select("id, parent_id, name, name_local, is_active").order("name"),
     supabase.from("brands").select("id, name, name_local, is_active").order("name"),
     supabase.from("company_currencies").select("code").eq("is_home", true).maybeSingle(),
