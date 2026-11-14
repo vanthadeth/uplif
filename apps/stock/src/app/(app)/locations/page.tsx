@@ -6,6 +6,9 @@ export const dynamic = "force-dynamic";
 
 export default async function LocationsPage() {
   const [state, supabase] = await Promise.all([getStockState(), createClient()]);
-  const { data, error } = await supabase.from("locations").select("id, name, name_local, address, note, is_active").order("name");
-  return <LocationsView locations={data ?? []} failed={!!error} companyId={state!.companyId} canManage={state!.canManage} />;
+  const [{ data, error }, branches] = await Promise.all([
+    supabase.from("locations").select("id, name, name_local, address, note, is_active, branch_id").order("name"),
+    supabase.from("branches").select("id, name, name_local").eq("is_active", true).order("name"),
+  ]);
+  return <LocationsView locations={data ?? []} branches={branches.data ?? []} failed={!!error} companyId={state!.companyId} canManage={state!.canManage} />;
 }
