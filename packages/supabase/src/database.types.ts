@@ -702,6 +702,42 @@ export type Database = {
         }
         Relationships: []
       }
+      locations: {
+        Row: {
+          address: string | null
+          company_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          name_local: string | null
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          name_local?: string | null
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_local?: string | null
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       branches: {
         Row: {
           timezone: string | null
