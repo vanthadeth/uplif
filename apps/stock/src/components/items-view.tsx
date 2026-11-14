@@ -1,12 +1,14 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Info, Lock, Package, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { ImagePlus, Info, Lock, Package, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { Badge, Button, EmptyState, ErrorState, Input, Modal, Select, SidePanel, Textarea, Toggle, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
 import { money, pick } from "@/lib/format";
+import { removePicture } from "@/lib/use-picture";
+import { ItemPictures, type ItemImage } from "@/components/item-pictures";
 
 export type Pack = { name: string; qty: number };
 export interface Item {
@@ -21,8 +23,8 @@ type PackRow = { name: string; qty: string };
 type Errors = { name?: string; uom?: string; price?: string; packs?: string; sku?: string };
 
 /** The item list: search, add, edit, hide and delete. Pictures, variants and options come in later pieces. */
-export function ItemsView({ items, categories, brands, currency, failed, companyId, canManage }: {
-  items: Item[]; categories: Cat[]; brands: Brand[]; currency: string; failed: boolean; companyId: string; canManage: boolean;
+export function ItemsView({ items, images, categories, brands, currency, failed, companyId, canManage }: {
+  items: Item[]; images: ItemImage[]; categories: Cat[]; brands: Brand[]; currency: string; failed: boolean; companyId: string; canManage: boolean;
 }) {
   const { t, locale } = useI18n();
   const toast = useToast();
@@ -30,6 +32,7 @@ export function ItemsView({ items, categories, brands, currency, failed, company
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<Item | "new" | null>(null);
   const [removing, setRemoving] = useState<Item | null>(null);
+  const [picturesOf, setPicturesOf] = useState<Item | null>(null);
   const [form, setForm] = useState(blank);
   const [packs, setPacks] = useState<PackRow[]>([]);
   const [active, setActive] = useState(true);
@@ -37,6 +40,8 @@ export function ItemsView({ items, categories, brands, currency, failed, company
   const [busy, setBusy] = useState(false);
   const set = (k: keyof typeof blank) => (e: { target: { value: string } }) => { setForm((f) => ({ ...f, [k]: e.target.value })); setErrors({}); };
 
+  const mainByItem = useMemo(() => new Map(images.filter((i) => i.is_main).map((i) => [i.item_id, i.url])), [images]);
+  const countByItem = useMemo(() => images.reduce((m, i) => m.set(i.item_id, (m.get(i.item_id) ?? 0) + 1), new Map<string, number>()), [images]);
   const catById = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
   const brandById = useMemo(() => new Map(brands.map((b) => [b.id, b])), [brands]);
   const label = (n: { name: string; name_local: string | null }) => pick(locale, n.name, n.name_local);
@@ -111,6 +116,8 @@ export function ItemsView({ items, categories, brands, currency, failed, company
     setBusy(false);
     if (error) return toast("error", error.code === "42501" ? t("sk.forbidden") : t("sk.saveError"));
     if (!data?.length) return toast("error", t("sk.forbidden"));
+    // The picture rows went with the item; remove their files too.
+    await Promise.all(images.filter((x) => x.item_id === i.id).map((x) => removePicture(x.image_path)));
     setRemoving(null);
     toast("success", t("sk.item.deleted"));
     router.refresh();
@@ -156,7 +163,9 @@ export function ItemsView({ items, categories, brands, currency, failed, company
                 const sub = [catPath(i.category_id), i.brand_id ? brandById.get(i.brand_id) && label(brandById.get(i.brand_id)!) : ""].filter(Boolean).join(" · ");
                 return (
                   <li key={i.id} className="flex min-h-20 items-center gap-3 border-t border-line p-3 first:border-t-0">
-                    <span className="grid size-12 shrink-0 place-items-center rounded-card bg-primary-soft text-primary-ink"><Package className="size-6" aria-hidden /></span>
+                    <span className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-card bg-primary-soft text-primary-ink">
+                      {mainByItem.get(i.id) ? <img src={mainByItem.get(i.id)!} alt="" className="size-full object-cover" /> : <Package className="size-6" aria-hidden />}
+                    </span>
                     <div className="min-w-0 flex-1 leading-snug">
                       <b className="block break-words">{pick(locale, i.name, i.name_local)}</b>
                       {i.name_local && <small className="block break-words text-muted">{locale === "en" ? i.name_local : i.name}</small>}
@@ -164,12 +173,15 @@ export function ItemsView({ items, categories, brands, currency, failed, company
                       <small className="block text-muted">{money(locale, i.price, i.currency_code)} · {i.base_uom}{i.sku ? ` · ${i.sku}` : ""}</small>
                       {!i.is_active && <Badge tone="neutral">{t("sk.brands.inactive")}</Badge>}
                     </div>
-                    {canManage && (
-                      <div className="flex shrink-0 gap-1">
+                    <div className="flex shrink-0 gap-1">
+                      {(canManage || countByItem.get(i.id)) && (
+                        <button type="button" aria-label={fill(t("sk.pics.open"), { name: i.name })} onClick={() => setPicturesOf(i)} className="grid size-11 place-items-center rounded-control text-muted transition-colors hover:bg-primary-soft"><ImagePlus className="size-5" aria-hidden /></button>
+                      )}
+                      {canManage && (<>
                         <button type="button" aria-label={`${t("sk.edit")}: ${i.name}`} onClick={() => open(i)} className="grid size-11 place-items-center rounded-control text-muted transition-colors hover:bg-primary-soft"><Pencil className="size-5" aria-hidden /></button>
                         <button type="button" aria-label={`${t("sk.delete")}: ${i.name}`} onClick={() => setRemoving(i)} className="grid size-11 place-items-center rounded-control text-muted transition-colors hover:bg-danger-soft"><Trash2 className="size-5" aria-hidden /></button>
-                      </div>
-                    )}
+                      </>)}
+                    </div>
                   </li>
                 );
               })}
@@ -229,6 +241,8 @@ export function ItemsView({ items, categories, brands, currency, failed, company
           )}
         </div>
       </SidePanel>
+
+      <ItemPictures item={picturesOf} images={images} companyId={companyId} canManage={canManage} onClose={() => setPicturesOf(null)} />
 
       <Modal open={removing !== null} onClose={() => setRemoving(null)} closeLabel={t("sk.close")} title={t("sk.item.deleteTitle")}
         footer={<><Button onClick={() => setRemoving(null)}>{t("sk.cancel")}</Button><Button variant="danger" loading={busy} onClick={() => removing && remove(removing)}>{t("sk.delete")}</Button></>}>

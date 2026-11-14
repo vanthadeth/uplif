@@ -702,6 +702,33 @@ export type Database = {
         }
         Relationships: []
       }
+      item_images: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          image_path: string
+          is_main: boolean
+          item_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          image_path: string
+          is_main?: boolean
+          item_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          image_path?: string
+          is_main?: boolean
+          item_id?: string
+        }
+        Relationships: []
+      }
       locations: {
         Row: {
           address: string | null
@@ -1319,6 +1346,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      set_item_main_image: { Args: { p_image_id: string }; Returns: undefined }
       save_work_schedule: {
         Args: { p_schedule_id: string | null; p_name: string; p_name_local: string | null; p_effective_from: string | null; p_rules: Json; p_days: Json }
         Returns: string
