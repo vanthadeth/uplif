@@ -21,7 +21,7 @@ describe("nextStep", () => {
   it("walks the first-time flow", () => {
     expect(nextStep({ ...base, signedIn: false })).toBe("/login");
     expect(nextStep({ ...base, hasProfile: false })).toBe("/profile");
-    expect(nextStep(base)).toBe("/companies/new");
+    expect(nextStep(base)).toBe("/companies");
     expect(nextStep({ ...base, companyCount: 2 })).toBe("/companies");
     expect(nextStep({ ...base, companyCount: 2, hasCompanyClaim: true })).toBe("/dashboard");
   });

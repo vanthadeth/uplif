@@ -35,7 +35,8 @@ export function Picker({ companies }: { companies: Company[] }) {
       </div>
       {error && <p role="alert" className="text-danger-ink">{error}</p>}
       {companies.length === 0 ? (
-        <EmptyState title={t("picker.empty")} />
+        <EmptyState title={t("picker.empty")}
+          action={<Link href="/companies/new" className="inline-flex min-h-(--control-h) items-center rounded-control bg-primary px-4 font-semibold text-white hover:bg-primary-hover">{t("picker.new")}</Link>} />
       ) : (
         <ul className="flex flex-col gap-2">
           {companies.map((c) => (
@@ -53,7 +54,7 @@ export function Picker({ companies }: { companies: Company[] }) {
           ))}
         </ul>
       )}
-      <Link href="/companies/new" className="text-center font-semibold text-link">{t("picker.new")}</Link>
+      {companies.length > 0 && <Link href="/companies/new" className="text-center font-semibold text-link">{t("picker.new")}</Link>}
     </main>
   );
 }
