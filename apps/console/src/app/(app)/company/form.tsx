@@ -6,6 +6,7 @@ import { Check, ChevronRight, ClipboardList, Info, Lock, Pencil, Plus } from "lu
 import { Badge, Button, Card, FloatingBar, Input, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
+import { DeleteCompany } from "./delete-company";
 
 interface Props {
   company: { id: string; name: string; name_local: string | null; country_code: string } | null;
@@ -14,6 +15,7 @@ interface Props {
   canProfile: boolean;
   canSettings: boolean;
   canCurrency: boolean;
+  canDelete: boolean;
 }
 
 const RETENTION = [30, 60, 90, 180, 365];
@@ -67,7 +69,7 @@ function ReadRow({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-export function CompanyForm({ company, settings, currencies, canProfile, canSettings, canCurrency }: Props) {
+export function CompanyForm({ company, settings, currencies, canProfile, canSettings, canCurrency, canDelete }: Props) {
   const { t, locale } = useI18n();
   const toast = useToast();
   const router = useRouter();
@@ -274,6 +276,8 @@ export function CompanyForm({ company, settings, currencies, canProfile, canSett
           {t("company.auditLink")}<ChevronRight className="size-3.5" aria-hidden />
         </Link>
       </div>
+
+      {canDelete && <DeleteCompany company={company} />}
 
       {!readOnly && (
         <FloatingBar>
