@@ -1,16 +1,15 @@
 "use client";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Info, Lock, Pencil, Plus, Search, Tag, Trash2 } from "lucide-react";
-import { Badge, Button, EmptyState, ErrorState, Input, Modal, PictureField, SidePanel, Toggle, resizeImage, useToast } from "@uplif/ui";
+import { Badge, Button, EmptyState, ErrorState, Input, Modal, PictureField, SidePanel, Toggle, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
 import { pick } from "@/lib/format";
+import { removePicture, usePicture } from "@/lib/use-picture";
 
 export interface Brand { id: string; name: string; name_local: string | null; image_path: string | null; image_url: string | null; is_active: boolean }
-
-const BUCKET = "stock-images";
 
 /** The brand list: search, add, edit (with picture), hide and delete. People without the manage permission only look. */
 export function BrandsView({ brands, failed, companyId, canManage }: { brands: Brand[]; failed: boolean; companyId: string; canManage: boolean }) {
@@ -23,15 +22,9 @@ export function BrandsView({ brands, failed, companyId, canManage }: { brands: B
   const [name, setName] = useState("");
   const [nameLocal, setNameLocal] = useState("");
   const [active, setActive] = useState(true);
-  const [path, setPath] = useState<string | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [pictureError, setPictureError] = useState<string>();
+  const picture = usePicture(companyId, "brands");
   const [nameError, setNameError] = useState<string>();
-  const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState(false);
-  // A picture uploaded in this form but not saved yet; removed again if the form is cancelled.
-  const fresh = useRef<string | null>(null);
-
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
     return brands.filter((b) => !q || `${b.name} ${b.name_local ?? ""}`.toLowerCase().includes(q));
@@ -42,45 +35,17 @@ export function BrandsView({ brands, failed, companyId, canManage }: { brands: B
     setName(b === "new" ? "" : b.name);
     setNameLocal(b === "new" ? "" : b.name_local ?? "");
     setActive(b === "new" ? true : b.is_active);
-    setPath(b === "new" ? null : b.image_path);
-    setPreview(b === "new" ? null : b.image_url);
-    setPictureError(undefined);
+    picture.reset(b === "new" ? null : b.image_path, b === "new" ? null : b.image_url);
     setNameError(undefined);
-    fresh.current = null;
   }
 
-  async function discardFresh() {
-    const p = fresh.current;
-    fresh.current = null;
-    if (p) await createClient().storage.from(BUCKET).remove([p]);
-  }
-  function close() { void discardFresh(); setEditing(null); }
-
-  async function pick_(file: File) {
-    setUploading(true);
-    setPictureError(undefined);
-    try {
-      const blob = await resizeImage(file, 512, 0.85);
-      const supabase = createClient();
-      const next = `${companyId}/brands/${crypto.randomUUID()}.jpg`;
-      const up = await supabase.storage.from(BUCKET).upload(next, blob, { contentType: "image/jpeg" });
-      if (up.error) throw up.error;
-      await discardFresh();
-      fresh.current = next;
-      setPath(next);
-      setPreview(URL.createObjectURL(blob));
-    } catch {
-      setPictureError(t("sk.brands.pictureError"));
-    } finally {
-      setUploading(false);
-    }
-  }
+  function close() { void picture.discard(); setEditing(null); }
 
   async function save() {
     if (!name.trim()) return setNameError(t("sk.brands.nameRequired"));
     setBusy(true);
     const supabase = createClient();
-    const values = { name: name.trim(), name_local: nameLocal.trim() || null, image_path: path, is_active: active };
+    const values = { name: name.trim(), name_local: nameLocal.trim() || null, image_path: picture.path, is_active: active };
     const res = editing === "new"
       ? await supabase.from("brands").insert({ company_id: companyId, name: values.name, name_local: values.name_local, image_path: values.image_path }).select("id")
       : await supabase.from("brands").update(values).eq("id", (editing as Brand).id).select("id");
@@ -89,8 +54,8 @@ export function BrandsView({ brands, failed, companyId, canManage }: { brands: B
     if (!res.data?.length) return toast("error", t("sk.forbidden"));
     // The old picture is no longer used once the new one is saved.
     const old = editing !== "new" ? (editing as Brand).image_path : null;
-    if (old && old !== path) await supabase.storage.from(BUCKET).remove([old]);
-    fresh.current = null;
+    if (old && old !== picture.path) await removePicture(old);
+    picture.keep();
     toast("success", editing === "new" ? t("sk.brands.added") : t("sk.brands.saved"));
     setEditing(null);
     router.refresh();
@@ -103,7 +68,7 @@ export function BrandsView({ brands, failed, companyId, canManage }: { brands: B
     setBusy(false);
     if (error) return toast("error", error.code === "42501" ? t("sk.forbidden") : t("sk.saveError"));
     if (!data?.length) return toast("error", t("sk.forbidden"));
-    if (b.image_path) await supabase.storage.from(BUCKET).remove([b.image_path]);
+    await removePicture(b.image_path);
     setRemoving(null);
     toast("success", t("sk.brands.deleted"));
     router.refresh();
@@ -167,11 +132,11 @@ export function BrandsView({ brands, failed, companyId, canManage }: { brands: B
       )}
 
       <SidePanel sheet open={editing !== null} onClose={close} closeLabel={t("sk.close")} title={editing === "new" ? t("sk.brands.add") : t("sk.brands.edit")}
-        footer={<><Button onClick={close}>{t("sk.cancel")}</Button><Button variant="primary" loading={busy} disabled={uploading} onClick={save}>{t("sk.save")}</Button></>}>
+        footer={<><Button onClick={close}>{t("sk.cancel")}</Button><Button variant="primary" loading={busy} disabled={picture.uploading} onClick={save}>{t("sk.save")}</Button></>}>
         <div className="flex flex-col gap-5">
-          <PictureField label={t("sk.brands.picture")} hint={t("sk.brands.pictureHelp")} error={pictureError} src={preview} busy={uploading}
+          <PictureField label={t("sk.brands.picture")} hint={t("sk.brands.pictureHelp")} error={picture.failed ? t("sk.brands.pictureError") : undefined} src={picture.preview} busy={picture.uploading}
             addLabel={t("sk.brands.addPicture")} changeLabel={t("sk.brands.changePicture")} removeLabel={t("sk.brands.removePicture")}
-            onPick={pick_} onRemove={() => { void discardFresh(); setPath(null); setPreview(null); }} />
+            onPick={picture.pick} onRemove={picture.remove} />
           <Input label={t("sk.brands.name")} value={name} maxLength={120} onChange={(e) => { setName(e.target.value); setNameError(undefined); }} error={nameError} />
           <Input label={t("sk.brands.nameLocal")} hint={t("sk.brands.nameLocalHint")} value={nameLocal} maxLength={120} onChange={(e) => setNameLocal(e.target.value)} />
           {editing !== "new" && (

@@ -9,6 +9,8 @@ export interface StockState {
   module: boolean;
   canRead: boolean;
   canManage: boolean;
+  canViewCost: boolean;
+  canMove: boolean;
 }
 
 /** The signed-in person's company, plan and Stock permissions. Cached for one request so the layout and pages share it. */
@@ -29,5 +31,7 @@ export const getStockState = cache(async (): Promise<StockState | null> => {
     module: (mods.data ?? []).includes("inventory"),
     canRead: manage || keys.has("stock.catalog.read") || keys.has("stock.catalog.manage"),
     canManage: manage,
+    canViewCost: keys.get("stock.cost.view") === "company",
+    canMove: keys.get("stock.movement.create") === "company",
   };
 });

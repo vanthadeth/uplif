@@ -1,5 +1,5 @@
 "use client";
-import { Tag } from "lucide-react";
+import { Layers, Tag, Truck, Warehouse } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { SetupLink } from "@/components/setup-link";
 
@@ -10,6 +10,9 @@ export default function MenuPage() {
       <h1 className="text-2xl font-bold tracking-tight">{t("sk.menu.title")}</h1>
       <h2 className="caps text-xs font-bold text-muted">{t("sk.menu.catalogue")}</h2>
       <SetupLink href="/brands" icon={Tag} title="sk.home.brands" />
+      <SetupLink href="/categories" icon={Layers} title="sk.home.cat" />
+      <SetupLink href="/suppliers" icon={Truck} title="sk.home.sup" />
+      <SetupLink href="/locations" icon={Warehouse} title="sk.home.loc" />
     </main>
   );
 }

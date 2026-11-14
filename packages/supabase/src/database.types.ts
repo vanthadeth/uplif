@@ -621,6 +621,366 @@ export type Database = {
         }
         Relationships: []
       }
+      categories: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          image_path: string | null
+          is_active: boolean
+          name: string
+          name_local: string | null
+          parent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          image_path?: string | null
+          is_active?: boolean
+          name: string
+          name_local?: string | null
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          image_path?: string | null
+          is_active?: boolean
+          name?: string
+          name_local?: string | null
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      stock_movements: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          location_id: string
+          note: string | null
+          reason: string | null
+          reference: string | null
+          request_id: string
+          supplier_id: string | null
+          transfer_id: string | null
+          transfer_step: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      stock_transfers: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          company_id: string
+          from_location_id: string
+          id: string
+          note: string | null
+          request_id: string
+          sent_at: string
+          sent_by: string | null
+          status: string
+          to_location_id: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      stock_transfer_lines: {
+        Row: {
+          company_id: string
+          qty_received: number | null
+          qty_sent: number
+          transfer_id: string
+          variant_id: string
+        }
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: "stock_transfer_lines_company_id_transfer_id_fkey"
+            columns: ["company_id", "transfer_id"]
+            isOneToOne: false
+            referencedRelation: "stock_transfers"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      stock_ledger: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          location_id: string
+          movement_id: string
+          qty_delta: number
+          variant_id: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      stock_balances: {
+        Row: {
+          company_id: string
+          location_id: string
+          qty: number
+          updated_at: string
+          variant_id: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      suppliers: {
+        Row: {
+          address: string | null
+          company_id: string
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          name: string
+          name_local: string | null
+          note: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          company_id: string
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          name_local?: string | null
+          note?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          company_id?: string
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_local?: string | null
+          note?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      item_costs: {
+        Row: {
+          company_id: string
+          cost: number
+          item_id: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          cost: number
+          item_id: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          cost?: number
+          item_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      item_images: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          image_path: string
+          is_main: boolean
+          item_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          image_path: string
+          is_main?: boolean
+          item_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          image_path?: string
+          is_main?: boolean
+          item_id?: string
+        }
+        Relationships: []
+      }
+      item_variants: {
+        Row: {
+          barcode: string | null
+          company_id: string
+          created_at: string
+          id: string
+          image_id: string | null
+          is_active: boolean
+          is_default: boolean
+          item_id: string
+          name: string
+          name_local: string | null
+          price: number | null
+          sku: string | null
+          updated_at: string
+        }
+        Insert: {
+          barcode?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          image_id?: string | null
+          is_active?: boolean
+          is_default?: boolean
+          item_id: string
+          name: string
+          name_local?: string | null
+          price?: number | null
+          sku?: string | null
+          updated_at?: string
+        }
+        Update: {
+          barcode?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          image_id?: string | null
+          is_active?: boolean
+          is_default?: boolean
+          item_id?: string
+          name?: string
+          name_local?: string | null
+          price?: number | null
+          sku?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      locations: {
+        Row: {
+          address: string | null
+          company_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          name_local: string | null
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          name_local?: string | null
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_local?: string | null
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      items: {
+        Row: {
+          base_uom: string
+          brand_id: string | null
+          category_id: string | null
+          company_id: string
+          created_at: string
+          currency_code: string
+          description: string | null
+          description_local: string | null
+          id: string
+          is_active: boolean
+          kind: string
+          name: string
+          name_local: string | null
+          packs: Json
+          properties: Json
+          price: number
+          sku: string | null
+          updated_at: string
+        }
+        Insert: {
+          base_uom?: string
+          brand_id?: string | null
+          category_id?: string | null
+          company_id: string
+          created_at?: string
+          currency_code: string
+          description?: string | null
+          description_local?: string | null
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name: string
+          name_local?: string | null
+          packs?: Json
+          properties?: Json
+          price?: number
+          sku?: string | null
+          updated_at?: string
+        }
+        Update: {
+          base_uom?: string
+          brand_id?: string | null
+          category_id?: string | null
+          company_id?: string
+          created_at?: string
+          currency_code?: string
+          description?: string | null
+          description_local?: string | null
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name?: string
+          name_local?: string | null
+          packs?: Json
+          properties?: Json
+          price?: number
+          sku?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       branches: {
         Row: {
           timezone: string | null
@@ -1142,6 +1502,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      send_transfer: {
+        Args: { p_request_id: string; p_from: string; p_to: string; p_note: string | null; p_lines: Json }
+        Returns: string
+      }
+      receive_transfer: { Args: { p_transfer_id: string; p_lines?: Json | null }; Returns: string }
+      cancel_transfer: { Args: { p_transfer_id: string }; Returns: string }
+      adjust_stock: {
+        Args: { p_request_id: string; p_location_id: string; p_reason: string; p_note: string | null; p_lines: Json }
+        Returns: string
+      }
+      receive_stock: {
+        Args: { p_request_id: string; p_location_id: string; p_supplier_id: string | null; p_reference: string | null; p_note: string | null; p_lines: Json }
+        Returns: string
+      }
+      set_item_main_image: { Args: { p_image_id: string }; Returns: undefined }
       save_work_schedule: {
         Args: { p_schedule_id: string | null; p_name: string; p_name_local: string | null; p_effective_from: string | null; p_rules: Json; p_days: Json }
         Returns: string
