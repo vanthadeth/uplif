@@ -5,6 +5,7 @@ import { Check, ChevronDown, Lock, X } from "lucide-react";
 import { APPS, coreApps, switcherApps, type AppKey, type SwitcherApp, type SwitcherData } from "./apps";
 import { APP_ICON_SVG } from "./app-icons";
 import { cn } from "./cn";
+import { useSheetReady } from "./Sheet";
 
 /** The app's colour tile with its pixel arrow and badge. Inline, so it works offline and needs no request. */
 export function AppIcon({ app, size = 48, dim, className }: { app: AppKey; size?: number; dim?: boolean; className?: string }) {
@@ -82,6 +83,7 @@ export function AppSwitcher({ current, data, locale = "en", labels, blurbs, onSw
   const companies = data?.companies ?? [];
   const interactive = !!data && (list.some((x) => x.app.key !== current) || companies.length > 1);
   const loading = !data || switching;
+  const slid = useSheetReady(open, 767);
 
   function show() {
     const r = btn.current?.getBoundingClientRect();
@@ -95,10 +97,10 @@ export function AppSwitcher({ current, data, locale = "en", labels, blurbs, onSw
 
   // Focus the first open app when the panel opens (or returns from a detail view).
   useEffect(() => {
-    if (!open || loading) return;
+    if (!open || loading || !slid) return;
     const first = panel.current?.querySelector<HTMLElement>("[data-app]:not([aria-disabled='true'])") ?? panel.current?.querySelector<HTMLElement>("button");
     first?.focus({ preventScroll: true });
-  }, [open, loading, detail === null]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, loading, slid, detail === null]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!open) return;
@@ -214,7 +216,8 @@ export function AppSwitcher({ current, data, locale = "en", labels, blurbs, onSw
   }
 
   let body;
-  if (loading) {
+  // While the sheet is still sliding in, show the skeleton; the real tiles appear once it has landed.
+  if (loading || !slid) {
     body = (
       <div aria-busy="true" className="grid grid-cols-3 gap-1.5 p-4">
         {Array.from({ length: 6 }, (_, i) => (
@@ -304,8 +307,8 @@ export function AppSwitcher({ current, data, locale = "en", labels, blurbs, onSw
             ref={panel} role="dialog" aria-modal="true" aria-labelledby={titleId} onKeyDown={onKey} onMouseOver={setHint} onFocus={setHint}
             style={{ "--sw-left": `${pos.left}px`, "--sw-top": `${pos.top}px`, "--sw-max": `${pos.max}px` } as React.CSSProperties}
             className={cn(
-              "fixed inset-x-0 bottom-0 z-[61] flex max-h-[86dvh] animate-[uplif-slide-up_0.28s_cubic-bezier(.2,.8,.2,1)] flex-col overflow-hidden rounded-t-[22px] border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] text-ink shadow-pop",
-              "md:inset-x-auto md:bottom-auto md:left-(--sw-left) md:top-(--sw-top) md:max-h-(--sw-max) md:w-[440px] md:animate-[uplif-in_0.2s_ease-out] md:rounded-card md:border",
+              "fixed inset-x-0 bottom-0 z-[61] flex max-h-[86dvh] animate-[uplif-slide-up_0.32s_cubic-bezier(.2,.8,.2,1)] will-change-transform flex-col overflow-hidden rounded-t-[22px] border-t border-line bg-surface pb-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.5rem))] text-ink shadow-pop",
+              "md:inset-x-auto md:bottom-auto md:left-(--sw-left) md:top-(--sw-top) md:max-h-(--sw-max) md:w-[440px] md:animate-[uplif-in_0.2s_ease-out] md:rounded-card md:border md:pb-0",
             )}
           >
             <span aria-hidden="true" className="mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full bg-line-strong md:hidden" />
@@ -316,7 +319,7 @@ export function AppSwitcher({ current, data, locale = "en", labels, blurbs, onSw
               </button>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{body}</div>
-            {!loading && !detail && groups.length > 0 && (
+            {!loading && slid && !detail && groups.length > 0 && (
               <div ref={hintRef} aria-hidden="true" className="hidden min-h-11 shrink-0 items-center border-t border-line bg-ground px-4 text-sm text-muted md:flex">{L.hint}</div>
             )}
           </div>
