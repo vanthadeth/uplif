@@ -729,6 +729,54 @@ export type Database = {
         }
         Relationships: []
       }
+      item_variants: {
+        Row: {
+          barcode: string | null
+          company_id: string
+          created_at: string
+          id: string
+          image_id: string | null
+          is_active: boolean
+          is_default: boolean
+          item_id: string
+          name: string
+          name_local: string | null
+          price: number | null
+          sku: string | null
+          updated_at: string
+        }
+        Insert: {
+          barcode?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          image_id?: string | null
+          is_active?: boolean
+          is_default?: boolean
+          item_id: string
+          name: string
+          name_local?: string | null
+          price?: number | null
+          sku?: string | null
+          updated_at?: string
+        }
+        Update: {
+          barcode?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          image_id?: string | null
+          is_active?: boolean
+          is_default?: boolean
+          item_id?: string
+          name?: string
+          name_local?: string | null
+          price?: number | null
+          sku?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       locations: {
         Row: {
           address: string | null
