@@ -127,11 +127,11 @@ export function BottomSheet({
             )}
           </div>
         </div>
-        <div className="min-h-[30dvh] flex-1 overflow-y-auto overscroll-contain border-t border-line px-5 pt-4 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))]">
+        <div className="min-h-[30dvh] flex-1 overflow-y-auto overscroll-contain border-t border-line px-5 pt-4 pb-[max(2.5rem,calc(env(safe-area-inset-bottom)+2rem))]">
           {landed && !loading ? children : <SheetSkeleton rows={skeletonRows} />}
         </div>
         {footer && (
-          <div className="flex items-stretch gap-2 border-t border-line px-5 pt-3.5 pb-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.75rem))]">{footer}</div>
+          <div className="flex items-stretch gap-2 border-t border-line px-5 pt-3.5 pb-[max(2.5rem,calc(env(safe-area-inset-bottom)+2rem))]">{footer}</div>
         )}
       </div>
     </div>,
