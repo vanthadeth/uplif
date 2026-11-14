@@ -22,7 +22,7 @@ export function AppsSection() {
   const { t } = useI18n();
   return (
     <section id="apps" className="mx-auto max-w-(--content-max) scroll-mt-20 px-4 py-12 sm:px-8">
-      <InView><h2 className="mb-8 text-balance text-center text-2xl font-bold sm:text-3xl">{t("lp.apps.title")}</h2></InView>
+      <InView><h2 className="mb-8 text-balance text-center text-2xl font-bold tracking-tight sm:text-3xl">{t("lp.apps.title")}</h2></InView>
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {SHOWN.map(({ key, blurb }, i) => {
           const app = APPS.find((a) => a.key === key)!;

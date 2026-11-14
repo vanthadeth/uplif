@@ -40,6 +40,18 @@ export const en = {
   "lp.mod.invoice": "Orders and invoices",
   "lp.footer.tag": "Business management made simple.",
   "lp.footer.signIn": "Already have an account? Sign in",
+  "lp.nav.logIn": "Log in",
+  "lp.nav.create": "Create account",
+  "lp.cta.create": "Create free account",
+  "lp.steps.title": "Up and running in three steps",
+  "lp.steps.1.title": "Create your account",
+  "lp.steps.1.body": "Sign in with Google or Telegram and set up your business.",
+  "lp.steps.2.title": "Invite your team",
+  "lp.steps.2.body": "Send each person a link. They join your company in one tap.",
+  "lp.steps.3.title": "Open the apps",
+  "lp.steps.3.body": "Everyone opens the apps they need on their phone.",
+  "lp.final.title": "Ready to simplify your business?",
+  "lp.final.body": "Create your free account in minutes. Already have one? Log in.",
 } as const;
 export type MessageKey = keyof typeof en;
 export const km: Partial<Record<MessageKey, string>> = {
@@ -82,5 +94,17 @@ export const km: Partial<Record<MessageKey, string>> = {
   "lp.mod.invoice": "ការបញ្ជាទិញ និងវិក្កយបត្រ",
   "lp.footer.tag": "គ្រប់គ្រងអាជីវកម្មបានងាយស្រួល។",
   "lp.footer.signIn": "មានគណនីរួចហើយ? ចូលគណនី",
+  "lp.nav.logIn": "ចូលគណនី",
+  "lp.nav.create": "បង្កើតគណនី",
+  "lp.cta.create": "បង្កើតគណនីឥតគិតថ្លៃ",
+  "lp.steps.title": "ចាប់ដំណើរការក្នុងបីជំហាន",
+  "lp.steps.1.title": "បង្កើតគណនីរបស់អ្នក",
+  "lp.steps.1.body": "ចូលដោយ Google ឬ Telegram ហើយរៀបចំអាជីវកម្មរបស់អ្នក។",
+  "lp.steps.2.title": "អញ្ជើញក្រុមការងាររបស់អ្នក",
+  "lp.steps.2.body": "ផ្ញើតំណភ្ជាប់ទៅមនុស្សម្នាក់ៗ។ ពួកគេចូលរួមក្រុមហ៊ុនរបស់អ្នកដោយចុចតែមួយ។",
+  "lp.steps.3.title": "បើកកម្មវិធី",
+  "lp.steps.3.body": "មនុស្សគ្រប់គ្នាបើកកម្មវិធីដែលពួកគេត្រូវការលើទូរស័ព្ទ។",
+  "lp.final.title": "ត្រៀមខ្លួនធ្វើឱ្យអាជីវកម្មរបស់អ្នកងាយស្រួលហើយឬនៅ?",
+  "lp.final.body": "បង្កើតគណនីឥតគិតថ្លៃរបស់អ្នកក្នុងរយៈពេលប៉ុន្មាននាទី។ មានរួចហើយ? ចូលគណនី។",
 };
 export const dictionaries: Record<string, Partial<Record<MessageKey, string>>> = { en, km };

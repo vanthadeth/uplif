@@ -16,11 +16,11 @@ function Frame({ children, note }: { children: React.ReactNode; note?: string })
   const { t } = useI18n();
   return (
     <section id="pricing" className="mx-auto max-w-(--content-max) scroll-mt-20 px-4 pb-20 pt-12 sm:px-8">
-      <InView><h2 className="mb-8 text-center text-2xl font-bold sm:text-3xl">{t("lp.pricing.title")}</h2></InView>
+      <InView><h2 className="mb-8 text-center text-2xl font-bold tracking-tight sm:text-3xl">{t("lp.pricing.title")}</h2></InView>
       {children}
       {note && <p role="status" className="mt-4 text-center text-muted">{note}</p>}
       <div className="mt-8 text-center">
-        <ButtonLink href={startUrl} variant="primary" size="lg">{t("lp.cta.startPlan")}</ButtonLink>
+        <ButtonLink href={startUrl} variant="primary" size="lg">{t("lp.cta.create")}</ButtonLink>
       </div>
     </section>
   );

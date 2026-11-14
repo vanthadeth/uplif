@@ -1,7 +1,9 @@
 import { Suspense } from "react";
 import { AppsSection } from "@/components/apps-section";
+import { FinalCta } from "@/components/final-cta";
 import { Hero } from "@/components/hero";
 import { Pricing, PricingSkeleton } from "@/components/pricing";
+import { StepsSection } from "@/components/steps-section";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { loadPlans } from "@/lib/plans";
@@ -21,7 +23,9 @@ export default function Home() {
       <main>
         <Hero />
         <AppsSection />
+        <StepsSection />
         <Suspense fallback={<PricingSkeleton />}><PricingFromPlans /></Suspense>
+        <FinalCta />
       </main>
       <SiteFooter />
     </div>
