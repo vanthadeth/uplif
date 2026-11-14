@@ -36,8 +36,8 @@ describe("switcherApps", () => {
     expect(st([], [])).toEqual({ me: "on" });
   });
   it("lists admin apps and what is coming soon for a person who runs the company", () => {
-    expect(st(["field_sales"], ["org.member.update", "sales.customer.read"])).toEqual({
-      me: "on", admin: "on", time: "soon", go: "on", orders: "soon", stock: "soon", pos: "soon", sites: "soon",
+    expect(st(["field_sales"], ["org.member.update", "sales.customer.read", "stock.catalog.read"])).toEqual({
+      me: "on", admin: "on", time: "soon", go: "on", orders: "soon", stock: "locked", pos: "soon", sites: "soon",
     });
   });
   it("locks a built app the person may use when the plan lacks its module", () => {
@@ -47,7 +47,16 @@ describe("switcherApps", () => {
     expect(st(["field_sales"], [])).toEqual({ me: "on" });
   });
   it("keeps a fixed order with the core apps first", () => {
-    const keys = switcherApps(["field_sales"], ["org.member.update", "sales.customer.read"]).map((x) => x.app.key);
+    const keys = switcherApps(["field_sales"], ["org.member.update", "sales.customer.read", "stock.catalog.read"]).map((x) => x.app.key);
     expect(keys).toEqual(["admin", "me", "time", "go", "orders", "stock", "pos", "sites"]);
+  });
+});
+
+describe("stock app", () => {
+  it("needs a Stock permission and the inventory module", () => {
+    const keys = (a: { key: string }[]) => a.map((x) => x.key);
+    expect(keys(visibleApps(["inventory"], ["stock.catalog.read"]))).toContain("stock");
+    expect(keys(visibleApps(["inventory"], ["org.role.manage"]))).not.toContain("stock");
+    expect(keys(visibleApps([], ["stock.catalog.manage"]))).not.toContain("stock");
   });
 });
