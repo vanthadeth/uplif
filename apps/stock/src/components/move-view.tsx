@@ -20,14 +20,17 @@ interface Receipt { id: string; kind: string; transfer_step: string | null; reas
 type Line = { variantId: string; qty: string };
 
 /** Move stock. This piece: receive stock from a supplier into a location. Adjustments and transfers come next. */
-export function MoveView({ locations, suppliers, options, balances, transit, recent, failed, canMove }: {
-  locations: Named[]; suppliers: Named[]; options: ReceiveOption[]; balances: Record<string, number>; transit: TransitTransfer[]; recent: Receipt[]; failed: boolean; canMove: boolean;
+function mine(list: Named[], ids: string[]) { return list.filter((l) => ids.includes(l.id)); }
+
+export function MoveView({ locations, suppliers, options, balances, transit, writableIds, recent, failed, canMove }: {
+  locations: Named[]; suppliers: Named[]; options: ReceiveOption[]; balances: Record<string, number>; transit: TransitTransfer[]; writableIds: string[]; recent: Receipt[]; failed: boolean; canMove: boolean;
 }) {
   const { t, locale } = useI18n();
   const toast = useToast();
   const router = useRouter();
   const [mode, setMode] = useState("receive");
-  const [location, setLocation] = useState(locations.length === 1 ? locations[0].id : "");
+  const mineLocs = mine(locations, writableIds);
+  const [location, setLocation] = useState(mineLocs.length === 1 ? mineLocs[0].id : "");
   const [supplier, setSupplier] = useState("");
   const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
@@ -93,22 +96,24 @@ export function MoveView({ locations, suppliers, options, balances, transit, rec
         <ErrorState title={t("sk.mv.loadError")} action={<Button onClick={() => router.refresh()}>{t("sk.retry")}</Button>} />
       ) : (
         <>
-          {canMove && (locations.length === 0 ? (
+          {canMove && (locations.length > 0 && mineLocs.length === 0 ? (
+            <div role="note" className="flex items-start gap-3 rounded-card bg-primary-soft p-4 leading-normal text-primary-ink"><Info className="mt-0.5 size-5 shrink-0" aria-hidden /><div>{t("sk.mv.noWritable")}</div></div>
+          ) : locations.length === 0 ? (
             <EmptyState title={t("sk.mv.noLocation")} body={t("sk.mv.noLocationBody")} action={<Link href="/locations"><Button variant="primary">{t("sk.mv.addLocation")}</Button></Link>} />
           ) : options.length === 0 ? (
             <EmptyState title={t("sk.mv.noItems")} body={t("sk.mv.noItemsBody")} action={<Link href="/items"><Button variant="primary">{t("sk.item.add")}</Button></Link>} />
           ) : (
             <>
             <Tabs label={t("sk.mv.tabs")} value={mode} onChange={setMode} items={[{ id: "receive", label: t("sk.mv.tabReceive") }, { id: "adjust", label: t("sk.mv.tabAdjust") }, { id: "transfer", label: t("sk.mv.tabTransfer") }]} />
-            {mode === "adjust" ? <AdjustForm locations={locations} options={options} balances={balances} /> :
+            {mode === "adjust" ? <AdjustForm locations={mineLocs} options={options} balances={balances} /> :
             mode === "transfer" ? (locations.length < 2
               ? <EmptyState title={t("sk.tr.needTwo")} body={t("sk.tr.needTwoBody")} action={<Link href="/locations"><Button variant="primary">{t("sk.mv.addLocation")}</Button></Link>} />
-              : <TransferPanel locations={locations} options={options} balances={balances} transit={transit} />) :
+              : <TransferPanel locations={locations} writableIds={writableIds} options={options} balances={balances} transit={transit} />) :
             <section aria-label={t("sk.mv.receive")} className="flex flex-col gap-4 rounded-card border border-line bg-surface p-4">
               <h2 className="text-lg font-bold">{t("sk.mv.receive")}</h2>
               <Select label={t("sk.mv.location")} value={location} error={errors.location} onChange={(e) => { setLocation(e.target.value); setErrors({}); }}>
                 <option value="">—</option>
-                {locations.map((l) => <option key={l.id} value={l.id}>{label(l)}</option>)}
+                {mineLocs.map((l) => <option key={l.id} value={l.id}>{label(l)}</option>)}
               </Select>
               <Select label={t("sk.mv.supplier")} value={supplier} onChange={(e) => setSupplier(e.target.value)}>
                 <option value="">{t("sk.mv.noSupplier")}</option>

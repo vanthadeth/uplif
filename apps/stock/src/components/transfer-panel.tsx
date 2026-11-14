@@ -14,8 +14,8 @@ export interface TransitTransfer { id: string; fromId: string; toId: string; sen
 type Line = { variantId: string; qty: string };
 
 /** Transfers in two steps: send from one location (stock goes "in transit"), then the receiving side confirms. */
-export function TransferPanel({ locations, options, balances, transit }: {
-  locations: Named[]; options: ReceiveOption[]; balances: Record<string, number>; transit: TransitTransfer[];
+export function TransferPanel({ locations, writableIds, options, balances, transit }: {
+  locations: Named[]; writableIds: string[]; options: ReceiveOption[]; balances: Record<string, number>; transit: TransitTransfer[];
 }) {
   const { t, locale } = useI18n();
   const toast = useToast();
@@ -103,7 +103,7 @@ export function TransferPanel({ locations, options, balances, transit }: {
         </div>
         <Select label={t("sk.tr.from")} value={from} error={errors.from} onChange={(e) => { setFrom(e.target.value); setLines([]); setErrors({}); }}>
           <option value="">—</option>
-          {locations.map((l) => <option key={l.id} value={l.id}>{label(l)}</option>)}
+          {locations.filter((l) => writableIds.includes(l.id)).map((l) => <option key={l.id} value={l.id}>{label(l)}</option>)}
         </Select>
         <Select label={t("sk.tr.to")} value={to} error={errors.to} onChange={(e) => { setTo(e.target.value); setErrors({}); }}>
           <option value="">—</option>
@@ -180,8 +180,8 @@ export function TransferPanel({ locations, options, balances, transit }: {
                   </div>
                 ) : (
                   <div className="flex flex-wrap gap-2 pt-1">
-                    <Button variant="primary" onClick={() => setOpen(tr.id)}>{t("sk.tr.receive")}</Button>
-                    <Button variant="secondary" loading={acting === tr.id} onClick={() => cancel(tr)}>{t("sk.tr.cancel")}</Button>
+                    {writableIds.includes(tr.toId) && <Button variant="primary" onClick={() => setOpen(tr.id)}>{t("sk.tr.receive")}</Button>}
+                    {writableIds.includes(tr.fromId) && <Button variant="secondary" loading={acting === tr.id} onClick={() => cancel(tr)}>{t("sk.tr.cancel")}</Button>}
                   </div>
                 )}
                 <small className="text-muted">{fill(t("sk.tr.cancelHint"), { from: nameOf(tr.fromId) })}</small>

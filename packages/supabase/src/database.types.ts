@@ -885,6 +885,7 @@ export type Database = {
       locations: {
         Row: {
           address: string | null
+          branch_id: string | null
           company_id: string
           created_at: string
           id: string
@@ -896,6 +897,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          branch_id?: string | null
           company_id: string
           created_at?: string
           id?: string
@@ -907,6 +909,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          branch_id?: string | null
           company_id?: string
           created_at?: string
           id?: string
@@ -1502,6 +1505,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      stock_writable_locations: { Args: Record<string, never>; Returns: string[] }
       send_transfer: {
         Args: { p_request_id: string; p_from: string; p_to: string; p_note: string | null; p_lines: Json }
         Returns: string

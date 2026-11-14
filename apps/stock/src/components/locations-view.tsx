@@ -2,20 +2,21 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Info, Lock, Pencil, Plus, Search, Trash2, Warehouse } from "lucide-react";
-import { Badge, Button, EmptyState, ErrorState, Input, Modal, SidePanel, Textarea, Toggle, useToast } from "@uplif/ui";
+import { Badge, Button, EmptyState, ErrorState, Input, Modal, Select, SidePanel, Textarea, Toggle, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
 import { pick } from "@/lib/format";
 
 export interface Location {
-  id: string; name: string; name_local: string | null; address: string | null; note: string | null; is_active: boolean;
+  id: string; name: string; name_local: string | null; address: string | null; note: string | null; is_active: boolean; branch_id: string | null;
 }
+interface Branch { id: string; name: string; name_local: string | null }
 
 const blank = { name: "", name_local: "", address: "", note: "" };
 
 /** The location list: search, add, edit, hide and delete. */
-export function LocationsView({ locations, failed, companyId, canManage }: { locations: Location[]; failed: boolean; companyId: string; canManage: boolean }) {
+export function LocationsView({ locations, branches, failed, companyId, canManage }: { locations: Location[]; branches: Branch[]; failed: boolean; companyId: string; canManage: boolean }) {
   const { t, locale } = useI18n();
   const toast = useToast();
   const router = useRouter();
@@ -24,6 +25,8 @@ export function LocationsView({ locations, failed, companyId, canManage }: { loc
   const [removing, setRemoving] = useState<Location | null>(null);
   const [form, setForm] = useState(blank);
   const [active, setActive] = useState(true);
+  const [branch, setBranch] = useState("");
+  const branchName = (id: string | null) => { const b = branches.find((x) => x.id === id); return b ? pick(locale, b.name, b.name_local) : ""; };
   const [errors, setErrors] = useState<{ name?: string }>({});
   const [busy, setBusy] = useState(false);
   const set = (k: keyof typeof blank) => (e: { target: { value: string } }) => { setForm((f) => ({ ...f, [k]: e.target.value })); setErrors({}); };
@@ -39,6 +42,7 @@ export function LocationsView({ locations, failed, companyId, canManage }: { loc
       name: s.name, name_local: s.name_local ?? "", address: s.address ?? "", note: s.note ?? "",
     });
     setActive(s === "new" ? true : s.is_active);
+    setBranch(s === "new" ? "" : s.branch_id ?? "");
     setErrors({});
   }
 
@@ -46,7 +50,7 @@ export function LocationsView({ locations, failed, companyId, canManage }: { loc
     if (!form.name.trim()) return setErrors({ name: t("sk.loc.nameRequired") });
     setBusy(true);
     const values = {
-      name: form.name.trim(), name_local: form.name_local.trim() || null, address: form.address.trim() || null, note: form.note.trim() || null,
+      name: form.name.trim(), name_local: form.name_local.trim() || null, address: form.address.trim() || null, note: form.note.trim() || null, branch_id: branch || null,
     };
     const supabase = createClient();
     const res = editing === "new"
@@ -112,6 +116,7 @@ export function LocationsView({ locations, failed, companyId, canManage }: { loc
                   <div className="min-w-0 flex-1 leading-snug">
                     <b className="block break-words">{pick(locale, s.name, s.name_local)}</b>
                     {s.name_local && <small className="block break-words text-muted">{locale === "en" ? s.name_local : s.name}</small>}
+                    {s.branch_id && branchName(s.branch_id) && <small className="block break-words text-muted">{branchName(s.branch_id)}</small>}
                     {s.address && <small className="block break-words text-muted">{s.address}</small>}
                     {!s.is_active && <Badge tone="neutral">{t("sk.brands.inactive")}</Badge>}
                   </div>
@@ -135,6 +140,10 @@ export function LocationsView({ locations, failed, companyId, canManage }: { loc
         <div className="flex flex-col gap-5">
           <Input label={t("sk.loc.name")} value={form.name} maxLength={120} onChange={set("name")} error={errors.name} />
           <Input label={t("sk.brands.nameLocal")} hint={t("sk.brands.nameLocalHint")} value={form.name_local} maxLength={120} onChange={set("name_local")} />
+          <Select label={t("sk.loc.branch")} hint={t("sk.loc.branchHint")} value={branch} onChange={(e) => setBranch(e.target.value)}>
+            <option value="">{t("sk.loc.noBranch")}</option>
+            {branches.map((b) => <option key={b.id} value={b.id}>{pick(locale, b.name, b.name_local)}</option>)}
+          </Select>
           <Textarea label={t("sk.loc.address")} value={form.address} maxLength={500} rows={2} onChange={set("address")} />
           <Textarea label={t("sk.loc.note")} hint={t("sk.loc.noteHint")} value={form.note} maxLength={1000} rows={3} onChange={set("note")} />
           {editing !== "new" && (
