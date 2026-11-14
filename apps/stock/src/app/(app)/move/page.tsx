@@ -6,17 +6,21 @@ export const dynamic = "force-dynamic";
 
 export default async function MovePage() {
   const [state, supabase] = await Promise.all([getStockState(), createClient()]);
-  const [locations, suppliers, items, variants, moves] = await Promise.all([
+  const [locations, suppliers, items, variants, moves, bal] = await Promise.all([
     supabase.from("locations").select("id, name, name_local").eq("is_active", true).order("name"),
     supabase.from("suppliers").select("id, name, name_local").order("name"),
     supabase.from("items").select("id, sku, name, name_local, base_uom, packs").eq("is_active", true).eq("kind", "stocked").order("name"),
     supabase.from("item_variants").select("id, item_id, name, name_local, sku, barcode, is_default").eq("is_active", true),
-    supabase.from("stock_movements").select("id, kind, location_id, supplier_id, reference, created_at").order("created_at", { ascending: false }).limit(20),
+    supabase.from("stock_movements").select("id, kind, reason, location_id, supplier_id, reference, created_at").order("created_at", { ascending: false }).limit(20),
+    supabase.from("stock_balances").select("location_id, variant_id, qty").limit(5000),
   ]);
   const ids = (moves.data ?? []).map((m) => m.id);
   const lines = ids.length ? (await supabase.from("stock_ledger").select("movement_id").in("movement_id", ids)).data ?? [] : [];
   const lineCount: Record<string, number> = {};
   for (const l of lines) lineCount[l.movement_id] = (lineCount[l.movement_id] ?? 0) + 1;
+
+  const balances: Record<string, number> = {};
+  for (const b of bal.data ?? []) balances[`${b.location_id}|${b.variant_id}`] = Number(b.qty);
 
   // One entry per thing you can receive: the item itself, or each of its variants when it has some.
   const byItem = new Map<string, typeof variants.data>();
@@ -33,7 +37,7 @@ export default async function MovePage() {
   });
   return (
     <MoveView
-      locations={locations.data ?? []} suppliers={suppliers.data ?? []} options={options}
+      locations={locations.data ?? []} suppliers={suppliers.data ?? []} options={options} balances={balances}
       recent={(moves.data ?? []).map((m) => ({ ...m, lines: lineCount[m.id] ?? 0 }))}
       failed={!!locations.error || !!items.error || !!moves.error} canMove={state!.canMove}
     />

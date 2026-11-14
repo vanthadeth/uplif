@@ -666,6 +666,7 @@ export type Database = {
           kind: string
           location_id: string
           note: string | null
+          reason: string | null
           reference: string | null
           request_id: string
           supplier_id: string | null
@@ -1461,6 +1462,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      adjust_stock: {
+        Args: { p_request_id: string; p_location_id: string; p_reason: string; p_note: string | null; p_lines: Json }
+        Returns: string
+      }
       receive_stock: {
         Args: { p_request_id: string; p_location_id: string; p_supplier_id: string | null; p_reference: string | null; p_note: string | null; p_lines: Json }
         Returns: string

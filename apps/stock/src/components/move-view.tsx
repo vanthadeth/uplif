@@ -3,27 +3,29 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Info, Plus, Search, Trash2 } from "lucide-react";
-import { Button, EmptyState, ErrorState, Input, Select, Textarea, useToast } from "@uplif/ui";
+import { Button, EmptyState, ErrorState, Input, Select, Tabs, Textarea, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
 import { pick } from "@/lib/format";
+import { AdjustForm } from "./adjust-form";
 
 export interface ReceiveOption {
   variantId: string; itemName: string; itemNameLocal: string | null; variantName: string | null; variantNameLocal: string | null;
   sku: string | null; barcode: string | null; uom: string; packs: { name: string; qty: number }[];
 }
 interface Named { id: string; name: string; name_local: string | null }
-interface Receipt { id: string; location_id: string; supplier_id: string | null; reference: string | null; created_at: string; lines: number }
+interface Receipt { id: string; kind: string; reason: string | null; location_id: string; supplier_id: string | null; reference: string | null; created_at: string; lines: number }
 type Line = { variantId: string; qty: string };
 
 /** Move stock. This piece: receive stock from a supplier into a location. Adjustments and transfers come next. */
-export function MoveView({ locations, suppliers, options, recent, failed, canMove }: {
-  locations: Named[]; suppliers: Named[]; options: ReceiveOption[]; recent: Receipt[]; failed: boolean; canMove: boolean;
+export function MoveView({ locations, suppliers, options, balances, recent, failed, canMove }: {
+  locations: Named[]; suppliers: Named[]; options: ReceiveOption[]; balances: Record<string, number>; recent: Receipt[]; failed: boolean; canMove: boolean;
 }) {
   const { t, locale } = useI18n();
   const toast = useToast();
   const router = useRouter();
+  const [mode, setMode] = useState("receive");
   const [location, setLocation] = useState(locations.length === 1 ? locations[0].id : "");
   const [supplier, setSupplier] = useState("");
   const [reference, setReference] = useState("");
@@ -77,7 +79,7 @@ export function MoveView({ locations, suppliers, options, recent, failed, canMov
     <main className="flex flex-col gap-4 p-4">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{t("sk.mv.title")}</h1>
-        <p className="mt-1 text-muted">{t("sk.mv.subtitle")}</p>
+        <p className="mt-1 text-muted">{t("sk.mv.subtitle2")}</p>
       </div>
       {!canMove && (
         <div role="note" className="flex items-start gap-3 rounded-card bg-primary-soft p-4 leading-normal text-primary-ink">
@@ -95,6 +97,9 @@ export function MoveView({ locations, suppliers, options, recent, failed, canMov
           ) : options.length === 0 ? (
             <EmptyState title={t("sk.mv.noItems")} body={t("sk.mv.noItemsBody")} action={<Link href="/items"><Button variant="primary">{t("sk.item.add")}</Button></Link>} />
           ) : (
+            <>
+            <Tabs label={t("sk.mv.tabs")} value={mode} onChange={setMode} items={[{ id: "receive", label: t("sk.mv.tabReceive") }, { id: "adjust", label: t("sk.mv.tabAdjust") }]} />
+            {mode === "adjust" ? <AdjustForm locations={locations} options={options} balances={balances} /> :
             <section aria-label={t("sk.mv.receive")} className="flex flex-col gap-4 rounded-card border border-line bg-surface p-4">
               <h2 className="text-lg font-bold">{t("sk.mv.receive")}</h2>
               <Select label={t("sk.mv.location")} value={location} error={errors.location} onChange={(e) => { setLocation(e.target.value); setErrors({}); }}>
@@ -154,16 +159,17 @@ export function MoveView({ locations, suppliers, options, recent, failed, canMov
 
               <Textarea label={t("sk.mv.note")} value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} />
               <Button variant="primary" loading={busy} onClick={submit}>{t("sk.mv.submit")}</Button>
-            </section>
+            </section>}
+            </>
           ))}
 
-          <section aria-label={t("sk.mv.recent")} className="flex flex-col gap-2">
-            <h2 className="text-lg font-bold">{t("sk.mv.recent")}</h2>
-            {recent.length === 0 ? <p className="text-muted">{t("sk.mv.recentEmpty")}</p> : (
+          <section aria-label={t("sk.mv.recentAll")} className="flex flex-col gap-2">
+            <h2 className="text-lg font-bold">{t("sk.mv.recentAll")}</h2>
+            {recent.length === 0 ? <p className="text-muted">{t("sk.mv.recentAllEmpty")}</p> : (
               <ul className="overflow-hidden rounded-card border border-line bg-surface">
                 {recent.map((r) => (
                   <li key={r.id} className="flex min-h-16 flex-col justify-center border-t border-line p-3 leading-snug first:border-t-0">
-                    <b className="break-words">{nameOf(locations, r.location_id) || "—"}{r.reference ? ` · ${r.reference}` : ""}</b>
+                    <b className="break-words">{r.kind === "adjust" ? `${t("sk.mv.kindAdjust")}${r.reason ? ` · ${t(`sk.ad.reason.${r.reason}` as never)}` : ""}` : t("sk.mv.kindReceive")} · {nameOf(locations, r.location_id) || "—"}{r.reference ? ` · ${r.reference}` : ""}</b>
                     <small className="text-muted">
                       {new Date(r.created_at).toLocaleString(locale)} · {fill(t("sk.mv.itemsCount"), { n: r.lines })}{r.supplier_id ? ` · ${nameOf(suppliers, r.supplier_id)}` : ""}
                     </small>
