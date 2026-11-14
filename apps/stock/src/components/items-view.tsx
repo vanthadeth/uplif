@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Boxes, ImagePlus, Info, Lock, Package, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { Boxes, ImagePlus, ListChecks, Info, Lock, Package, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { Badge, Button, EmptyState, ErrorState, Input, Modal, Select, SidePanel, Textarea, Toggle, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
@@ -10,11 +10,12 @@ import { money, pick } from "@/lib/format";
 import { removePicture } from "@/lib/use-picture";
 import { ItemPictures, type ItemImage } from "@/components/item-pictures";
 import { ItemVariants, type Variant } from "@/components/item-variants";
+import { ItemProperties, type PropGroup } from "@/components/item-properties";
 
 export type Pack = { name: string; qty: number };
 export interface Item {
   id: string; sku: string | null; name: string; name_local: string | null; description: string | null; description_local: string | null;
-  category_id: string | null; brand_id: string | null; base_uom: string; packs: Pack[]; price: number; currency_code: string; is_active: boolean;
+  category_id: string | null; brand_id: string | null; base_uom: string; packs: Pack[]; properties: PropGroup[]; price: number; currency_code: string; is_active: boolean;
 }
 interface Cat { id: string; parent_id: string | null; name: string; name_local: string | null; is_active: boolean }
 interface Brand { id: string; name: string; name_local: string | null; is_active: boolean }
@@ -35,6 +36,7 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
   const [removing, setRemoving] = useState<Item | null>(null);
   const [picturesOf, setPicturesOf] = useState<Item | null>(null);
   const [variantsOf, setVariantsOf] = useState<Item | null>(null);
+  const [propsOf, setPropsOf] = useState<string | null>(null);
   const [form, setForm] = useState(blank);
   const [packs, setPacks] = useState<PackRow[]>([]);
   const [active, setActive] = useState(true);
@@ -180,6 +182,9 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
                       {(canManage || variantCount.get(i.id)) && (
                         <button type="button" aria-label={fill(t("sk.var.open"), { name: i.name })} onClick={() => setVariantsOf(i)} className="grid size-11 place-items-center rounded-control text-muted transition-colors hover:bg-primary-soft"><Boxes className="size-5" aria-hidden /></button>
                       )}
+                      {(canManage || i.properties.length > 0) && (
+                        <button type="button" aria-label={fill(t("sk.prop.open"), { name: i.name })} onClick={() => setPropsOf(i.id)} className="grid size-11 place-items-center rounded-control text-muted transition-colors hover:bg-primary-soft"><ListChecks className="size-5" aria-hidden /></button>
+                      )}
                       {(canManage || countByItem.get(i.id)) && (
                         <button type="button" aria-label={fill(t("sk.pics.open"), { name: i.name })} onClick={() => setPicturesOf(i)} className="grid size-11 place-items-center rounded-control text-muted transition-colors hover:bg-primary-soft"><ImagePlus className="size-5" aria-hidden /></button>
                       )}
@@ -250,6 +255,7 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
 
       <ItemPictures item={picturesOf} images={images} companyId={companyId} canManage={canManage} onClose={() => setPicturesOf(null)} />
 
+      <ItemProperties item={items.find((x) => x.id === propsOf) ?? null} currency={items.find((x) => x.id === propsOf)?.currency_code ?? currency} canManage={canManage} onClose={() => setPropsOf(null)} />
       <ItemVariants item={variantsOf} variants={variants} images={images} currency={variantsOf?.currency_code ?? currency} companyId={companyId} canManage={canManage} onClose={() => setVariantsOf(null)} />
 
       <Modal open={removing !== null} onClose={() => setRemoving(null)} closeLabel={t("sk.close")} title={t("sk.item.deleteTitle")}

@@ -829,6 +829,7 @@ export type Database = {
           name: string
           name_local: string | null
           packs: Json
+          properties: Json
           price: number
           sku: string | null
           updated_at: string
@@ -848,6 +849,7 @@ export type Database = {
           name: string
           name_local?: string | null
           packs?: Json
+          properties?: Json
           price?: number
           sku?: string | null
           updated_at?: string
@@ -867,6 +869,7 @@ export type Database = {
           name?: string
           name_local?: string | null
           packs?: Json
+          properties?: Json
           price?: number
           sku?: string | null
           updated_at?: string
