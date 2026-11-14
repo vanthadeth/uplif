@@ -621,6 +621,42 @@ export type Database = {
         }
         Relationships: []
       }
+      categories: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          image_path: string | null
+          is_active: boolean
+          name: string
+          name_local: string | null
+          parent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          image_path?: string | null
+          is_active?: boolean
+          name: string
+          name_local?: string | null
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          image_path?: string | null
+          is_active?: boolean
+          name?: string
+          name_local?: string | null
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       branches: {
         Row: {
           timezone: string | null

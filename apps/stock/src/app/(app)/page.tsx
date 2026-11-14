@@ -1,5 +1,5 @@
 "use client";
-import { Tag } from "lucide-react";
+import { Layers, Tag } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { SetupLink } from "@/components/setup-link";
 
@@ -12,6 +12,7 @@ export default function Home() {
         <p className="mt-1 text-muted">{t("sk.home.body")}</p>
       </div>
       <SetupLink href="/brands" icon={Tag} title="sk.home.brands" body="sk.home.brandsBody" />
+      <SetupLink href="/categories" icon={Layers} title="sk.home.cat" body="sk.home.catBody" />
     </main>
   );
 }
