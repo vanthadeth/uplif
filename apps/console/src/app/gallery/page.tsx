@@ -174,7 +174,7 @@ export default function Gallery() {
         >
           <p className="text-muted">{t("overlay.sheetBody")}</p>
         </BottomSheet>
-        <SidePanel open={panel} onClose={() => setPanel(false)} title={t("overlay.panelTitle")} closeLabel={t("overlay.close")}>
+        <SidePanel sheet open={panel} onClose={() => setPanel(false)} title={t("overlay.panelTitle")} closeLabel={t("overlay.close")}>
           <p className="text-muted">{t("overlay.panelBody")}</p>
         </SidePanel>
       </Section>

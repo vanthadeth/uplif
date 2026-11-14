@@ -2,7 +2,8 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { cn } from "./cn";
-import { SheetSkeleton, useSheetReady } from "./Sheet";
+import { BottomSheet } from "./BottomSheet";
+import { SheetSkeleton, useIsPhone, useSheetReady } from "./Sheet";
 
 interface OverlayProps {
   open: boolean;
@@ -18,12 +19,27 @@ function Overlay({ open, onClose, title, closeLabel = "Close", children, footer,
   const ref = useRef<HTMLDialogElement>(null);
   const slid = useSheetReady(open);
   const asSheet = !!(side && sheet);
+  const phone = useIsPhone();
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
     if (open && !d.open) d.showModal();
     if (!open && d.open) d.close();
   }, [open]);
+  // Phones get the shared bottom sheet: the last footer button is the wide primary action.
+  if (asSheet && phone) {
+    return (
+      <BottomSheet
+        open={open}
+        onClose={onClose}
+        title={title}
+        closeLabel={closeLabel}
+        footer={footer && <div className="flex w-full gap-2 [&>*:last-child]:h-12 [&>*:last-child]:flex-1 [&>*:last-child]:text-[17px]">{footer}</div>}
+      >
+        {children}
+      </BottomSheet>
+    );
+  }
   return (
     <dialog
       ref={ref}

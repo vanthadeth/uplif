@@ -20,6 +20,8 @@ export interface BottomSheetProps {
   loading?: boolean;
   /** Where to mount. Inside a modal <dialog> pass the dialog, because a modal dialog makes the rest of the page inert. */
   container?: Element | null;
+  /** Move focus into the sheet on open. Turn off when focus must stay where it is (a list driven from its own button). */
+  autoFocus?: boolean;
   /** Hide the close button (the handle, backdrop tap, drag and Esc still close). */
   hideClose?: boolean;
   className?: string;
@@ -36,7 +38,7 @@ const DISMISS_VELOCITY = 0.6; // px per ms
  * On wide screens it is a centred panel of the same shape.
  */
 export function BottomSheet({
-  open, onClose, title, closeLabel = "Close", children, footer, skeletonRows = 4, loading = false, container, hideClose, className,
+  open, onClose, title, closeLabel = "Close", children, footer, skeletonRows = 4, loading = false, container, hideClose, autoFocus = true, className,
 }: BottomSheetProps) {
   const [mounted, setMounted] = useState(open);
   const [leaving, setLeaving] = useState(false);
@@ -69,11 +71,12 @@ export function BottomSheet({
     if (!mounted) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const key = (e: KeyboardEvent) => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } };
-    document.addEventListener("keydown", key, true);
-    panel.current?.focus({ preventScroll: true });
-    return () => { document.body.style.overflow = prev; document.removeEventListener("keydown", key, true); };
-  }, [mounted, onClose]);
+    // Bubble phase, and skip when something inside (an open list) already handled Esc.
+    const key = (e: KeyboardEvent) => { if (e.key === "Escape" && !e.defaultPrevented) onClose(); };
+    document.addEventListener("keydown", key);
+    if (autoFocus) panel.current?.focus({ preventScroll: true });
+    return () => { document.body.style.overflow = prev; document.removeEventListener("keydown", key); };
+  }, [mounted, onClose, autoFocus]);
 
   const down = useCallback((e: React.PointerEvent) => {
     start.current = { y: e.clientY, t: performance.now(), id: e.pointerId };
