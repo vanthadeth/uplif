@@ -1,7 +1,7 @@
 "use client";
 import { useState, type ReactNode } from "react";
 import {
-  AppSwitcher, Avatar, Badge, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Input, Modal, ScopePill, Select,
+  AppSwitcher, Avatar, Badge, BottomSheet, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Input, Modal, ScopePill, Select,
   SidePanel, Skeleton, Spinner, TabPanel, Table, TBody, TD, TH, THead, Tabs, Toggle, TR, useToast,
 } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
@@ -34,6 +34,7 @@ export default function Gallery() {
   const toast = useToast();
   const [modal, setModal] = useState(false);
   const [panel, setPanel] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [tab, setTab] = useState("general");
   const [approval, setApproval] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -152,6 +153,7 @@ export default function Gallery() {
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => setModal(true)}>{t("overlay.openModal")}</Button>
           <Button onClick={() => setPanel(true)}>{t("overlay.openPanel")}</Button>
+          <Button onClick={() => setSheetOpen(true)}>{t("overlay.openSheet")}</Button>
         </div>
         <Modal
           open={modal}
@@ -162,6 +164,15 @@ export default function Gallery() {
         >
           <p>{t("overlay.confirmBody")}</p>
         </Modal>
+        <BottomSheet
+          open={sheetOpen}
+          onClose={() => setSheetOpen(false)}
+          title={t("overlay.panelTitle")}
+          closeLabel={t("overlay.close")}
+          footer={<><Button onClick={() => setSheetOpen(false)}>{t("btn.secondary")}</Button><Button variant="primary" onClick={() => setSheetOpen(false)}>{t("overlay.close")}</Button></>}
+        >
+          <p className="text-muted">{t("overlay.sheetBody")}</p>
+        </BottomSheet>
         <SidePanel open={panel} onClose={() => setPanel(false)} title={t("overlay.panelTitle")} closeLabel={t("overlay.close")}>
           <p className="text-muted">{t("overlay.panelBody")}</p>
         </SidePanel>
