@@ -670,10 +670,50 @@ export type Database = {
           reference: string | null
           request_id: string
           supplier_id: string | null
+          transfer_id: string | null
+          transfer_step: string | null
         }
         Insert: never
         Update: never
         Relationships: []
+      }
+      stock_transfers: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          company_id: string
+          from_location_id: string
+          id: string
+          note: string | null
+          request_id: string
+          sent_at: string
+          sent_by: string | null
+          status: string
+          to_location_id: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      stock_transfer_lines: {
+        Row: {
+          company_id: string
+          qty_received: number | null
+          qty_sent: number
+          transfer_id: string
+          variant_id: string
+        }
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: "stock_transfer_lines_company_id_transfer_id_fkey"
+            columns: ["company_id", "transfer_id"]
+            isOneToOne: false
+            referencedRelation: "stock_transfers"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
       }
       stock_ledger: {
         Row: {
@@ -1462,6 +1502,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      send_transfer: {
+        Args: { p_request_id: string; p_from: string; p_to: string; p_note: string | null; p_lines: Json }
+        Returns: string
+      }
+      receive_transfer: { Args: { p_transfer_id: string; p_lines?: Json | null }; Returns: string }
+      cancel_transfer: { Args: { p_transfer_id: string }; Returns: string }
       adjust_stock: {
         Args: { p_request_id: string; p_location_id: string; p_reason: string; p_note: string | null; p_lines: Json }
         Returns: string
