@@ -2,10 +2,11 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, Trash2 } from "lucide-react";
-import { Button, Input, Select, Textarea, useToast } from "@uplif/ui";
+import { BarcodeScanner, Button, Input, Select, Textarea, useToast, ScanButton } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
+import { scanLabels } from "@/lib/scan-labels";
 import { pick, qtyText } from "@/lib/format";
 import type { ReceiveOption } from "./move-view";
 
@@ -23,6 +24,7 @@ export function AdjustForm({ locations, options, balances }: { locations: Named[
   const [note, setNote] = useState("");
   const [lines, setLines] = useState<Line[]>([]);
   const [query, setQuery] = useState("");
+  const [scanning, setScanning] = useState(false);
   const [errors, setErrors] = useState<{ location?: string; lines?: string }>({});
   const [busy, setBusy] = useState(false);
   const [requestId, setRequestId] = useState(() => crypto.randomUUID());
@@ -76,11 +78,17 @@ export function AdjustForm({ locations, options, balances }: { locations: Named[
 
       <fieldset className="flex flex-col gap-3">
         <legend className="mb-1 text-[14px] font-semibold text-ink-2">{t("sk.mv.lines")}</legend>
-        <label className="flex min-h-11 items-center gap-2 rounded-control border border-line-strong bg-surface px-3">
-          <Search className="size-[18px] shrink-0 text-muted" aria-hidden />
-          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("sk.mv.search")} aria-label={t("sk.mv.search")}
-            className="min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-muted" />
-        </label>
+        <BarcodeScanner open={scanning} onClose={() => setScanning(false)} onScan={setQuery} labels={scanLabels(t)} />
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+          <label className="flex min-h-11 items-center gap-2 rounded-control border border-line-strong bg-surface px-3">
+            <Search className="size-[18px] shrink-0 text-muted" aria-hidden />
+            <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("sk.mv.search")} aria-label={t("sk.mv.search")}
+              className="min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-muted" />
+          </label>
+          </div>
+          <ScanButton onClick={() => setScanning(true)} label={t("sk.scan.open")} />
+        </div>
         {query.trim() && (matches.length === 0
           ? <p className="text-muted">{t("sk.mv.searchEmpty")}</p>
           : <ul className="overflow-hidden rounded-card border border-line">

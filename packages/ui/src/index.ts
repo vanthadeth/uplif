@@ -40,3 +40,4 @@ export * from "./useSwitcherData";
 export * from "./InView";
 export * from "./AppTile";
 export * from "./PlanCard";
+export * from "./BarcodeScanner";

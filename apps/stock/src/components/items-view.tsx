@@ -1,8 +1,8 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Boxes, ImagePlus, ListChecks, Info, Lock, Package, Pencil, Plus, Search, Trash2, X } from "lucide-react";
-import { Badge, Button, EmptyState, ErrorState, Input, Modal, Select, SidePanel, Textarea, Toggle, useToast } from "@uplif/ui";
+import { Boxes, FileUp, ImagePlus, ListChecks, Info, Lock, Package, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { Badge, BarcodeScanner, Button, EmptyState, ErrorState, Input, Modal, ScanButton, Select, SidePanel, Textarea, Toggle, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
@@ -11,6 +11,8 @@ import { removePicture } from "@/lib/use-picture";
 import { ItemPictures, type ItemImage } from "@/components/item-pictures";
 import { ItemVariants, type Variant } from "@/components/item-variants";
 import { ItemProperties, type PropGroup } from "@/components/item-properties";
+import { ItemsImport } from "@/components/items-import";
+import { scanLabels } from "@/lib/scan-labels";
 
 export type Pack = { name: string; qty: number };
 export interface Item {
@@ -37,6 +39,8 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
   const [picturesOf, setPicturesOf] = useState<Item | null>(null);
   const [variantsOf, setVariantsOf] = useState<Item | null>(null);
   const [propsOf, setPropsOf] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [form, setForm] = useState(blank);
   const [packs, setPacks] = useState<PackRow[]>([]);
   const [active, setActive] = useState(true);
@@ -70,10 +74,12 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
   }, [categories, form.category_id, locale]);
   const brandOptions = useMemo(() => brands.filter((b) => b.is_active || b.id === form.brand_id), [brands, form.brand_id]);
 
+  // Barcodes live on variants; searching an item by barcode looks at all of its variants.
+  const codesByItem = useMemo(() => variants.reduce((m, v) => (v.barcode ? m.set(v.item_id, `${m.get(v.item_id) ?? ""} ${v.barcode}`) : m), new Map<string, string>()), [variants]);
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return items.filter((i) => !q || [i.name, i.name_local, i.sku].filter(Boolean).join(" ").toLowerCase().includes(q));
-  }, [items, query]);
+    return items.filter((i) => !q || [i.name, i.name_local, i.sku, codesByItem.get(i.id)].filter(Boolean).join(" ").toLowerCase().includes(q));
+  }, [items, query, codesByItem]);
 
   function open(i: Item | "new") {
     setEditing(i);
@@ -172,6 +178,8 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
               <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("sk.search")} aria-label={t("sk.search")}
                 className="min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-muted" />
             </label>
+            <ScanButton onClick={() => setScanning(true)} label={t("sk.scan.open")} />
+            {canManage && <Button onClick={() => setImporting(true)} aria-label={t("sk.imp.open")} title={t("sk.imp.open")}><FileUp className="size-5" aria-hidden /></Button>}
             {canManage ? <Button variant="primary" onClick={() => open("new")} aria-label={t("sk.item.add")}><Plus className="size-5" aria-hidden /></Button>
               : <Badge tone="neutral"><Lock className="size-3" aria-hidden />{t("sk.brands.viewOnly")}</Badge>}
           </div>
@@ -277,6 +285,10 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
           )}
         </div>
       </SidePanel>
+
+      <BarcodeScanner open={scanning} onClose={() => setScanning(false)} onScan={setQuery} labels={scanLabels(t)} />
+      <ItemsImport open={importing} onClose={() => setImporting(false)} companyId={companyId} currency={currency} categories={categories} brands={brands}
+        skus={items.map((i) => i.sku).filter((s): s is string => !!s)} barcodes={variants.map((v) => v.barcode).filter((s): s is string => !!s)} />
 
       <ItemPictures item={picturesOf} images={images} companyId={companyId} canManage={canManage} onClose={() => setPicturesOf(null)} />
 

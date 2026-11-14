@@ -2,10 +2,11 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ImageIcon, Info, Pencil, Plus, Trash2, Wand2 } from "lucide-react";
-import { Badge, Button, EmptyState, Input, Modal, SidePanel, Toggle, useToast } from "@uplif/ui";
+import { Badge, BarcodeScanner, Button, EmptyState, Input, Modal, ScanButton, SidePanel, Toggle, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
+import { scanLabels } from "@/lib/scan-labels";
 import { money, pick } from "@/lib/format";
 import type { ItemImage } from "@/components/item-pictures";
 
@@ -42,6 +43,7 @@ export function ItemVariants({ item, variants, images, currency, companyId, canM
   const [help, setHelp] = useState(false);
   const [errors, setErrors] = useState<{ name?: string; price?: string; sku?: string; barcode?: string; lists?: string }>({});
   const [defaultBarcode, setDefaultBarcode] = useState<string | null>(null);
+  const [scanFor, setScanFor] = useState<"default" | "variant" | null>(null);
   const [busy, setBusy] = useState(false);
   const set = (k: keyof typeof blank) => (e: { target: { value: string } }) => { setForm((f) => ({ ...f, [k]: e.target.value })); setErrors({}); };
 
@@ -179,6 +181,7 @@ export function ItemVariants({ item, variants, images, currency, companyId, canM
                       <Input label={t("sk.var.barcodeItem")} value={defaultBarcode ?? def.barcode ?? ""} maxLength={60} error={errors.barcode}
                         onChange={(e) => { setDefaultBarcode(e.target.value); setErrors({}); }} />
                     </div>
+                    <ScanButton onClick={() => setScanFor("default")} label={t("sk.scan.open")} />
                     {defaultBarcode !== null && <Button variant="primary" loading={busy} onClick={saveDefaultBarcode}>{t("sk.save")}</Button>}
                   </div>
                 )}
@@ -216,7 +219,10 @@ export function ItemVariants({ item, variants, images, currency, companyId, canM
             <Input label={t("sk.var.name")} value={form.name} maxLength={160} onChange={set("name")} error={errors.name} />
             <Input label={t("sk.brands.nameLocal")} hint={t("sk.brands.nameLocalHint")} value={form.name_local} maxLength={160} onChange={set("name_local")} />
             <Input label={t("sk.var.price")} hint={`${t("sk.var.priceHint")} (${currency})`} type="number" inputMode="decimal" min={0} step="any" value={form.price} onChange={set("price")} error={errors.price} />
-            <Input label={t("sk.var.barcode")} value={form.barcode} maxLength={60} onChange={set("barcode")} error={errors.barcode} />
+            <div className="flex items-end gap-2">
+              <div className="min-w-0 flex-1"><Input label={t("sk.var.barcode")} value={form.barcode} maxLength={60} onChange={set("barcode")} error={errors.barcode} /></div>
+              <ScanButton onClick={() => setScanFor("variant")} label={t("sk.scan.open")} />
+            </div>
             <Input label={t("sk.var.sku")} value={form.sku} maxLength={60} onChange={set("sku")} error={errors.sku} />
             <fieldset className="flex flex-col gap-2">
               <legend className="mb-1 text-[14px] font-semibold text-ink-2">{t("sk.var.picture")}</legend>
@@ -260,6 +266,8 @@ export function ItemVariants({ item, variants, images, currency, companyId, canM
         footer={<><Button onClick={() => setRemoving(null)}>{t("sk.cancel")}</Button><Button variant="danger" loading={busy} onClick={() => removing && remove(removing)}>{t("sk.delete")}</Button></>}>
         <p>{removing ? fill(t("sk.var.deleteBody"), { name: label(removing) }) : ""}</p>
       </Modal>
+      <BarcodeScanner open={scanFor !== null} onClose={() => setScanFor(null)} labels={scanLabels(t)}
+        onScan={(code) => { setErrors({}); if (scanFor === "default") setDefaultBarcode(code); else setForm((f) => ({ ...f, barcode: code })); }} />
     </>
   );
 }
