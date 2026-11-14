@@ -40,15 +40,20 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   );
 });
 
-/** A link that looks like a Button (sign-up and "open app" links). Same sizes and colors; size "lg" is for page heroes. */
+/** A link that looks like a Button (sign-up and "open app" links). Same sizes and colors; size "lg" is for page heroes; "light" and "outlineLight" are for dark panels. */
+const onDark = {
+  light: "bg-white border-white text-navy hover:bg-primary-soft",
+  outlineLight: "bg-transparent border-white/40 text-white hover:bg-white/10",
+} as const;
+
 export function ButtonLink({ variant = "secondary", size = "md", className, ...rest }:
-  AnchorHTMLAttributes<HTMLAnchorElement> & { variant?: Exclude<ButtonVariant, "danger">; size?: "md" | "lg" }) {
+  AnchorHTMLAttributes<HTMLAnchorElement> & { variant?: Exclude<ButtonVariant, "danger"> | keyof typeof onDark; size?: "md" | "lg" }) {
   return (
     <a
       className={cn(
         "inline-flex items-center justify-center gap-2 rounded-control border font-semibold transition-[background-color,transform] active:scale-[0.98]",
         size === "lg" ? "min-h-13 rounded-card px-7 text-lg" : "min-h-(--control-h) px-4",
-        variants[variant], className,
+        variant in onDark ? onDark[variant as keyof typeof onDark] : variants[variant as ButtonVariant], className,
       )}
       {...rest}
     />
