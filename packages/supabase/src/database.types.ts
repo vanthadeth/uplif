@@ -738,6 +738,66 @@ export type Database = {
         }
         Relationships: []
       }
+      items: {
+        Row: {
+          base_uom: string
+          brand_id: string | null
+          category_id: string | null
+          company_id: string
+          created_at: string
+          currency_code: string
+          description: string | null
+          description_local: string | null
+          id: string
+          is_active: boolean
+          kind: string
+          name: string
+          name_local: string | null
+          packs: Json
+          price: number
+          sku: string | null
+          updated_at: string
+        }
+        Insert: {
+          base_uom?: string
+          brand_id?: string | null
+          category_id?: string | null
+          company_id: string
+          created_at?: string
+          currency_code: string
+          description?: string | null
+          description_local?: string | null
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name: string
+          name_local?: string | null
+          packs?: Json
+          price?: number
+          sku?: string | null
+          updated_at?: string
+        }
+        Update: {
+          base_uom?: string
+          brand_id?: string | null
+          category_id?: string | null
+          company_id?: string
+          created_at?: string
+          currency_code?: string
+          description?: string | null
+          description_local?: string | null
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name?: string
+          name_local?: string | null
+          packs?: Json
+          price?: number
+          sku?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       branches: {
         Row: {
           timezone: string | null
