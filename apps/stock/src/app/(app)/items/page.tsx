@@ -9,13 +9,14 @@ export const dynamic = "force-dynamic";
 
 export default async function ItemsPage() {
   const [state, supabase] = await Promise.all([getStockState(), createClient()]);
-  const [items, categories, brands, home, pics, vars] = await Promise.all([
+  const [items, categories, brands, home, pics, vars, costRows] = await Promise.all([
     supabase.from("items").select("id, sku, name, name_local, description, description_local, category_id, brand_id, base_uom, packs, properties, price, currency_code, is_active").order("name"),
     supabase.from("categories").select("id, parent_id, name, name_local, is_active").order("name"),
     supabase.from("brands").select("id, name, name_local, is_active").order("name"),
     supabase.from("company_currencies").select("code").eq("is_home", true).maybeSingle(),
     supabase.from("item_images").select("id, item_id, image_path, is_main").order("created_at"),
     supabase.from("item_variants").select("id, item_id, name, name_local, sku, barcode, price, image_id, is_default, is_active").order("created_at"),
+    state!.canViewCost ? supabase.from("item_costs").select("item_id, cost") : Promise.resolve({ data: [] as { item_id: string; cost: number }[] }),
   ]);
   // Pictures are private; each gets a link that works for an hour.
   const rows = pics.data ?? [];
@@ -28,6 +29,7 @@ export default async function ItemsPage() {
       images={images} variants={(vars.data ?? []) as Variant[]} categories={categories.data ?? []} brands={brands.data ?? []}
       currency={home.data?.code ?? "USD"} failed={!!items.error}
       companyId={state!.companyId} canManage={state!.canManage}
+      canViewCost={state!.canViewCost} costs={Object.fromEntries((costRows.data ?? []).map((c) => [c.item_id, Number(c.cost)]))}
     />
   );
 }

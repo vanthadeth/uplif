@@ -20,13 +20,13 @@ export interface Item {
 interface Cat { id: string; parent_id: string | null; name: string; name_local: string | null; is_active: boolean }
 interface Brand { id: string; name: string; name_local: string | null; is_active: boolean }
 
-const blank = { name: "", name_local: "", description: "", description_local: "", sku: "", category_id: "", brand_id: "", base_uom: "pcs", price: "0" };
+const blank = { name: "", name_local: "", description: "", description_local: "", sku: "", category_id: "", brand_id: "", base_uom: "pcs", price: "0", cost: "" };
 type PackRow = { name: string; qty: string };
-type Errors = { name?: string; uom?: string; price?: string; packs?: string; sku?: string };
+type Errors = { name?: string; uom?: string; price?: string; cost?: string; packs?: string; sku?: string };
 
 /** The item list: search, add, edit, hide and delete. Pictures, variants and options come in later pieces. */
-export function ItemsView({ items, images, variants, categories, brands, currency, failed, companyId, canManage }: {
-  items: Item[]; images: ItemImage[]; variants: Variant[]; categories: Cat[]; brands: Brand[]; currency: string; failed: boolean; companyId: string; canManage: boolean;
+export function ItemsView({ items, images, variants, categories, brands, currency, failed, companyId, canManage, canViewCost, costs }: {
+  items: Item[]; images: ItemImage[]; variants: Variant[]; categories: Cat[]; brands: Brand[]; currency: string; failed: boolean; companyId: string; canManage: boolean; canViewCost: boolean; costs: Record<string, number>;
 }) {
   const { t, locale } = useI18n();
   const toast = useToast();
@@ -79,7 +79,7 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
     setEditing(i);
     setForm(i === "new" ? { ...blank } : {
       name: i.name, name_local: i.name_local ?? "", description: i.description ?? "", description_local: i.description_local ?? "",
-      sku: i.sku ?? "", category_id: i.category_id ?? "", brand_id: i.brand_id ?? "", base_uom: i.base_uom, price: String(i.price),
+      sku: i.sku ?? "", category_id: i.category_id ?? "", brand_id: i.brand_id ?? "", base_uom: i.base_uom, price: String(i.price), cost: costs[i.id] === undefined ? "" : String(costs[i.id]),
     });
     setPacks(i === "new" ? [] : i.packs.map((p) => ({ name: p.name, qty: String(p.qty) })));
     setActive(i === "new" ? true : i.is_active);
@@ -91,6 +91,8 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
     if (!form.name.trim()) return setErrors({ name: t("sk.item.nameRequired") });
     if (!form.base_uom.trim()) return setErrors({ uom: t("sk.item.uomRequired") });
     if (!Number.isFinite(price) || price < 0) return setErrors({ price: t("sk.item.priceInvalid") });
+    const cost = form.cost.trim() === "" ? null : Number(form.cost);
+    if (canViewCost && cost !== null && (!Number.isFinite(cost) || cost < 0)) return setErrors({ cost: t("sk.cost.invalid") });
     const cleanPacks = packs.filter((p) => p.name.trim() || p.qty.trim());
     const parsed: Pack[] = cleanPacks.map((p) => ({ name: p.name.trim(), qty: Number(p.qty) }));
     if (parsed.some((p) => !p.name || !Number.isInteger(p.qty) || p.qty < 2)) return setErrors({ packs: t("sk.item.packInvalid") });
@@ -110,6 +112,14 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
       return toast("error", res.error.code === "42501" ? t("sk.forbidden") : t("sk.saveError"));
     }
     if (!res.data?.length) return toast("error", t("sk.forbidden"));
+    if (canViewCost) {
+      const itemId = res.data[0].id;
+      const had = editing !== "new" && costs[(editing as Item).id] !== undefined;
+      const r = cost === null
+        ? (had ? await supabase.from("item_costs").delete().eq("item_id", itemId) : { error: null })
+        : await supabase.from("item_costs").upsert({ item_id: itemId, company_id: companyId, cost });
+      if (r.error) toast("error", t("sk.saveError"));
+    }
     toast("success", editing === "new" ? t("sk.item.added") : t("sk.item.saved"));
     setEditing(null);
     router.refresh();
@@ -129,6 +139,9 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
   }
 
   const add = <Button variant="primary" className="w-full sm:w-auto" onClick={() => open("new")}><Plus className="size-[18px]" aria-hidden />{t("sk.item.add")}</Button>;
+  const costN = form.cost.trim() === "" ? null : Number(form.cost), priceN = Number(form.price);
+  const margin = canViewCost && costN !== null && Number.isFinite(costN) && Number.isFinite(priceN) && priceN > 0
+    ? { diff: priceN - costN, percent: Math.round(((priceN - costN) / priceN) * 100) } : null;
   const editCurrency = editing && editing !== "new" ? editing.currency_code : currency;
 
   return (
@@ -216,6 +229,15 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
           </Select>
           <Input label={t("sk.item.price")} hint={fill(t("sk.item.priceHint"), { currency: editCurrency })} type="number" inputMode="decimal" min={0} step="any"
             value={form.price} onChange={set("price")} error={errors.price} />
+          {canViewCost && (
+            <div className="flex flex-col gap-2">
+              <Input label={t("sk.cost.label")} hint={fill(t("sk.cost.hint"), { currency: editCurrency })} type="number" inputMode="decimal" min={0} step="any"
+                value={form.cost} onChange={set("cost")} error={errors.cost} />
+              {margin && <p role="status" className={margin.diff < 0 ? "text-danger" : "text-muted"}>
+                {margin.diff < 0 ? fill(t("sk.cost.loss"), { amount: money(locale, -margin.diff, editCurrency) }) : fill(t("sk.cost.margin"), { amount: money(locale, margin.diff, editCurrency), percent: margin.percent })}
+              </p>}
+            </div>
+          )}
           <Input label={t("sk.item.uom")} hint={t("sk.item.uomHint")} value={form.base_uom} maxLength={30} onChange={set("base_uom")} error={errors.uom} />
 
           <fieldset className="flex flex-col gap-3 rounded-card border border-line p-3">

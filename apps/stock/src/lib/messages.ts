@@ -297,6 +297,11 @@ export const en = {
   "sk.prop.pickOne": "choose one",
   "sk.prop.pickMany": "choose one or more",
   "sk.prop.mustChoose": "required",
+  "sk.cost.label": "Cost price",
+  "sk.cost.hint": "What you pay for one unit, in {currency}. Only people allowed to see cost can see this.",
+  "sk.cost.invalid": "Type a cost of 0 or more.",
+  "sk.cost.margin": "Profit on each sale: {amount} ({percent}%)",
+  "sk.cost.loss": "Selling below cost: {amount} lost on each sale",
   "sk.var.count": "{n} variants",
   // Shared with the apps switcher (strings already in the database).
   "app.me.blurb": "Your profile and work record",
@@ -627,6 +632,11 @@ export const km: Record<MessageKey, string> = {
   "sk.prop.pickOne": "ជ្រើសតែមួយ",
   "sk.prop.pickMany": "ជ្រើសមួយ ឬច្រើន",
   "sk.prop.mustChoose": "ត្រូវជ្រើស",
+  "sk.cost.label": "តម្លៃដើម",
+  "sk.cost.hint": "អ្វីដែលអ្នកបង់សម្រាប់មួយឯកតា គិតជា {currency}។ មានតែអ្នកដែលមានសិទ្ធិមើលតម្លៃដើមប៉ុណ្ណោះដែលអាចឃើញ។",
+  "sk.cost.invalid": "សូមវាយតម្លៃដើមចាប់ពី ០ ឡើងទៅ។",
+  "sk.cost.margin": "ប្រាក់ចំណេញរាល់ការលក់៖ {amount} ({percent}%)",
+  "sk.cost.loss": "លក់ក្រោមតម្លៃដើម៖ ខាត {amount} រាល់ការលក់",
   "sk.var.count": "ជម្រើស {n}",
   // Shared with the apps switcher.
   "app.me.blurb": "ប្រវត្តិរូប និងកំណត់ត្រាការងាររបស់អ្នក",

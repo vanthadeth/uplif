@@ -702,6 +702,27 @@ export type Database = {
         }
         Relationships: []
       }
+      item_costs: {
+        Row: {
+          company_id: string
+          cost: number
+          item_id: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          cost: number
+          item_id: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          cost?: number
+          item_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       item_images: {
         Row: {
           company_id: string
