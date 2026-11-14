@@ -634,9 +634,12 @@ export type Database = {
         Row: {
           country_code: string
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           id: string
           name: string
           name_local: string | null
+          purge_after: string | null
           updated_at: string
         }
         Insert: {
@@ -1610,11 +1613,22 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           company_id: string
+          deleted_at: string | null
           is_active: boolean
+          is_owner: boolean
           membership_id: string
           name: string
           name_local: string | null
+          purge_after: string | null
         }[]
+      }
+      delete_company: {
+        Args: { p_company: string; p_confirm_name: string }
+        Returns: string
+      }
+      restore_company: {
+        Args: { p_company: string }
+        Returns: undefined
       }
       switch_company: {
         Args: { p_membership_id: string }
