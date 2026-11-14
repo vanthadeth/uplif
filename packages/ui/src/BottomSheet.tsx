@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { Button, type ButtonVariant } from "./Button";
 import { cn } from "./cn";
 import { SHEET_SLIDE_MS, SheetSkeleton } from "./Sheet";
 
@@ -130,10 +131,33 @@ export function BottomSheet({
           {landed && !loading ? children : <SheetSkeleton rows={skeletonRows} />}
         </div>
         {footer && (
-          <div className="flex justify-end gap-2 border-t border-line px-5 pt-3.5 pb-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.75rem))]">{footer}</div>
+          <div className="flex items-stretch gap-2 border-t border-line px-5 pt-3.5 pb-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.75rem))]">{footer}</div>
         )}
       </div>
     </div>,
     host,
+  );
+}
+
+export interface SheetActionsProps {
+  /** The main action: fills the row and is the larger button. */
+  primary: { label: string; onClick?: () => void; variant?: ButtonVariant; loading?: boolean; disabled?: boolean; type?: "button" | "submit" };
+  /** Other actions: icon-only square buttons beside the primary one. `label` is the accessible name. */
+  secondary?: { label: string; icon: ReactNode; onClick: () => void; disabled?: boolean }[];
+}
+
+/** Footer row for a BottomSheet: one wide primary button, any other actions icon-only. Pass as `footer`. */
+export function SheetActions({ primary, secondary = [] }: SheetActionsProps) {
+  return (
+    <>
+      {secondary.map((a) => (
+        <Button key={a.label} aria-label={a.label} title={a.label} onClick={a.onClick} disabled={a.disabled} className="size-12 shrink-0 !px-0">
+          {a.icon}
+        </Button>
+      ))}
+      <Button variant={primary.variant ?? "primary"} type={primary.type} onClick={primary.onClick} loading={primary.loading} disabled={primary.disabled} className="h-12 flex-1 text-[17px]">
+        {primary.label}
+      </Button>
+    </>
   );
 }

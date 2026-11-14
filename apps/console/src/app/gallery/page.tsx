@@ -1,7 +1,8 @@
 "use client";
+import { X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import {
-  AppSwitcher, Avatar, Badge, BottomSheet, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Input, Modal, ScopePill, Select,
+  AppSwitcher, Avatar, Badge, BottomSheet, Button, SheetActions, Card, CardBody, CardHeader, EmptyState, ErrorState, Input, Modal, ScopePill, Select,
   SidePanel, Skeleton, Spinner, TabPanel, Table, TBody, TD, TH, THead, Tabs, Toggle, TR, useToast,
 } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
@@ -169,7 +170,7 @@ export default function Gallery() {
           onClose={() => setSheetOpen(false)}
           title={t("overlay.panelTitle")}
           closeLabel={t("overlay.close")}
-          footer={<><Button onClick={() => setSheetOpen(false)}>{t("btn.secondary")}</Button><Button variant="primary" onClick={() => setSheetOpen(false)}>{t("overlay.close")}</Button></>}
+          footer={<SheetActions primary={{ label: t("btn.primary"), onClick: () => setSheetOpen(false) }} secondary={[{ label: t("btn.secondary"), icon: <X className="size-5" aria-hidden="true" />, onClick: () => setSheetOpen(false) }]} />}
         >
           <p className="text-muted">{t("overlay.sheetBody")}</p>
         </BottomSheet>
