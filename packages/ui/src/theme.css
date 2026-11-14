@@ -63,6 +63,7 @@ html:lang(km) .caps { text-transform: none; letter-spacing: 0; }
 
 @keyframes uplif-spin { to { transform: rotate(360deg); } }
 @keyframes uplif-pulse { 50% { opacity: 0.5; } }
+@keyframes uplif-fade { from { opacity: 0; } }
 @keyframes uplif-in { from { opacity: 0; transform: translateY(8px); } }
 @keyframes uplif-slide { from { transform: translateX(100%); } }
 @keyframes uplif-slide-up { from { transform: translateY(100%); } }

@@ -20,6 +20,8 @@ interface ShellProps {
   groups: NavGroup[];
   activeId: string;
   onNavigate: (id: string) => void;
+  /** Replaces the company block at the top of the sidebar, for example with the shared apps switcher. Receives whether the rail is collapsed. */
+  brand?: (rail: boolean) => ReactNode;
   /** Optional: warm up a section when the pointer or keyboard reaches its item. */
   onPrefetch?: (id: string) => void;
   /** Rows above the account, for example language and theme. */
@@ -106,25 +108,27 @@ export function AppShell(p: ShellProps) {
 
         <div className={cn("flex h-[72px] shrink-0 items-center gap-2 border-b border-(--sb-line) px-3", rail && "justify-center px-0")}>
           {/* Without onSwitch (one-company apps such as the super-admin app) the block is a plain label. */}
-          <BrandTag
-            switchable={!!p.company.onSwitch}
-            onClick={() => { p.company.onSwitch?.(); setDrawer(false); }}
-            aria-label={`${p.company.label}: ${p.company.name}`} title={rail ? p.company.label : undefined}
-            className={cn("flex min-w-0 flex-1 items-center gap-3 rounded-[10px] p-1.5 text-start", p.company.onSwitch && "hover:bg-(--sb-hover)", rail && "flex-none p-0")}
-          >
-            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-[11px] bg-(--sb-acc) text-lg font-bold text-(--sb-mark-fg)">
-              {p.company.logo ?? <span aria-hidden="true">U</span>}
-            </span>
-            {!rail && (
-              <>
-                <span className="min-w-0 flex-1 leading-snug">
-                  <span className="block truncate font-semibold">{p.company.name}</span>
-                  {p.company.sub && <span className="block truncate text-xs text-(--sb-muted)">{p.company.sub}</span>}
-                </span>
-                {p.company.onSwitch && <ChevronsUpDown className="size-[18px] shrink-0 text-(--sb-muted)" aria-hidden="true" />}
-              </>
-            )}
-          </BrandTag>
+          {p.brand ? <div className={cn("min-w-0 flex-1", rail && "flex-none")}>{p.brand(rail)}</div> : (
+            <BrandTag
+              switchable={!!p.company.onSwitch}
+              onClick={() => { p.company.onSwitch?.(); setDrawer(false); }}
+              aria-label={`${p.company.label}: ${p.company.name}`} title={rail ? p.company.label : undefined}
+              className={cn("flex min-w-0 flex-1 items-center gap-3 rounded-[10px] p-1.5 text-start", p.company.onSwitch && "hover:bg-(--sb-hover)", rail && "flex-none p-0")}
+            >
+              <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-[11px] bg-(--sb-acc) text-lg font-bold text-(--sb-mark-fg)">
+                {p.company.logo ?? <span aria-hidden="true">U</span>}
+              </span>
+              {!rail && (
+                <>
+                  <span className="min-w-0 flex-1 leading-snug">
+                    <span className="block truncate font-semibold">{p.company.name}</span>
+                    {p.company.sub && <span className="block truncate text-xs text-(--sb-muted)">{p.company.sub}</span>}
+                  </span>
+                  {p.company.onSwitch && <ChevronsUpDown className="size-[18px] shrink-0 text-(--sb-muted)" aria-hidden="true" />}
+                </>
+              )}
+            </BrandTag>
+          )}
           {drawer && (
             <button type="button" aria-label={p.closeLabel} title={p.closeLabel} onClick={() => setDrawer(false)} className="inline-flex size-11 shrink-0 items-center justify-center rounded-[10px] text-(--sb-muted) hover:bg-(--sb-hover) hover:text-(--sb-fg) md:hidden">
               <X className="size-5" aria-hidden="true" />
