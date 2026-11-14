@@ -900,6 +900,27 @@ export type Database = {
         }
         Relationships: []
       }
+      role_apps: {
+        Row: {
+          allowed: boolean
+          app_key: string
+          company_id: string
+          role_id: string
+        }
+        Insert: {
+          allowed: boolean
+          app_key: string
+          company_id: string
+          role_id: string
+        }
+        Update: {
+          allowed?: boolean
+          app_key?: string
+          company_id?: string
+          role_id?: string
+        }
+        Relationships: []
+      }
       roles: {
         Row: {
           company_id: string
@@ -1213,6 +1234,10 @@ export type Database = {
       holiday_notice: {
         Args: Record<string, never>
         Returns: { year: number; holiday_count: number; provisional: boolean }[]
+      }
+      save_role_access: {
+        Args: { p_role_id: string; p_apps: Json; p_perms: Json }
+        Returns: undefined
       }
       save_policy: {
         Args: { p_id: string | null; p_title: string; p_title_local: string | null; p_body: string; p_body_local: string | null; p_kind?: "policy" | "conduct" }
