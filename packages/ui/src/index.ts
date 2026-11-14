@@ -20,6 +20,7 @@ export * from "./Tabs";
 export * from "./Overlay";
 export * from "./Toast";
 export * from "./States";
+export * from "./Sheet";
 export * from "./Motion";
 export * from "./Switcher";
 export * from "./LanguageToggle";
