@@ -7,6 +7,7 @@ import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
 import { useAppearance, type Appearance } from "@/lib/appearance";
 import { createClient } from "@/lib/supabase/client";
+import { AppsSwitcher } from "@/components/apps-switcher";
 import { LanguageBar } from "@/components/language-bar";
 import { useNotifications } from "@/components/notifications-context";
 import { usePicture } from "@/components/picture-context";
@@ -30,7 +31,6 @@ export function AppBar() {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
-  const company = localName(profile?.company, locale) ?? t("st.app");
   const role = localName(profile?.position, locale) ?? t("st.bar.role");
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export function AppBar() {
 
   return (
     <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-line bg-surface ps-4 pe-2">
-      <b className="min-w-0 flex-1 truncate text-lg">{company}</b>
+      <AppsSwitcher current="me" className="flex-1" />
       <Link href="/notifications" aria-label={unread > 0 ? fill(t("st.bar.unread"), { n: unread }) : t("st.bar.notifications")} className="relative grid size-12 place-items-center rounded-full text-muted transition-colors hover:bg-primary-soft">
         <Bell className="size-6" aria-hidden />
         {unread > 0 && <span aria-hidden className="absolute end-2 top-2 grid min-w-5 place-items-center rounded-full bg-danger px-1 text-[13px] font-bold leading-5 text-white">{unread > 9 ? "9+" : unread}</span>}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { APPS, appIconUrl, visibleApps, type AppInfo } from "./apps";
+import { APPS, appIconUrl, switcherApps, visibleApps, type AppInfo } from "./apps";
 
 const keys = (a: AppInfo[]) => a.map((x) => x.key);
 
@@ -27,5 +27,27 @@ describe("appIconUrl", () => {
   it("points at the app's own icon without a double slash", () => {
     expect(appIconUrl({ url: "https://x.test/" })).toBe("https://x.test/icons/icon-192.png");
     expect(appIconUrl({ url: "https://x.test" })).toBe("https://x.test/icons/icon-192.png");
+  });
+});
+
+describe("switcherApps", () => {
+  const st = (mods: string[], perms: string[]) => Object.fromEntries(switcherApps(mods, perms).map((x) => [x.app.key, x.status]));
+  it("shows only Me to a person with no permissions, and hides apps that are not built", () => {
+    expect(st([], [])).toEqual({ me: "on" });
+  });
+  it("lists admin apps and what is coming soon for a person who runs the company", () => {
+    expect(st(["field_sales"], ["org.member.update", "sales.customer.read"])).toEqual({
+      me: "on", admin: "on", time: "soon", go: "on", orders: "soon", stock: "soon", pos: "soon", sites: "soon",
+    });
+  });
+  it("locks a built app the person may use when the plan lacks its module", () => {
+    expect(st([], ["sales.customer.read"]).go).toBe("locked");
+  });
+  it("hides a built app the person may not use, even when the plan has it", () => {
+    expect(st(["field_sales"], [])).toEqual({ me: "on" });
+  });
+  it("keeps a fixed order with the core apps first", () => {
+    const keys = switcherApps(["field_sales"], ["org.member.update", "sales.customer.read"]).map((x) => x.app.key);
+    expect(keys).toEqual(["admin", "me", "time", "go", "orders", "stock", "pos", "sites"]);
   });
 });
