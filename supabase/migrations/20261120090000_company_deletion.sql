@@ -1,5 +1,5 @@
 -- Migration: an owner can delete their company. The company is hidden at once and its data is kept for a grace
--- period (30 days), during which the owner can restore it. After that a daily job removes it for good.
+-- period (90 days), during which the owner can restore it. After that a daily job removes it for good.
 --
 -- While deleted: nobody can read or write the company's data (RLS helpers treat it as gone), it does not count
 -- against the owner's plan limit, and it no longer appears for members. The owner still sees it in the company
@@ -164,7 +164,7 @@ language plpgsql security definer set search_path = '' as $$
 declare
   uid uuid := (select auth.uid());
   c public.companies;
-  purge timestamptz := now() + interval '30 days';
+  purge timestamptz := now() + interval '90 days';
 begin
   if uid is null then raise exception 'not authenticated' using errcode = '28000'; end if;
   select * into c from public.companies where id = p_company for update;
