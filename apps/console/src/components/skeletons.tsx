@@ -115,3 +115,16 @@ export function ShellSkeleton() {
     </div>
   );
 }
+
+/** Page title, a search box and a grid of cards: the roles list. */
+export function CardGridSkeleton({ cards = 6 }: { cards?: number }) {
+  return (
+    <Frame>
+      <div className="flex items-center justify-between gap-3"><Title /><Skeleton className="h-(--control-h) w-32" /></div>
+      <Skeleton className="h-(--control-h) w-full" />
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {Array.from({ length: cards }, (_, i) => <Skeleton key={i} className="h-32 rounded-card" />)}
+      </div>
+    </Frame>
+  );
+}

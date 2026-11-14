@@ -17,6 +17,8 @@ export * from "./RichEditor";
 export * from "./Table";
 export * from "./Toggle";
 export * from "./Tabs";
+export * from "./Steps";
+export * from "./Segmented";
 export * from "./Overlay";
 export * from "./Toast";
 export * from "./States";

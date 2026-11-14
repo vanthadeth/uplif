@@ -18,6 +18,7 @@ export function describeAction(action: string, details: Json): { key: MessageKey
     return { key: "db.act.memberships.update" };
   }
   if (action.startsWith("role_permissions.")) return { key: "db.act.role_permissions" };
+  if (action.startsWith("role_apps.")) return { key: "db.act.role_apps" };
   const key = `db.act.${action}` as MessageKey;
   return { key: key in KNOWN ? key : "db.act.other" };
 }
