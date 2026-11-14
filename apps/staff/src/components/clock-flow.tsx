@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import { Camera, Check, MapPin, RefreshCw, TriangleAlert, X } from "lucide-react";
 import { Button, ProgressBar, Spinner } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
@@ -53,6 +54,13 @@ export function ClockFlow({ kind, onClose, onSaved }: { kind: "in" | "out"; onCl
     streamRef.current = null;
   }, []);
   useEffect(() => stopCamera, [stopCamera]);
+  // The flow is a full-screen layer: the page behind it must not scroll.
+  useEffect(() => {
+    const html = document.documentElement;
+    const prev = html.style.overflow;
+    html.style.overflow = "hidden";
+    return () => { html.style.overflow = prev; };
+  }, []);
   useEffect(() => { return () => { if (photo) URL.revokeObjectURL(photo.url); }; }, [photo]);
 
   const startCamera = useCallback(async () => {
@@ -191,9 +199,12 @@ export function ClockFlow({ kind, onClose, onSaved }: { kind: "in" | "out"; onCl
   const gpsSub = gps.status === "ok" && inside !== null ? (gps.acc > 100 ? t("st.gps.weak") : fill(t("st.gps.ok"), { m: gps.acc })) : null;
   const gpsGood = gps.status === "ok" && inside !== false && gps.acc <= 100;
 
+  // Rendered on the page body, outside the page transition, so it always sits above the bottom navigation.
+  const layer = (node: React.ReactElement) => createPortal(node, document.body);
+
   if (step === "done" && done) {
     const outside = done.flags.includes("outside_geofence");
-    return (
+    return layer(
       <div role="dialog" aria-modal="true" aria-label={t(kind === "in" ? "st.done.in" : "st.done.out")} className="fixed inset-0 z-50 overflow-y-auto bg-ground">
         <div className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-5 p-5">
           <div className="flex flex-col items-center gap-3 text-center">
@@ -225,16 +236,17 @@ export function ClockFlow({ kind, onClose, onSaved }: { kind: "in" | "out"; onCl
   // so the shutter or Confirm button is always on screen and nothing scrolls.
   if (step === "camera" || step === "preview" || step === "sending") {
     const cam = step === "camera";
-    return (
+    return layer(
       <div role="dialog" aria-modal="true" aria-label={t("st.step.photo")} className="fixed inset-x-0 top-0 z-50 h-dvh overflow-hidden bg-navy text-white">
         <div className="relative mx-auto h-full max-w-md overflow-hidden bg-[#141c30]">
           {cam && (
             <>
               <video ref={videoRef} playsInline muted className="absolute inset-0 size-full -scale-x-100 object-cover" />
               {!cameraError && (
-                <div className="pointer-events-none absolute left-1/2 top-[44%] flex w-[66%] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-4">
-                  <span aria-hidden className="aspect-3/4 w-full rounded-full border-[3px] border-white shadow-[0_0_0_1200px_rgba(10,16,32,0.6)]" />
-                  <span className="whitespace-nowrap rounded-full bg-navy/70 px-3.5 py-1.5 text-sm">{t("st.step.hint")}</span>
+                // The face oval fits the space between the header and the shutter, so it never runs under either on a short phone.
+                <div className="pointer-events-none absolute inset-x-0 bottom-[10.5rem] top-40 flex flex-col items-center justify-center gap-3 px-6">
+                  <span aria-hidden className="aspect-3/4 min-h-0 max-h-[min(93.3dvw,25.3rem)] max-w-[min(70dvw,19rem)] flex-1 rounded-full border-[3px] border-white shadow-[0_0_0_1200px_rgba(10,16,32,0.6)]" />
+                  <span className="shrink-0 whitespace-nowrap rounded-full bg-navy/70 px-3.5 py-1.5 text-sm">{t("st.step.hint")}</span>
                 </div>
               )}
             </>
@@ -260,27 +272,29 @@ export function ClockFlow({ kind, onClose, onSaved }: { kind: "in" | "out"; onCl
             </p>
           </header>
 
-          <footer className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2.5 bg-navy/60 px-5 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-4">
-            {error && <p role="alert" className="m-0 w-full rounded-card bg-danger-soft p-3 text-danger-ink">{error}</p>}
-            {cam ? (
-              <>
-                <button type="button" disabled={!!cameraError} onClick={take} aria-label={t("st.step.take")} className="grid size-19 place-items-center rounded-full border-4 border-white disabled:opacity-40"><span className="size-14 rounded-full bg-white" /></button>
-                <span className="text-sm text-white/75">{t("st.step.take")}</span>
-              </>
-            ) : (
+          {cam ? (
+            // The shutter floats over the camera picture, so there is no bar to hide it and nothing to scroll.
+            <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+              {error && <p role="alert" className="m-0 w-full rounded-card bg-danger-soft p-3 text-danger-ink">{error}</p>}
+              <button type="button" disabled={!!cameraError} onClick={take} aria-label={t("st.step.take")} className="grid size-20 place-items-center rounded-full border-4 border-white shadow-[0_2px_14px_rgba(0,0,0,0.45)] transition-transform active:scale-95 disabled:opacity-40"><span className="size-15 rounded-full bg-white" /></button>
+              <span className="rounded-full bg-navy/70 px-3 py-1 text-sm">{t("st.step.take")}</span>
+            </div>
+          ) : (
+            <footer className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2.5 bg-navy/60 px-5 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-4">
+              {error && <p role="alert" className="m-0 w-full rounded-card bg-danger-soft p-3 text-danger-ink">{error}</p>}
               <div className="flex w-full flex-col gap-2.5">
                 <Button variant="primary" className="h-14 w-full bg-white! text-lg text-ink! hover:bg-white/90!" loading={step === "sending"} onClick={send}>{t(kind === "in" ? "st.step.send" : "st.step.sendOut")}</Button>
                 <Button className="w-full border-white/25! bg-white/15! text-white! hover:bg-white/25!" disabled={step === "sending"} onClick={retake}><RefreshCw className="size-4" aria-hidden />{t("st.step.retake")}</Button>
                 {step === "sending" && <span className="mx-auto"><Spinner label={t("st.sending")} /></span>}
               </div>
-            )}
-          </footer>
+            </footer>
+          )}
         </div>
       </div>
     );
   }
 
-  return (
+  return layer(
     <div role="dialog" aria-modal="true" aria-label={t("st.step.photo")} className="fixed inset-x-0 top-0 z-50 h-dvh overflow-hidden bg-navy text-white">
       <div className="mx-auto flex h-full max-w-md flex-col gap-3 px-4 pb-0 pt-[max(1rem,env(safe-area-inset-top))]">
         <header className="flex shrink-0 items-center gap-3">
