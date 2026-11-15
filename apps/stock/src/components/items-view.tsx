@@ -177,6 +177,13 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
         <p className="mt-1 text-muted">{t("sk.item.subtitle")}</p>
       </div>
 
+      {canManage && !failed && items.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          <Button variant="primary" onClick={() => open("new")}><Plus className="size-[18px]" aria-hidden />{t("sk.item.add")}</Button>
+          <Button onClick={() => setImporting(true)}><FileUp className="size-[18px]" aria-hidden />{t("sk.imp.open")}</Button>
+        </div>
+      )}
+
       {!canManage && (
         <div role="note" className="flex items-start gap-3 rounded-card bg-primary-soft p-4 leading-normal text-primary-ink">
           <Info className="mt-0.5 size-5 shrink-0" aria-hidden />
@@ -197,9 +204,7 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
                 className="min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-muted" />
             </label>
             <ScanButton onClick={() => setScanning(true)} label={t("sk.scan.open")} />
-            {canManage && <Button className="shrink-0" onClick={() => setImporting(true)} aria-label={t("sk.imp.open")} title={t("sk.imp.open")}><FileUp className="size-5" aria-hidden /></Button>}
-            {canManage ? <Button variant="primary" className="shrink-0" onClick={() => open("new")} aria-label={t("sk.item.add")}><Plus className="size-5" aria-hidden /></Button>
-              : <Badge tone="neutral"><Lock className="size-3" aria-hidden />{t("sk.brands.viewOnly")}</Badge>}
+            {!canManage && <Badge tone="neutral"><Lock className="size-3" aria-hidden />{t("sk.brands.viewOnly")}</Badge>}
           </div>
           {shown.length === 0 ? (
             <p className="py-8 text-center text-muted">{t("sk.item.noMatch")}</p>
