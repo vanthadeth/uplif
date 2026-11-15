@@ -1,12 +1,12 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Download, RefreshCw } from "lucide-react";
-import { Button, EmptyState, ErrorState, Skeleton, Tabs, downloadCsv, toCsv, cn } from "@uplif/ui";
+import { BottomSheet, Badge, Button, EmptyState, ErrorState, Skeleton, Tabs, downloadCsv, toCsv, cn } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { languageOf } from "@/lib/languages";
 import { pick } from "@/lib/format";
-import type { MessageKey } from "@/lib/messages";
+import { fill, type MessageKey } from "@/lib/messages";
 
 interface Row {
   employee_id: string; name: string; name_local: string | null; position_name: string | null; position_name_local: string | null;
@@ -14,6 +14,8 @@ interface Row {
   incomplete: number; late_min: number; overtime_min: number; worked_min: number; flagged_days: number;
 }
 type Mode = "week" | "month";
+interface Day { status: string; first_in: string | null; last_out: string | null; late_min: number; early_min: number; worked_min: number; overtime_min: number; flagged: boolean }
+interface Pick { row: Row; date: string; status: string }
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const addDays = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
@@ -39,6 +41,9 @@ export function ReportView() {
   const [anchor, setAnchor] = useState(() => new Date());
   const [rows, setRows] = useState<Row[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [picked, setPicked] = useState<Pick | null>(null);
+  const [day, setDay] = useState<Day | null>(null);
+  const [dayFailed, setDayFailed] = useState(false);
   const { from, days } = useMemo(() => period(anchor, mode), [anchor, mode]);
   const fromIso = iso(from);
 
@@ -49,12 +54,23 @@ export function ReportView() {
     setRows(data ?? []);
   }, [fromIso, days]);
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    if (!picked) return;
+    let live = true;
+    setDay(null); setDayFailed(false);
+    createClient().rpc("employee_attendance_days", { p_employee_id: picked.row.employee_id, p_from: picked.date, p_days: 1 }).then(({ data, error }) => {
+      if (!live) return;
+      if (error || !data?.[0]) setDayFailed(true); else setDay(data[0]);
+    });
+    return () => { live = false; };
+  }, [picked]);
 
   const tag = languageOf(locale).dateTag;
   const title = mode === "month"
     ? new Intl.DateTimeFormat(tag, { month: "long", year: "numeric" }).format(from)
     : `${new Intl.DateTimeFormat(tag, { day: "numeric", month: "short" }).format(from)} – ${new Intl.DateTimeFormat(tag, { day: "numeric", month: "short" }).format(addDays(from, days - 1))}`;
   const step = (dir: -1 | 1) => setAnchor(mode === "week" ? addDays(anchor, 7 * dir) : new Date(anchor.getFullYear(), anchor.getMonth() + dir, 1));
+  const hm = (v: string) => new Intl.DateTimeFormat(tag, { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(v));
   const st = (s: string) => t((`tm.st.${s}`) as MessageKey);
   const dayNum = (i: number) => addDays(from, i).getDate();
   const isOff = (s: string) => s === "off" || s === "holiday";
@@ -113,7 +129,7 @@ export function ReportView() {
                     <th scope="row" className="sticky start-0 z-10 max-w-44 truncate bg-surface px-3 py-2 text-start font-semibold">{pick(locale, r.name, r.name_local)}</th>
                     {r.days.map((s, i) => (
                       <td key={i} className="px-0.5 py-1 text-center">
-                        <span title={st(s)} aria-label={st(s)} className={cn("grid h-7 min-w-7 place-items-center rounded-md text-xs font-bold", cellTone[s] ?? (isOff(s) ? "bg-neutral-soft text-muted" : "text-muted"))}>{cellMark[s] ?? ""}</span>
+                        <button type="button" onClick={() => setPicked({ row: r, date: iso(addDays(from, i)), status: s })} title={st(s)} aria-label={`${pick(locale, r.name, r.name_local)}, ${iso(addDays(from, i))}: ${st(s)}`} className={cn("grid h-9 min-w-8 place-items-center rounded-md text-xs font-bold", cellTone[s] ?? (isOff(s) ? "bg-neutral-soft text-muted" : "text-muted"))}>{cellMark[s] ?? ""}</button>
                       </td>
                     ))}
                     <td className="px-2 text-center">{r.late}</td>
@@ -126,6 +142,31 @@ export function ReportView() {
           </div>
         </>
       )}
+      <BottomSheet open={!!picked} onClose={() => setPicked(null)} title={picked ? pick(locale, picked.row.name, picked.row.name_local) : ""} closeLabel={t("tm.day.close")}>
+        {picked && (
+          <div className="flex flex-col gap-3 pb-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted">{new Intl.DateTimeFormat(tag, { weekday: "long", day: "numeric", month: "long" }).format(new Date(picked.date + "T00:00:00"))}</span>
+              <Badge tone={picked.status === "absent" ? "danger" : picked.status === "on_time" ? "success" : picked.status === "late" || picked.status === "early_leave" || picked.status === "incomplete" ? "warning" : "info"}>{st(picked.status)}</Badge>
+            </div>
+            {dayFailed ? <p className="text-danger-ink">{t("tm.day.error")}</p> : day === null ? (
+              <div aria-busy="true" className="flex flex-col gap-2"><Skeleton className="h-6 w-full" /><Skeleton className="h-6 w-3/4" /></div>
+            ) : (
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+                {([
+                  ["tm.day.firstIn", day.first_in ? hm(day.first_in) : t("tm.day.none")],
+                  ["tm.day.lastOut", day.last_out ? hm(day.last_out) : "–"],
+                  ["tm.day.late", fill(t("tm.day.min"), { n: day.late_min })],
+                  ["tm.day.early", fill(t("tm.day.min"), { n: day.early_min })],
+                  ["tm.day.worked", fill(t("tm.day.min"), { n: day.worked_min })],
+                  ["tm.day.overtime", fill(t("tm.day.min"), { n: day.overtime_min })],
+                ] as const).map(([k, v]) => <div key={k}><dt className="text-xs text-muted">{t(k)}</dt><dd className="font-semibold">{v}</dd></div>)}
+              </dl>
+            )}
+            {day?.flagged && <p className="rounded-card bg-warning-soft p-3 text-sm text-warning-ink">{t("tm.day.flagged")}</p>}
+          </div>
+        )}
+      </BottomSheet>
     </main>
   );
 }
