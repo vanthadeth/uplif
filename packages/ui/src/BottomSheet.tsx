@@ -84,17 +84,29 @@ export function BottomSheet({
     return () => window.clearTimeout(t);
   }, [waiting, waitDelayMs]);
 
-  // Lock page scroll, close on Esc, move focus into the sheet.
+  // Callers pass inline handlers that change on every render (each keystroke); keep the latest in a ref so the
+  // effects below run only when the sheet opens or closes. Re-running them would pull focus off a field mid-typing
+  // and close the phone keyboard.
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+
+  // Lock page scroll and close on Esc.
   useEffect(() => {
     if (!mounted) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     // Bubble phase, and skip when something inside (an open list) already handled Esc.
-    const key = (e: KeyboardEvent) => { if (e.key === "Escape" && !e.defaultPrevented) onClose(); };
+    const key = (e: KeyboardEvent) => { if (e.key === "Escape" && !e.defaultPrevented) closeRef.current(); };
     document.addEventListener("keydown", key);
-    if (autoFocus) panel.current?.focus({ preventScroll: true });
     return () => { document.body.style.overflow = prev; document.removeEventListener("keydown", key); };
-  }, [mounted, onClose, autoFocus]);
+  }, [mounted]);
+
+  // Move focus into the sheet once, when it opens, unless something inside already has it.
+  useEffect(() => {
+    if (!mounted || !autoFocus) return;
+    const p = panel.current;
+    if (p && !p.contains(document.activeElement)) p.focus({ preventScroll: true });
+  }, [mounted, autoFocus]);
 
   const down = useCallback((e: React.PointerEvent) => {
     start.current = { y: e.clientY, t: performance.now(), id: e.pointerId };
