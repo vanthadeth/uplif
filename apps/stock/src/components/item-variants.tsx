@@ -151,8 +151,8 @@ export function ItemVariants({ item, variants, images, currency, companyId, canM
     : mode === "generate"
       ? <><Button onClick={back}>{t("sk.cancel")}</Button><Button variant="primary" loading={busy} disabled={generated.length === 0} onClick={createMany}>{t("sk.var.genCreate")}</Button></>
       : canManage
-        ? <><Button onClick={() => { setMode("generate"); setErrors({}); }}><Wand2 className="size-[18px]" aria-hidden />{t("sk.var.generate")}</Button>
-          <Button variant="primary" onClick={() => openForm("new")}><Plus className="size-[18px]" aria-hidden />{t("sk.var.add")}</Button></>
+        ? <><Button className="shrink-0" onClick={() => { setMode("generate"); setErrors({}); }} aria-label={t("sk.var.generate")} title={t("sk.var.generate")}><Wand2 className="size-5" aria-hidden /></Button>
+          <Button variant="primary" className="min-w-0 flex-1" onClick={() => openForm("new")}><Plus className="size-[18px]" aria-hidden />{t("sk.var.add")}</Button></>
         : undefined;
 
   return (
