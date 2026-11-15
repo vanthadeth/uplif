@@ -1841,6 +1841,50 @@ export type Database = {
         Args: { p_employee_id: string; p_from: string; p_days?: number }
         Returns: { day: string; status: string; first_in: string | null; last_out: string | null; late_min: number; early_min: number; worked_min: number; overtime_min: number; half_day: boolean; flagged: boolean }[]
       }
+      time_attendance_report: {
+        Args: { p_from: string; p_days?: number; p_branch_id?: string }
+        Returns: { employee_id: string; name: string; name_local: string | null; branch_id: string | null; position_name: string | null; position_name_local: string | null; days: string[]; work_days: number; on_time: number; late: number; early_leave: number; absent: number; leave_days: number; incomplete: number; late_min: number; overtime_min: number; worked_min: number; flagged_days: number }[]
+      }
+      time_leave_balances: {
+        Args: { p_year?: number }
+        Returns: { employee_id: string; name: string; name_local: string | null; type_id: string; type_code: string; type_name: string; type_name_local: string | null; entitled: number; allowance: number; used: number; pending: number }[]
+      }
+      grant_leave_allowance: {
+        Args: { p_employee_id: string; p_type_id: string; p_year: number; p_days: number; p_reason: string }
+        Returns: string
+      }
+      payroll_pay_items: {
+        Args: Record<string, never>
+        Returns: { id: string; code: string; name: string; name_local: string | null; kind: string; category: string; reference_only: boolean }[]
+      }
+      payroll_people: {
+        Args: Record<string, never>
+        Returns: { employee_id: string; name: string; name_local: string | null; branch_id: string | null; position_name: string | null; position_name_local: string | null; pay_currency: string | null; payment_method: string | null; fixed_amount: number | null; achievement_amount: number | null; commission_rate: number | null }[]
+      }
+      payroll_person: {
+        Args: { p_employee_id: string }
+        Returns: Json
+      }
+      payroll_save_terms: {
+        Args: { p_employee_id: string; p_pay_item_id: string; p_amount: number | null; p_rate_pct: number | null; p_currency: string; p_effective_from: string; p_note: string | null }
+        Returns: string
+      }
+      payroll_save_profile: {
+        Args: { p_employee_id: string; p_currency: string; p_method: string; p_account_name: string | null; p_account_no: string | null; p_bank_name: string | null; p_note: string | null }
+        Returns: undefined
+      }
+      payroll_get_settings: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      payroll_save_settings: {
+        Args: { p_rate_divisor: string; p_overtime_multiplier: number; p_require_second_approver: boolean; p_close_blocks_on_review: boolean }
+        Returns: undefined
+      }
+      time_today: {
+        Args: { p_branch_id?: string }
+        Returns: { employee_id: string; name: string; name_local: string | null; branch_id: string | null; position_name: string | null; position_name_local: string | null; status: string; first_in: string | null; late_min: number; overtime_min: number; flagged: boolean }[]
+      }
       my_achievements: {
         Args: Record<string, never>
         Returns: { kind: "green_month" | "progress" | "tenure"; period: string; n: number; total: number | null }[]
