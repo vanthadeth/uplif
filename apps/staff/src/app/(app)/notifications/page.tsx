@@ -102,15 +102,13 @@ export default function NotificationsPage() {
         : (
           <Reveal className="flex flex-col gap-4">
             <Card className="flex flex-col gap-1 p-4">
-              <Toggle checked={on} onChange={(v) => void toggle(v)} label={t("st.notif.toggle")} />
-              <p className="m-0 text-sm text-muted">{t("st.notif.toggle.hint")}</p>
+              <Toggle checked={on} onChange={(v) => toggle(v)} label={t("st.notif.toggle")} description={t("st.notif.toggle.hint")} />
             </Card>
             {VAPID_PUBLIC_KEY && (
               <Card className="flex flex-col gap-1 p-4">
                 {pushNote === "unsupported" ? <p className="m-0 text-sm text-muted">{t("st.push.unsupported")}</p> : (
                   <>
-                    <Toggle checked={push === true} disabled={push === null || pushNote === "denied"} onChange={(v) => void togglePush(v)} label={t("st.push.toggle")} />
-                    <p className="m-0 text-sm text-muted">{t("st.push.hint")}</p>
+                    <Toggle checked={push === true} disabled={push === null || pushNote === "denied"} onChange={(v) => togglePush(v)} label={t("st.push.toggle")} description={t("st.push.hint")} />
                     {pushNote === "denied" && <p role="status" className="m-0 text-sm font-semibold text-warning-ink">{t("st.push.denied")}</p>}
                     {pushNote === "error" && <p role="alert" className="m-0 text-sm font-semibold text-danger">{t("st.push.error")}</p>}
                   </>
