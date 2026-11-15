@@ -45,6 +45,8 @@
   --spacing-control: 2.5rem; /* 40px; 48px on touch, see below */
 }
 
+:root { --toggle-knob: #ffffff; --toggle-check: #1d5fd1; }
+
 :root { --control-h: 2.5rem; }
 @media (pointer: coarse) { :root { --control-h: 3rem; } }
 
@@ -82,6 +84,7 @@ html:lang(km) .caps { text-transform: none; letter-spacing: 0; }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
+    --toggle-knob: #e6ebf5; --toggle-check: #0b1220;
     --color-ink: #e6ebf5; --color-ink-2: #c3ccdd; --color-muted: #9aa6bc; --color-line: #243049; --color-line-strong: #33415c;
     --color-check: #6b7891; --color-ground: #0b1220; --color-surface: #141c2e; --color-neutral-soft: #1a2540;
     --color-primary-soft: #1e2d52; --color-primary-ink: #9dbdff; --color-link: #7fa9ff;
@@ -95,6 +98,7 @@ html:lang(km) .caps { text-transform: none; letter-spacing: 0; }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
+  --toggle-knob: #e6ebf5; --toggle-check: #0b1220;
   --color-ink: #e6ebf5; --color-ink-2: #c3ccdd; --color-muted: #9aa6bc; --color-line: #243049; --color-line-strong: #33415c;
   --color-check: #6b7891; --color-ground: #0b1220; --color-surface: #141c2e; --color-neutral-soft: #1a2540;
   --color-primary-soft: #1e2d52; --color-primary-ink: #9dbdff; --color-link: #7fa9ff;

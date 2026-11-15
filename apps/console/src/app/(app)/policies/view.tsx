@@ -81,7 +81,7 @@ export function PoliciesView({ rows }: { rows: PolicyRow[] }) {
       <Tabs label={t("pol.tabsLabel")} value={kind} onChange={(id) => setKind(id as "policy" | "conduct")}
         items={[{ id: "policy", label: t("pol.tabPolicies") }, { id: "conduct", label: t("pol.tabConduct") }]} />
 
-      {hasArchived && <Toggle checked={showArchived} label={t("pol.showArchived")} onChange={setShowArchived} />}
+      {hasArchived && <Toggle inline checked={showArchived} label={t("pol.showArchived")} onChange={setShowArchived} />}
 
       {shown.length === 0 ? (
         <div className="rounded-card border border-line bg-surface px-4 py-9 text-center text-muted">
