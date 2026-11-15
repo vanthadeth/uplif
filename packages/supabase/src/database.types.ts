@@ -1781,6 +1781,10 @@ export type Database = {
         Args: { p_employee_id: string; p_from: string; p_days?: number }
         Returns: { day: string; status: string; first_in: string | null; last_out: string | null; late_min: number; early_min: number; worked_min: number; overtime_min: number; half_day: boolean; flagged: boolean }[]
       }
+      time_today: {
+        Args: { p_branch_id?: string }
+        Returns: { employee_id: string; name: string; name_local: string | null; branch_id: string | null; position_name: string | null; position_name_local: string | null; status: string; first_in: string | null; late_min: number; overtime_min: number; flagged: boolean }[]
+      }
       my_achievements: {
         Args: Record<string, never>
         Returns: { kind: "green_month" | "progress" | "tenure"; period: string; n: number; total: number | null }[]

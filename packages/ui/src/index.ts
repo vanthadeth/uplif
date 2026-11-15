@@ -5,6 +5,7 @@ export * from "./Field";
 export * from "./FloatingBar";
 export * from "./Select";
 export * from "./Badge";
+export * from "./StatTile";
 export * from "./Avatar";
 export * from "./AvatarEdit";
 export * from "./PictureField";
