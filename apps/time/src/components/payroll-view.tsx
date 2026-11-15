@@ -8,6 +8,7 @@ import { useTime } from "@/components/time-context";
 import { languageOf } from "@/lib/languages";
 import { money, pick } from "@/lib/format";
 import { fill, type MessageKey } from "@/lib/messages";
+import { PlansForm, RunsView } from "@/components/runs-view";
 
 type T = (k: MessageKey) => string;
 interface Person {
@@ -25,9 +26,9 @@ interface Settings { rate_divisor: string; overtime_multiplier: number; require_
 /** Payroll, slice T3: who is paid what for reference, how they are paid, and the company's payroll settings. Salary is shown only at company scope. */
 export function PayrollView() {
   const { t, locale } = useI18n();
-  const { canViewPay, canPaySettings } = useTime();
-  const [tab, setTab] = useState<"people" | "settings">("people");
-  if (!canViewPay && !canPaySettings) {
+  const { canViewPay, canPaySettings, canSlips } = useTime();
+  const [tab, setTab] = useState<"people" | "runs" | "settings">(canViewPay ? "people" : canSlips ? "runs" : "settings");
+  if (!canViewPay && !canPaySettings && !canSlips) {
     return (
       <main className="flex flex-col gap-4 p-4">
         <h1 className="text-2xl font-bold tracking-tight">{t("tm.payroll.title")}</h1>
@@ -35,13 +36,17 @@ export function PayrollView() {
       </main>
     );
   }
-  const tabs = [...(canViewPay ? [{ id: "people", label: t("tm.pr.people") }] : []), ...(canPaySettings ? [{ id: "settings", label: t("tm.pr.settings") }] : [])];
-  const active = canViewPay ? tab : "settings";
+  const tabs = [
+    ...(canViewPay ? [{ id: "people", label: t("tm.pr.people") }] : []),
+    ...(canSlips ? [{ id: "runs", label: t("tm.pr.tab.runs") }] : []),
+    ...(canPaySettings ? [{ id: "settings", label: t("tm.pr.settings") }] : []),
+  ];
+  const active = tabs.some((x) => x.id === tab) ? tab : tabs[0].id;
   return (
     <main className="flex flex-col gap-4 p-4">
       <h1 className="text-2xl font-bold tracking-tight">{t("tm.payroll.title")}</h1>
-      {tabs.length > 1 && <Tabs label={t("tm.payroll.title")} value={active} onChange={(v) => setTab(v as "people" | "settings")} items={tabs} />}
-      {active === "people" ? <People t={t} locale={locale} /> : <SettingsForm t={t} />}
+      {tabs.length > 1 && <Tabs label={t("tm.payroll.title")} value={active} onChange={(v) => setTab(v as "people" | "runs" | "settings")} items={tabs} />}
+      {active === "people" ? <People t={t} locale={locale} /> : active === "runs" ? <RunsView t={t} locale={locale} /> : <><SettingsForm t={t} /><PlansForm t={t} locale={locale} /></>}
     </main>
   );
 }
@@ -102,8 +107,10 @@ function People({ t, locale }: { t: T; locale: string }) {
 const today = () => new Date().toISOString().slice(0, 10);
 
 function PersonSheet({ t, locale, person, onClose, onSaved }: { t: T; locale: string; person: Person | null; onClose: () => void; onSaved: () => void }) {
-  const { canManagePay } = useTime();
+  const { canManagePay, canPrepare } = useTime();
   const toast = useToast();
+  const [salesMonth, setSalesMonth] = useState(() => { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`; });
+  const [salesAmt, setSalesAmt] = useState("");
   const tag = languageOf(locale).dateTag;
   const [items, setItems] = useState<Item[]>([]);
   const [currencies, setCurrencies] = useState<string[]>([]);
@@ -168,6 +175,17 @@ function PersonSheet({ t, locale, person, onClose, onSaved }: { t: T; locale: st
     await load(person.employee_id); onSaved();
   }
 
+  async function saveSales() {
+    if (!person) return;
+    const n = Number(salesAmt);
+    if (!salesAmt.trim() || !Number.isFinite(n) || n < 0) { toast("error", t("tm.pr.err.line")); return; }
+    setSaving(true);
+    const { error } = await createClient().rpc("payroll_set_sales_volume", { p_employee_id: person.employee_id, p_month: salesMonth, p_amount: n, p_currency: cur });
+    setSaving(false);
+    if (error) { toast("error", t("tm.pr.err.generic")); return; }
+    toast("success", t("tm.pr.saved")); setSalesAmt("");
+  }
+
   const methods = ["cash", "bank", "wing", "aba", "other"] as const;
   return (
     <BottomSheet open={!!person} onClose={onClose} title={person ? pick(locale, person.name, person.name_local) : ""} closeLabel={t("tm.day.close")}>
@@ -188,6 +206,15 @@ function PersonSheet({ t, locale, person, onClose, onSaved }: { t: T; locale: st
               </ul>
             )}
           </section>
+          {canPrepare && (
+            <section className="flex flex-col gap-3">
+              <b>{t("tm.pr.sales.title")}</b>
+              <p className="text-sm text-muted">{t("tm.pr.sales.hint")}</p>
+              <Input label={t("tm.pr.sales.month")} type="month" value={salesMonth.slice(0, 7)} onChange={(e) => e.target.value && setSalesMonth(`${e.target.value}-01`)} />
+              <Input label={t("tm.pr.amount")} inputMode="decimal" value={salesAmt} onChange={(e) => setSalesAmt(e.target.value)} />
+              <Button variant="secondary" disabled={saving} onClick={saveSales}>{t("tm.pr.save")}</Button>
+            </section>
+          )}
           {canManagePay && (
             <>
               <section className="flex flex-col gap-3">

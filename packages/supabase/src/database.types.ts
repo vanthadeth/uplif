@@ -1881,6 +1881,58 @@ export type Database = {
         Args: { p_rate_divisor: string; p_overtime_multiplier: number; p_require_second_approver: boolean; p_close_blocks_on_review: boolean }
         Returns: undefined
       }
+      payroll_plans: {
+        Args: Record<string, never>
+        Returns: { id: string; kind: string; name: string; name_local: string | null; open_day: number | null; covers: string; auto_open: boolean; active: boolean; rule_kind: string | null; rule_config: Json | null }[]
+      }
+      payroll_save_plan: {
+        Args: { p_plan_id: string; p_open_day: number | null; p_covers: string; p_auto_open: boolean; p_active: boolean }
+        Returns: undefined
+      }
+      payroll_save_rule: {
+        Args: { p_plan_id: string; p_kind: string; p_config: Json; p_from: string }
+        Returns: undefined
+      }
+      payroll_set_sales_volume: {
+        Args: { p_employee_id: string; p_month: string; p_amount: number; p_currency: string }
+        Returns: undefined
+      }
+      payroll_runs: {
+        Args: Record<string, never>
+        Returns: { id: string; plan_id: string; plan_kind: string; name: string; period_start: string; period_end: string; open_date: string; status: string; slips: number; drafts: number; currency_code: string | null; net: number }[]
+      }
+      payroll_open_run: {
+        Args: { p_plan_id: string; p_month: string; p_name?: string | null }
+        Returns: string
+      }
+      payroll_refresh_run: {
+        Args: { p_run_id: string }
+        Returns: undefined
+      }
+      payroll_run_slips: {
+        Args: { p_run_id: string }
+        Returns: { payslip_id: string; employee_id: string; name: string; name_local: string | null; status: string; currency_code: string; gross: number; deductions: number; net: number }[]
+      }
+      payroll_payslip: {
+        Args: { p_payslip_id: string }
+        Returns: Json
+      }
+      payroll_save_line: {
+        Args: { p_payslip_id: string; p_line_id: string | null; p_pay_item_id: string; p_qty: number; p_unit_amount: number; p_note: string | null; p_source?: string }
+        Returns: string
+      }
+      payroll_delete_line: {
+        Args: { p_line_id: string }
+        Returns: undefined
+      }
+      payroll_suggestions: {
+        Args: { p_payslip_id: string }
+        Returns: { code: string; pay_item_id: string; label: string; qty: number; unit_amount: number; amount: number; note: string }[]
+      }
+      payroll_add_bonus: {
+        Args: { p_run_id: string; p_employee_id: string; p_amount: number; p_currency: string; p_note: string | null }
+        Returns: string
+      }
       time_today: {
         Args: { p_branch_id?: string }
         Returns: { employee_id: string; name: string; name_local: string | null; branch_id: string | null; position_name: string | null; position_name_local: string | null; status: string; first_in: string | null; late_min: number; overtime_min: number; flagged: boolean }[]
