@@ -190,15 +190,15 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
         <EmptyState title={t("sk.item.empty")} body={t("sk.item.emptyBody")} action={canManage ? add : undefined} />
       ) : (
         <>
-          <div className="flex items-center gap-3">
-            <label className="flex min-h-11 flex-1 items-center gap-2 rounded-control border border-line-strong bg-surface px-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <label className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-control border border-line-strong bg-surface px-3">
               <Search className="size-[18px] shrink-0 text-muted" aria-hidden />
               <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("sk.search")} aria-label={t("sk.search")}
                 className="min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-muted" />
             </label>
             <ScanButton onClick={() => setScanning(true)} label={t("sk.scan.open")} />
-            {canManage && <Button onClick={() => setImporting(true)} aria-label={t("sk.imp.open")} title={t("sk.imp.open")}><FileUp className="size-5" aria-hidden /></Button>}
-            {canManage ? <Button variant="primary" onClick={() => open("new")} aria-label={t("sk.item.add")}><Plus className="size-5" aria-hidden /></Button>
+            {canManage && <Button className="shrink-0" onClick={() => setImporting(true)} aria-label={t("sk.imp.open")} title={t("sk.imp.open")}><FileUp className="size-5" aria-hidden /></Button>}
+            {canManage ? <Button variant="primary" className="shrink-0" onClick={() => open("new")} aria-label={t("sk.item.add")}><Plus className="size-5" aria-hidden /></Button>
               : <Badge tone="neutral"><Lock className="size-3" aria-hidden />{t("sk.brands.viewOnly")}</Badge>}
           </div>
           {shown.length === 0 ? (
