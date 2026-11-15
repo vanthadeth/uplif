@@ -14,10 +14,12 @@ interface OverlayProps {
   footer?: ReactNode;
   /** Phone sheet only: hold the sheet closed, showing a waiting indicator, until the panel's own data has loaded. Pictures should not count. */
   loading?: boolean;
+  /** Accessible text for the phone waiting indicator (translated by the caller). */
+  loadingLabel?: string;
 }
 
 /** Native <dialog>: focus trap, Esc to close and focus return come from the browser. */
-function Overlay({ open, onClose, title, closeLabel = "Close", children, footer, loading, side, sheet }: OverlayProps & { side?: boolean; sheet?: boolean }) {
+function Overlay({ open, onClose, title, closeLabel = "Close", children, footer, loading, loadingLabel, side, sheet }: OverlayProps & { side?: boolean; sheet?: boolean }) {
   const ref = useRef<HTMLDialogElement>(null);
   const slid = useSheetReady(open);
   const asSheet = !!(side && sheet);
@@ -38,6 +40,7 @@ function Overlay({ open, onClose, title, closeLabel = "Close", children, footer,
         title={title}
         closeLabel={closeLabel}
         loading={loading}
+        loadingLabel={loadingLabel}
         footer={footer && <div className="flex w-full gap-2 [&>*:last-child]:h-12 [&>*:last-child]:flex-1 [&>*:last-child]:text-[17px]">{footer}</div>}
       >
         {children}
