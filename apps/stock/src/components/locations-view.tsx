@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Info, Lock, Pencil, Plus, Search, Trash2, Warehouse } from "lucide-react";
+import { Info, Lock, MapPin, Pencil, Plus, Search, Trash2, Warehouse } from "lucide-react";
 import { Badge, Button, EmptyState, ErrorState, Input, Modal, Select, SidePanel, Textarea, Toggle, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
@@ -10,10 +10,11 @@ import { pick } from "@/lib/format";
 
 export interface Location {
   id: string; name: string; name_local: string | null; address: string | null; note: string | null; is_active: boolean; branch_id: string | null;
+  latitude: number | null; longitude: number | null;
 }
 interface Branch { id: string; name: string; name_local: string | null }
 
-const blank = { name: "", name_local: "", address: "", note: "" };
+const blank = { name: "", name_local: "", address: "", note: "", latitude: "", longitude: "" };
 
 /** The location list: search, add, edit, hide and delete. */
 export function LocationsView({ locations, branches, failed, companyId, canManage }: { locations: Location[]; branches: Branch[]; failed: boolean; companyId: string; canManage: boolean }) {
@@ -27,7 +28,7 @@ export function LocationsView({ locations, branches, failed, companyId, canManag
   const [active, setActive] = useState(true);
   const [branch, setBranch] = useState("");
   const branchName = (id: string | null) => { const b = branches.find((x) => x.id === id); return b ? pick(locale, b.name, b.name_local) : ""; };
-  const [errors, setErrors] = useState<{ name?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; geo?: string }>({});
   const [busy, setBusy] = useState(false);
   const set = (k: keyof typeof blank) => (e: { target: { value: string } }) => { setForm((f) => ({ ...f, [k]: e.target.value })); setErrors({}); };
 
@@ -40,17 +41,33 @@ export function LocationsView({ locations, branches, failed, companyId, canManag
     setEditing(s);
     setForm(s === "new" ? blank : {
       name: s.name, name_local: s.name_local ?? "", address: s.address ?? "", note: s.note ?? "",
+      latitude: s.latitude === null ? "" : String(s.latitude), longitude: s.longitude === null ? "" : String(s.longitude),
     });
     setActive(s === "new" ? true : s.is_active);
     setBranch(s === "new" ? "" : s.branch_id ?? "");
     setErrors({});
   }
 
+  /** Fills latitude and longitude from the device. Only runs when the person taps the button. */
+  function useMyPosition() {
+    if (!navigator.geolocation) return toast("error", t("sk.loc.geoUnavailable"));
+    navigator.geolocation.getCurrentPosition(
+      (p) => { setForm((f) => ({ ...f, latitude: p.coords.latitude.toFixed(6), longitude: p.coords.longitude.toFixed(6) })); setErrors({}); },
+      () => toast("error", t("sk.loc.geoUnavailable")),
+      { enableHighAccuracy: true, timeout: 15000 },
+    );
+  }
+
   async function save() {
     if (!form.name.trim()) return setErrors({ name: t("sk.loc.nameRequired") });
+    const latText = form.latitude.trim(), lngText = form.longitude.trim();
+    const lat = latText === "" ? null : Number(latText), lng = lngText === "" ? null : Number(lngText);
+    if ((lat === null) !== (lng === null)) return setErrors({ geo: t("sk.loc.geoBoth") });
+    if (lat !== null && lng !== null && (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180)) return setErrors({ geo: t("sk.loc.geoInvalid") });
     setBusy(true);
     const values = {
       name: form.name.trim(), name_local: form.name_local.trim() || null, address: form.address.trim() || null, note: form.note.trim() || null, branch_id: branch || null,
+      latitude: lat === null ? null : Math.round(lat * 1e6) / 1e6, longitude: lng === null ? null : Math.round((lng as number) * 1e6) / 1e6,
     };
     const supabase = createClient();
     const res = editing === "new"
@@ -118,9 +135,14 @@ export function LocationsView({ locations, branches, failed, companyId, canManag
                     {s.name_local && <small className="block break-words text-muted">{locale === "en" ? s.name_local : s.name}</small>}
                     {s.branch_id && branchName(s.branch_id) && <small className="block break-words text-muted">{branchName(s.branch_id)}</small>}
                     {s.address && <small className="block break-words text-muted">{s.address}</small>}
+                    {s.latitude !== null && s.longitude !== null && <small className="block text-muted">{s.latitude}, {s.longitude}</small>}
                     {!s.is_active && <Badge tone="neutral">{t("sk.brands.inactive")}</Badge>}
                   </div>
                   <div className="flex shrink-0 gap-1">
+                    {s.latitude !== null && s.longitude !== null && (
+                      <a href={`https://www.google.com/maps?q=${s.latitude},${s.longitude}`} target="_blank" rel="noopener noreferrer" aria-label={fill(t("sk.loc.map"), { name: s.name })}
+                        className="grid size-11 place-items-center rounded-control text-link transition-colors hover:bg-primary-soft"><MapPin className="size-5" aria-hidden /></a>
+                    )}
                     {canManage && (
                       <>
                         <button type="button" aria-label={`${t("sk.edit")}: ${s.name}`} onClick={() => open(s)} className="grid size-11 place-items-center rounded-control text-muted transition-colors hover:bg-primary-soft"><Pencil className="size-5" aria-hidden /></button>
@@ -145,6 +167,16 @@ export function LocationsView({ locations, branches, failed, companyId, canManag
             {branches.map((b) => <option key={b.id} value={b.id}>{pick(locale, b.name, b.name_local)}</option>)}
           </Select>
           <Textarea label={t("sk.loc.address")} value={form.address} maxLength={500} rows={2} onChange={set("address")} />
+          <fieldset className="flex flex-col gap-3 rounded-card border border-line p-3">
+            <legend className="px-1 font-semibold">{t("sk.loc.geo")}</legend>
+            <p className="text-muted">{t("sk.loc.geoHint")}</p>
+            <div className="grid grid-cols-2 gap-3">
+              <Input label={t("sk.loc.lat")} type="number" inputMode="decimal" step="any" min={-90} max={90} value={form.latitude} onChange={set("latitude")} />
+              <Input label={t("sk.loc.lng")} type="number" inputMode="decimal" step="any" min={-180} max={180} value={form.longitude} onChange={set("longitude")} />
+            </div>
+            {errors.geo && <p role="alert" className="text-danger">{errors.geo}</p>}
+            <Button onClick={useMyPosition}><MapPin className="size-[18px]" aria-hidden />{t("sk.loc.useMine")}</Button>
+          </fieldset>
           <Textarea label={t("sk.loc.note")} hint={t("sk.loc.noteHint")} value={form.note} maxLength={1000} rows={3} onChange={set("note")} />
           {editing !== "new" && (
             <div className="flex items-center justify-between gap-3 rounded-card border border-line p-3">

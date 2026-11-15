@@ -754,6 +754,7 @@ export type Database = {
           name_local: string | null
           note: string | null
           phone: string | null
+          phone2: string | null
           updated_at: string
         }
         Insert: {
@@ -768,6 +769,7 @@ export type Database = {
           name_local?: string | null
           note?: string | null
           phone?: string | null
+          phone2?: string | null
           updated_at?: string
         }
         Update: {
@@ -782,6 +784,7 @@ export type Database = {
           name_local?: string | null
           note?: string | null
           phone?: string | null
+          phone2?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -890,6 +893,8 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          latitude: number | null
+          longitude: number | null
           name: string
           name_local: string | null
           note: string | null
@@ -902,6 +907,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
           name: string
           name_local?: string | null
           note?: string | null
@@ -914,6 +921,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           name_local?: string | null
           note?: string | null
