@@ -1,8 +1,8 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Boxes, ImagePlus, ListChecks, Info, Lock, Package, Pencil, Plus, Search, Trash2, X } from "lucide-react";
-import { Badge, Button, EmptyState, ErrorState, Input, Modal, Select, SidePanel, Textarea, Toggle, useToast } from "@uplif/ui";
+import { Boxes, FileUp, ImagePlus, ListChecks, Info, Lock, Package, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { Badge, BarcodeScanner, Button, EmptyState, ErrorState, Input, Modal, ScanButton, Select, SidePanel, Textarea, Toggle, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
@@ -11,18 +11,20 @@ import { removePicture } from "@/lib/use-picture";
 import { ItemPictures, type ItemImage } from "@/components/item-pictures";
 import { ItemVariants, type Variant } from "@/components/item-variants";
 import { ItemProperties, type PropGroup } from "@/components/item-properties";
+import { ItemsImport } from "@/components/items-import";
+import { scanLabels } from "@/lib/scan-labels";
 
 export type Pack = { name: string; qty: number };
 export interface Item {
   id: string; sku: string | null; name: string; name_local: string | null; description: string | null; description_local: string | null;
-  category_id: string | null; brand_id: string | null; base_uom: string; packs: Pack[]; properties: PropGroup[]; price: number; currency_code: string; is_active: boolean;
+  category_id: string | null; brand_id: string | null; base_uom: string; packs: Pack[]; properties: PropGroup[]; price: number; currency_code: string; reorder_level: number | null; is_active: boolean;
 }
 interface Cat { id: string; parent_id: string | null; name: string; name_local: string | null; is_active: boolean }
 interface Brand { id: string; name: string; name_local: string | null; is_active: boolean }
 
-const blank = { name: "", name_local: "", description: "", description_local: "", sku: "", category_id: "", brand_id: "", base_uom: "pcs", price: "0", cost: "" };
+const blank = { name: "", name_local: "", description: "", description_local: "", sku: "", category_id: "", brand_id: "", base_uom: "pcs", price: "0", cost: "", reorder: "" };
 type PackRow = { name: string; qty: string };
-type Errors = { name?: string; uom?: string; price?: string; cost?: string; packs?: string; sku?: string };
+type Errors = { reorder?: string; name?: string; uom?: string; price?: string; cost?: string; packs?: string; sku?: string };
 
 /** The item list: search, add, edit, hide and delete. Pictures, variants and options come in later pieces. */
 export function ItemsView({ items, images, variants, categories, brands, currency, failed, companyId, canManage, canViewCost, costs }: {
@@ -37,6 +39,8 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
   const [picturesOf, setPicturesOf] = useState<Item | null>(null);
   const [variantsOf, setVariantsOf] = useState<Item | null>(null);
   const [propsOf, setPropsOf] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [form, setForm] = useState(blank);
   const [packs, setPacks] = useState<PackRow[]>([]);
   const [active, setActive] = useState(true);
@@ -70,16 +74,18 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
   }, [categories, form.category_id, locale]);
   const brandOptions = useMemo(() => brands.filter((b) => b.is_active || b.id === form.brand_id), [brands, form.brand_id]);
 
+  // Barcodes live on variants; searching an item by barcode looks at all of its variants.
+  const codesByItem = useMemo(() => variants.reduce((m, v) => (v.barcode ? m.set(v.item_id, `${m.get(v.item_id) ?? ""} ${v.barcode}`) : m), new Map<string, string>()), [variants]);
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return items.filter((i) => !q || [i.name, i.name_local, i.sku].filter(Boolean).join(" ").toLowerCase().includes(q));
-  }, [items, query]);
+    return items.filter((i) => !q || [i.name, i.name_local, i.sku, codesByItem.get(i.id)].filter(Boolean).join(" ").toLowerCase().includes(q));
+  }, [items, query, codesByItem]);
 
   function open(i: Item | "new") {
     setEditing(i);
     setForm(i === "new" ? { ...blank } : {
       name: i.name, name_local: i.name_local ?? "", description: i.description ?? "", description_local: i.description_local ?? "",
-      sku: i.sku ?? "", category_id: i.category_id ?? "", brand_id: i.brand_id ?? "", base_uom: i.base_uom, price: String(i.price), cost: costs[i.id] === undefined ? "" : String(costs[i.id]),
+      sku: i.sku ?? "", category_id: i.category_id ?? "", brand_id: i.brand_id ?? "", base_uom: i.base_uom, price: String(i.price), cost: costs[i.id] === undefined ? "" : String(costs[i.id]), reorder: i.reorder_level === null ? "" : String(i.reorder_level),
     });
     setPacks(i === "new" ? [] : i.packs.map((p) => ({ name: p.name, qty: String(p.qty) })));
     setActive(i === "new" ? true : i.is_active);
@@ -91,6 +97,8 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
     if (!form.name.trim()) return setErrors({ name: t("sk.item.nameRequired") });
     if (!form.base_uom.trim()) return setErrors({ uom: t("sk.item.uomRequired") });
     if (!Number.isFinite(price) || price < 0) return setErrors({ price: t("sk.item.priceInvalid") });
+    const reorder = form.reorder.trim() === "" ? null : Number(form.reorder);
+    if (reorder !== null && (!Number.isFinite(reorder) || reorder < 0)) return setErrors({ reorder: t("sk.item.reorderInvalid") });
     const cost = form.cost.trim() === "" ? null : Number(form.cost);
     if (canViewCost && cost !== null && (!Number.isFinite(cost) || cost < 0)) return setErrors({ cost: t("sk.cost.invalid") });
     const cleanPacks = packs.filter((p) => p.name.trim() || p.qty.trim());
@@ -100,7 +108,7 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
     const values = {
       sku: form.sku.trim() || null, name: form.name.trim(), name_local: form.name_local.trim() || null,
       description: form.description.trim() || null, description_local: form.description_local.trim() || null,
-      category_id: form.category_id || null, brand_id: form.brand_id || null, base_uom: form.base_uom.trim(), packs: parsed, price,
+      category_id: form.category_id || null, brand_id: form.brand_id || null, base_uom: form.base_uom.trim(), packs: parsed, price, reorder_level: reorder,
     };
     const supabase = createClient();
     const res = editing === "new"
@@ -170,6 +178,8 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
               <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("sk.search")} aria-label={t("sk.search")}
                 className="min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-muted" />
             </label>
+            <ScanButton onClick={() => setScanning(true)} label={t("sk.scan.open")} />
+            {canManage && <Button onClick={() => setImporting(true)} aria-label={t("sk.imp.open")} title={t("sk.imp.open")}><FileUp className="size-5" aria-hidden /></Button>}
             {canManage ? <Button variant="primary" onClick={() => open("new")} aria-label={t("sk.item.add")}><Plus className="size-5" aria-hidden /></Button>
               : <Badge tone="neutral"><Lock className="size-3" aria-hidden />{t("sk.brands.viewOnly")}</Badge>}
           </div>
@@ -238,6 +248,7 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
               </p>}
             </div>
           )}
+          <Input label={t("sk.item.reorder")} hint={t("sk.item.reorderHint")} type="number" inputMode="decimal" min={0} step="any" value={form.reorder} onChange={set("reorder")} error={errors.reorder} />
           <Input label={t("sk.item.uom")} hint={t("sk.item.uomHint")} value={form.base_uom} maxLength={30} onChange={set("base_uom")} error={errors.uom} />
 
           <fieldset className="flex flex-col gap-3 rounded-card border border-line p-3">
@@ -274,6 +285,10 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
           )}
         </div>
       </SidePanel>
+
+      <BarcodeScanner open={scanning} onClose={() => setScanning(false)} onScan={setQuery} labels={scanLabels(t)} />
+      <ItemsImport open={importing} onClose={() => setImporting(false)} companyId={companyId} currency={currency} categories={categories} brands={brands}
+        skus={items.map((i) => i.sku).filter((s): s is string => !!s)} barcodes={variants.map((v) => v.barcode).filter((s): s is string => !!s)} />
 
       <ItemPictures item={picturesOf} images={images} companyId={companyId} canManage={canManage} onClose={() => setPicturesOf(null)} />
 

@@ -2,29 +2,33 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, Trash2 } from "lucide-react";
-import { Button, Input, Select, Textarea, useToast } from "@uplif/ui";
+import { BarcodeScanner, Button, Input, Select, Textarea, useToast, ScanButton } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
+import { scanLabels } from "@/lib/scan-labels";
 import { pick, qtyText } from "@/lib/format";
 import type { ReceiveOption } from "./move-view";
+import { useStockOutbox } from "./outbox-context";
 
 interface Named { id: string; name: string; name_local: string | null }
 export interface TransitTransfer { id: string; fromId: string; toId: string; sentAt: string; note: string | null; lines: { variantId: string; qty: number }[] }
 type Line = { variantId: string; qty: string };
 
 /** Transfers in two steps: send from one location (stock goes "in transit"), then the receiving side confirms. */
-export function TransferPanel({ locations, options, balances, transit }: {
-  locations: Named[]; options: ReceiveOption[]; balances: Record<string, number>; transit: TransitTransfer[];
+export function TransferPanel({ locations, writableIds, options, balances, transit }: {
+  locations: Named[]; writableIds: string[]; options: ReceiveOption[]; balances: Record<string, number>; transit: TransitTransfer[];
 }) {
   const { t, locale } = useI18n();
   const toast = useToast();
+  const outbox = useStockOutbox();
   const router = useRouter();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [note, setNote] = useState("");
   const [lines, setLines] = useState<Line[]>([]);
   const [query, setQuery] = useState("");
+  const [scanning, setScanning] = useState(false);
   const [errors, setErrors] = useState<{ from?: string; to?: string; lines?: string }>({});
   const [busy, setBusy] = useState(false);
   const [requestId, setRequestId] = useState(() => crypto.randomUUID());
@@ -67,10 +71,10 @@ export function TransferPanel({ locations, options, balances, transit }: {
     if (parsed.some((l) => !Number.isFinite(l.qty) || l.qty <= 0)) return setErrors({ lines: t("sk.tr.qtyInvalid") });
     if (parsed.some((l) => l.qty > avail(l.variant_id))) return setErrors({ lines: t("sk.tr.tooMuch") });
     setBusy(true);
-    const { error } = await createClient().rpc("send_transfer", { p_request_id: requestId, p_from: from, p_to: to, p_note: note.trim() || null, p_lines: parsed });
+    const { error, queued } = await outbox.submit({ fn: "send_transfer", kind: "transfer", args: { p_request_id: requestId, p_from: from, p_to: to, p_note: note.trim() || null, p_lines: parsed } });
     setBusy(false);
     if (error) return toast("error", errMsg(error.code, error.message, t("sk.tr.failed")));
-    toast("success", t("sk.tr.done"));
+    toast("success", queued ? t("sk.ob.saved") : t("sk.tr.done"));
     setLines([]); setNote(""); setQuery(""); setErrors({});
     setRequestId(crypto.randomUUID());
     router.refresh();
@@ -80,10 +84,10 @@ export function TransferPanel({ locations, options, balances, transit }: {
     const parsed = tr.lines.map((l) => ({ variant_id: l.variantId, received: Number(got[`${tr.id}|${l.variantId}`] ?? l.qty) }));
     if (parsed.some((l, i) => !Number.isFinite(l.received) || l.received < 0 || l.received > tr.lines[i].qty)) return toast("error", t("sk.tr.receiveInvalid"));
     setActing(tr.id);
-    const { error } = await createClient().rpc("receive_transfer", { p_transfer_id: tr.id, p_lines: parsed });
+    const { error, queued } = await outbox.submit({ fn: "receive_transfer", kind: "arrival", args: { p_transfer_id: tr.id, p_lines: parsed } });
     setActing(null);
     if (error) { if (error.message === "transfer_closed") router.refresh(); return toast("error", errMsg(error.code, error.message, t("sk.tr.failed"))); }
-    toast("success", t("sk.tr.receiveDone")); setOpen(null); router.refresh();
+    toast("success", queued ? t("sk.ob.saved") : t("sk.tr.receiveDone")); setOpen(null); router.refresh();
   }
 
   async function cancel(tr: TransitTransfer) {
@@ -103,7 +107,7 @@ export function TransferPanel({ locations, options, balances, transit }: {
         </div>
         <Select label={t("sk.tr.from")} value={from} error={errors.from} onChange={(e) => { setFrom(e.target.value); setLines([]); setErrors({}); }}>
           <option value="">—</option>
-          {locations.map((l) => <option key={l.id} value={l.id}>{label(l)}</option>)}
+          {locations.filter((l) => writableIds.includes(l.id)).map((l) => <option key={l.id} value={l.id}>{label(l)}</option>)}
         </Select>
         <Select label={t("sk.tr.to")} value={to} error={errors.to} onChange={(e) => { setTo(e.target.value); setErrors({}); }}>
           <option value="">—</option>
@@ -112,11 +116,17 @@ export function TransferPanel({ locations, options, balances, transit }: {
 
         <fieldset className="flex flex-col gap-3">
           <legend className="mb-1 text-[14px] font-semibold text-ink-2">{t("sk.mv.lines")}</legend>
-          <label className="flex min-h-11 items-center gap-2 rounded-control border border-line-strong bg-surface px-3">
-            <Search className="size-[18px] shrink-0 text-muted" aria-hidden />
-            <input type="search" value={query} disabled={!from} onChange={(e) => setQuery(e.target.value)} placeholder={t("sk.mv.search")} aria-label={t("sk.mv.search")}
-              className="min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-muted" />
-          </label>
+          <BarcodeScanner open={scanning} onClose={() => setScanning(false)} onScan={setQuery} labels={scanLabels(t)} />
+          <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+            <label className="flex min-h-11 items-center gap-2 rounded-control border border-line-strong bg-surface px-3">
+              <Search className="size-[18px] shrink-0 text-muted" aria-hidden />
+              <input type="search" value={query} disabled={!from} onChange={(e) => setQuery(e.target.value)} placeholder={t("sk.mv.search")} aria-label={t("sk.mv.search")}
+                className="min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-muted" />
+            </label>
+            </div>
+            <ScanButton onClick={() => setScanning(true)} label={t("sk.scan.open")} />
+          </div>
           {query.trim() && from && (matches.length === 0
             ? <p className="text-muted">{t("sk.mv.searchEmpty")}</p>
             : <ul className="overflow-hidden rounded-card border border-line">
@@ -180,8 +190,8 @@ export function TransferPanel({ locations, options, balances, transit }: {
                   </div>
                 ) : (
                   <div className="flex flex-wrap gap-2 pt-1">
-                    <Button variant="primary" onClick={() => setOpen(tr.id)}>{t("sk.tr.receive")}</Button>
-                    <Button variant="secondary" loading={acting === tr.id} onClick={() => cancel(tr)}>{t("sk.tr.cancel")}</Button>
+                    {writableIds.includes(tr.toId) && <Button variant="primary" onClick={() => setOpen(tr.id)}>{t("sk.tr.receive")}</Button>}
+                    {writableIds.includes(tr.fromId) && <Button variant="secondary" loading={acting === tr.id} onClick={() => cancel(tr)}>{t("sk.tr.cancel")}</Button>}
                   </div>
                 )}
                 <small className="text-muted">{fill(t("sk.tr.cancelHint"), { from: nameOf(tr.fromId) })}</small>

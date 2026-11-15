@@ -754,6 +754,7 @@ export type Database = {
           name_local: string | null
           note: string | null
           phone: string | null
+          phone2: string | null
           updated_at: string
         }
         Insert: {
@@ -768,6 +769,7 @@ export type Database = {
           name_local?: string | null
           note?: string | null
           phone?: string | null
+          phone2?: string | null
           updated_at?: string
         }
         Update: {
@@ -782,6 +784,7 @@ export type Database = {
           name_local?: string | null
           note?: string | null
           phone?: string | null
+          phone2?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -885,10 +888,13 @@ export type Database = {
       locations: {
         Row: {
           address: string | null
+          branch_id: string | null
           company_id: string
           created_at: string
           id: string
           is_active: boolean
+          latitude: number | null
+          longitude: number | null
           name: string
           name_local: string | null
           note: string | null
@@ -896,10 +902,13 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          branch_id?: string | null
           company_id: string
           created_at?: string
           id?: string
           is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
           name: string
           name_local?: string | null
           note?: string | null
@@ -907,10 +916,13 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          branch_id?: string | null
           company_id?: string
           created_at?: string
           id?: string
           is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           name_local?: string | null
           note?: string | null
@@ -936,6 +948,7 @@ export type Database = {
           packs: Json
           properties: Json
           price: number
+          reorder_level: number | null
           sku: string | null
           updated_at: string
         }
@@ -956,6 +969,7 @@ export type Database = {
           packs?: Json
           properties?: Json
           price?: number
+          reorder_level?: number | null
           sku?: string | null
           updated_at?: string
         }
@@ -976,6 +990,7 @@ export type Database = {
           packs?: Json
           properties?: Json
           price?: number
+          reorder_level?: number | null
           sku?: string | null
           updated_at?: string
         }
@@ -1502,6 +1517,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      stock_writable_locations: { Args: Record<string, never>; Returns: string[] }
       send_transfer: {
         Args: { p_request_id: string; p_from: string; p_to: string; p_note: string | null; p_lines: Json }
         Returns: string

@@ -3,12 +3,14 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Info, Plus, Search, Trash2 } from "lucide-react";
-import { Button, EmptyState, ErrorState, Input, Select, Tabs, Textarea, useToast } from "@uplif/ui";
-import { createClient } from "@/lib/supabase/client";
+import { BarcodeScanner, Button, EmptyState, ErrorState, Input, Select, Tabs, Textarea, useToast, ScanButton } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
+import { scanLabels } from "@/lib/scan-labels";
 import { pick } from "@/lib/format";
+import { useStockOutbox } from "./outbox-context";
 import { AdjustForm } from "./adjust-form";
+import { CountSheet } from "./count-sheet";
 import { TransferPanel, type TransitTransfer } from "./transfer-panel";
 
 export interface ReceiveOption {
@@ -20,19 +22,24 @@ interface Receipt { id: string; kind: string; transfer_step: string | null; reas
 type Line = { variantId: string; qty: string };
 
 /** Move stock. This piece: receive stock from a supplier into a location. Adjustments and transfers come next. */
-export function MoveView({ locations, suppliers, options, balances, transit, recent, failed, canMove }: {
-  locations: Named[]; suppliers: Named[]; options: ReceiveOption[]; balances: Record<string, number>; transit: TransitTransfer[]; recent: Receipt[]; failed: boolean; canMove: boolean;
+function mine(list: Named[], ids: string[]) { return list.filter((l) => ids.includes(l.id)); }
+
+export function MoveView({ locations, suppliers, options, balances, transit, writableIds, recent, failed, canMove }: {
+  locations: Named[]; suppliers: Named[]; options: ReceiveOption[]; balances: Record<string, number>; transit: TransitTransfer[]; writableIds: string[]; recent: Receipt[]; failed: boolean; canMove: boolean;
 }) {
   const { t, locale } = useI18n();
   const toast = useToast();
+  const outbox = useStockOutbox();
   const router = useRouter();
   const [mode, setMode] = useState("receive");
-  const [location, setLocation] = useState(locations.length === 1 ? locations[0].id : "");
+  const mineLocs = mine(locations, writableIds);
+  const [location, setLocation] = useState(mineLocs.length === 1 ? mineLocs[0].id : "");
   const [supplier, setSupplier] = useState("");
   const [reference, setReference] = useState("");
   const [note, setNote] = useState("");
   const [lines, setLines] = useState<Line[]>([]);
   const [query, setQuery] = useState("");
+  const [scanning, setScanning] = useState(false);
   const [errors, setErrors] = useState<{ location?: string; lines?: string }>({});
   const [busy, setBusy] = useState(false);
   // One id per form, so a retry after a dropped connection can never receive the same delivery twice.
@@ -62,13 +69,13 @@ export function MoveView({ locations, suppliers, options, balances, transit, rec
     const parsed = lines.map((l) => ({ variant_id: l.variantId, qty: Number(l.qty) }));
     if (parsed.some((l) => !Number.isFinite(l.qty) || l.qty <= 0)) return setErrors({ lines: t("sk.mv.qtyInvalid") });
     setBusy(true);
-    const { error } = await createClient().rpc("receive_stock", {
+    const { error, queued } = await outbox.submit({ fn: "receive_stock", kind: "receive", args: {
       p_request_id: requestId, p_location_id: location, p_supplier_id: supplier || null,
       p_reference: reference.trim() || null, p_note: note.trim() || null, p_lines: parsed,
-    });
+    } });
     setBusy(false);
     if (error) return toast("error", error.code === "42501" ? t("sk.forbidden") : error.code === "P0001" ? t("sk.mv.failed") : t("sk.saveError"));
-    toast("success", t("sk.mv.done"));
+    toast("success", queued ? t("sk.ob.saved") : t("sk.mv.done"));
     setLines([]); setReference(""); setNote(""); setSupplier(""); setQuery(""); setErrors({});
     setRequestId(crypto.randomUUID());
     router.refresh();
@@ -93,22 +100,25 @@ export function MoveView({ locations, suppliers, options, balances, transit, rec
         <ErrorState title={t("sk.mv.loadError")} action={<Button onClick={() => router.refresh()}>{t("sk.retry")}</Button>} />
       ) : (
         <>
-          {canMove && (locations.length === 0 ? (
+          {canMove && (locations.length > 0 && mineLocs.length === 0 ? (
+            <div role="note" className="flex items-start gap-3 rounded-card bg-primary-soft p-4 leading-normal text-primary-ink"><Info className="mt-0.5 size-5 shrink-0" aria-hidden /><div>{t("sk.mv.noWritable")}</div></div>
+          ) : locations.length === 0 ? (
             <EmptyState title={t("sk.mv.noLocation")} body={t("sk.mv.noLocationBody")} action={<Link href="/locations"><Button variant="primary">{t("sk.mv.addLocation")}</Button></Link>} />
           ) : options.length === 0 ? (
             <EmptyState title={t("sk.mv.noItems")} body={t("sk.mv.noItemsBody")} action={<Link href="/items"><Button variant="primary">{t("sk.item.add")}</Button></Link>} />
           ) : (
             <>
-            <Tabs label={t("sk.mv.tabs")} value={mode} onChange={setMode} items={[{ id: "receive", label: t("sk.mv.tabReceive") }, { id: "adjust", label: t("sk.mv.tabAdjust") }, { id: "transfer", label: t("sk.mv.tabTransfer") }]} />
-            {mode === "adjust" ? <AdjustForm locations={locations} options={options} balances={balances} /> :
+            <Tabs label={t("sk.mv.tabs")} value={mode} onChange={setMode} items={[{ id: "receive", label: t("sk.mv.tabReceive") }, { id: "adjust", label: t("sk.mv.tabAdjust") }, { id: "count", label: t("sk.mv.tabCount") }, { id: "transfer", label: t("sk.mv.tabTransfer") }]} />
+            {mode === "adjust" ? <AdjustForm locations={mineLocs} options={options} balances={balances} /> :
+            mode === "count" ? <CountSheet locations={mineLocs} options={options} balances={balances} /> :
             mode === "transfer" ? (locations.length < 2
               ? <EmptyState title={t("sk.tr.needTwo")} body={t("sk.tr.needTwoBody")} action={<Link href="/locations"><Button variant="primary">{t("sk.mv.addLocation")}</Button></Link>} />
-              : <TransferPanel locations={locations} options={options} balances={balances} transit={transit} />) :
+              : <TransferPanel locations={locations} writableIds={writableIds} options={options} balances={balances} transit={transit} />) :
             <section aria-label={t("sk.mv.receive")} className="flex flex-col gap-4 rounded-card border border-line bg-surface p-4">
               <h2 className="text-lg font-bold">{t("sk.mv.receive")}</h2>
               <Select label={t("sk.mv.location")} value={location} error={errors.location} onChange={(e) => { setLocation(e.target.value); setErrors({}); }}>
                 <option value="">—</option>
-                {locations.map((l) => <option key={l.id} value={l.id}>{label(l)}</option>)}
+                {mineLocs.map((l) => <option key={l.id} value={l.id}>{label(l)}</option>)}
               </Select>
               <Select label={t("sk.mv.supplier")} value={supplier} onChange={(e) => setSupplier(e.target.value)}>
                 <option value="">{t("sk.mv.noSupplier")}</option>
@@ -118,11 +128,17 @@ export function MoveView({ locations, suppliers, options, balances, transit, rec
 
               <fieldset className="flex flex-col gap-3">
                 <legend className="mb-1 text-[14px] font-semibold text-ink-2">{t("sk.mv.lines")}</legend>
-                <label className="flex min-h-11 items-center gap-2 rounded-control border border-line-strong bg-surface px-3">
-                  <Search className="size-[18px] shrink-0 text-muted" aria-hidden />
-                  <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("sk.mv.search")} aria-label={t("sk.mv.search")}
-                    className="min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-muted" />
-                </label>
+                <BarcodeScanner open={scanning} onClose={() => setScanning(false)} onScan={setQuery} labels={scanLabels(t)} />
+                <div className="flex items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                  <label className="flex min-h-11 items-center gap-2 rounded-control border border-line-strong bg-surface px-3">
+                    <Search className="size-[18px] shrink-0 text-muted" aria-hidden />
+                    <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("sk.mv.search")} aria-label={t("sk.mv.search")}
+                      className="min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-muted" />
+                  </label>
+                  </div>
+                  <ScanButton onClick={() => setScanning(true)} label={t("sk.scan.open")} />
+                </div>
                 {query.trim() && (matches.length === 0
                   ? <p className="text-muted">{t("sk.mv.searchEmpty")}</p>
                   : <ul className="overflow-hidden rounded-card border border-line">
@@ -181,6 +197,7 @@ export function MoveView({ locations, suppliers, options, balances, transit, rec
                 ))}
               </ul>
             )}
+            <Link href="/history" className="inline-flex min-h-11 items-center text-link">{t("sk.hi.link")}</Link>
           </section>
         </>
       )}

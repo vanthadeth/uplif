@@ -9,11 +9,11 @@ import { fill } from "@/lib/messages";
 import { pick } from "@/lib/format";
 
 export interface Supplier {
-  id: string; name: string; name_local: string | null; contact_name: string | null; phone: string | null;
+  id: string; name: string; name_local: string | null; contact_name: string | null; phone: string | null; phone2: string | null;
   email: string | null; address: string | null; note: string | null; is_active: boolean;
 }
 
-const blank = { name: "", name_local: "", contact_name: "", phone: "", email: "", address: "", note: "" };
+const blank = { name: "", name_local: "", contact_name: "", phone: "", phone2: "", email: "", address: "", note: "" };
 
 /** The supplier list: search, add, edit, hide and delete. A phone number is a tap-to-call link. */
 export function SuppliersView({ suppliers, failed, companyId, canManage }: { suppliers: Supplier[]; failed: boolean; companyId: string; canManage: boolean }) {
@@ -31,13 +31,13 @@ export function SuppliersView({ suppliers, failed, companyId, canManage }: { sup
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return suppliers.filter((s) => !q || [s.name, s.name_local, s.contact_name, s.phone].filter(Boolean).join(" ").toLowerCase().includes(q));
+    return suppliers.filter((s) => !q || [s.name, s.name_local, s.contact_name, s.phone, s.phone2].filter(Boolean).join(" ").toLowerCase().includes(q));
   }, [suppliers, query]);
 
   function open(s: Supplier | "new") {
     setEditing(s);
     setForm(s === "new" ? blank : {
-      name: s.name, name_local: s.name_local ?? "", contact_name: s.contact_name ?? "", phone: s.phone ?? "",
+      name: s.name, name_local: s.name_local ?? "", contact_name: s.contact_name ?? "", phone: s.phone ?? "", phone2: s.phone2 ?? "",
       email: s.email ?? "", address: s.address ?? "", note: s.note ?? "",
     });
     setActive(s === "new" ? true : s.is_active);
@@ -51,7 +51,7 @@ export function SuppliersView({ suppliers, failed, companyId, canManage }: { sup
     setBusy(true);
     const values = {
       name: form.name.trim(), name_local: form.name_local.trim() || null, contact_name: form.contact_name.trim() || null,
-      phone: form.phone.trim() || null, email: email || null, address: form.address.trim() || null, note: form.note.trim() || null,
+      phone: form.phone.trim() || null, phone2: form.phone2.trim() || null, email: email || null, address: form.address.trim() || null, note: form.note.trim() || null,
     };
     const supabase = createClient();
     const res = editing === "new"
@@ -121,9 +121,9 @@ export function SuppliersView({ suppliers, failed, companyId, canManage }: { sup
                     {!s.is_active && <Badge tone="neutral">{t("sk.brands.inactive")}</Badge>}
                   </div>
                   <div className="flex shrink-0 gap-1">
-                    {s.phone && (
-                      <a href={`tel:${s.phone.replace(/[^\d+]/g, "")}`} aria-label={fill(t("sk.sup.call"), { name: s.name })} className="grid size-11 place-items-center rounded-control text-link transition-colors hover:bg-primary-soft"><Phone className="size-5" aria-hidden /></a>
-                    )}
+                    {[s.phone, s.phone2].filter((x): x is string => !!x).map((num) => (
+                      <a key={num} href={`tel:${num.replace(/[^\d+]/g, "")}`} aria-label={`${fill(t("sk.sup.call"), { name: s.name })} ${num}`} title={num} className="grid size-11 place-items-center rounded-control text-link transition-colors hover:bg-primary-soft"><Phone className="size-5" aria-hidden /></a>
+                    ))}
                     {canManage && (
                       <>
                         <button type="button" aria-label={`${t("sk.edit")}: ${s.name}`} onClick={() => open(s)} className="grid size-11 place-items-center rounded-control text-muted transition-colors hover:bg-primary-soft"><Pencil className="size-5" aria-hidden /></button>
@@ -145,6 +145,7 @@ export function SuppliersView({ suppliers, failed, companyId, canManage }: { sup
           <Input label={t("sk.brands.nameLocal")} hint={t("sk.brands.nameLocalHint")} value={form.name_local} maxLength={120} onChange={set("name_local")} />
           <Input label={t("sk.sup.contact")} value={form.contact_name} maxLength={120} onChange={set("contact_name")} />
           <Input label={t("sk.sup.phone")} type="tel" inputMode="tel" value={form.phone} maxLength={40} onChange={set("phone")} />
+          <Input label={t("sk.sup.phone2")} type="tel" inputMode="tel" value={form.phone2} maxLength={40} onChange={set("phone2")} />
           <Input label={t("sk.sup.email")} type="email" inputMode="email" value={form.email} maxLength={200} onChange={set("email")} error={errors.email} />
           <Textarea label={t("sk.sup.address")} value={form.address} maxLength={500} rows={2} onChange={set("address")} />
           <Textarea label={t("sk.sup.note")} hint={t("sk.sup.noteHint")} value={form.note} maxLength={1000} rows={3} onChange={set("note")} />
