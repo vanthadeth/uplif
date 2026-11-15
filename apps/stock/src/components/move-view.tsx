@@ -194,6 +194,7 @@ export function MoveView({ locations, suppliers, options, balances, transit, wri
                 ))}
               </ul>
             )}
+            <Link href="/history" className="inline-flex min-h-11 items-center text-link">{t("sk.hi.link")}</Link>
           </section>
         </>
       )}
