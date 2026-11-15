@@ -810,6 +810,27 @@ export type Database = {
         }
         Relationships: []
       }
+      variant_costs: {
+        Row: {
+          company_id: string
+          cost: number
+          updated_at: string
+          variant_id: string
+        }
+        Insert: {
+          company_id: string
+          cost: number
+          updated_at?: string
+          variant_id: string
+        }
+        Update: {
+          company_id?: string
+          cost?: number
+          updated_at?: string
+          variant_id?: string
+        }
+        Relationships: []
+      }
       item_images: {
         Row: {
           company_id: string
@@ -849,6 +870,7 @@ export type Database = {
           item_id: string
           name: string
           name_local: string | null
+          packs: Json | null
           price: number | null
           sku: string | null
           updated_at: string
@@ -864,6 +886,7 @@ export type Database = {
           item_id: string
           name: string
           name_local?: string | null
+          packs?: Json | null
           price?: number | null
           sku?: string | null
           updated_at?: string
@@ -879,6 +902,7 @@ export type Database = {
           item_id?: string
           name?: string
           name_local?: string | null
+          packs?: Json | null
           price?: number | null
           sku?: string | null
           updated_at?: string

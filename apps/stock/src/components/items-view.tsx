@@ -13,8 +13,10 @@ import { ItemVariants, type Variant } from "@/components/item-variants";
 import { ItemProperties, type PropGroup } from "@/components/item-properties";
 import { ItemsImport } from "@/components/items-import";
 import { scanLabels } from "@/lib/scan-labels";
+import { PackEditor } from "@/components/pack-editor";
+import { packsToRows, rowsToPacks, type Pack, type PackRow } from "@/lib/packs";
+export type { Pack };
 
-export type Pack = { name: string; qty: number };
 export interface Item {
   id: string; sku: string | null; name: string; name_local: string | null; description: string | null; description_local: string | null;
   category_id: string | null; brand_id: string | null; base_uom: string; packs: Pack[]; properties: PropGroup[]; price: number; currency_code: string; reorder_level: number | null; is_active: boolean;
@@ -23,12 +25,11 @@ interface Cat { id: string; parent_id: string | null; name: string; name_local: 
 interface Brand { id: string; name: string; name_local: string | null; is_active: boolean }
 
 const blank = { name: "", name_local: "", description: "", description_local: "", sku: "", category_id: "", brand_id: "", base_uom: "pcs", price: "0", cost: "", reorder: "" };
-type PackRow = { name: string; qty: string };
 type Errors = { reorder?: string; name?: string; uom?: string; price?: string; cost?: string; packs?: string; sku?: string };
 
 /** The item list: search, add, edit, hide and delete. Pictures, variants and options come in later pieces. */
-export function ItemsView({ items, images, variants, categories, brands, currency, failed, companyId, canManage, canViewCost, costs }: {
-  items: Item[]; images: ItemImage[]; variants: Variant[]; categories: Cat[]; brands: Brand[]; currency: string; failed: boolean; companyId: string; canManage: boolean; canViewCost: boolean; costs: Record<string, number>;
+export function ItemsView({ items, images, variants, categories, brands, currency, failed, companyId, canManage, canViewCost, costs, variantCosts }: {
+  items: Item[]; images: ItemImage[]; variants: Variant[]; categories: Cat[]; brands: Brand[]; currency: string; failed: boolean; companyId: string; canManage: boolean; canViewCost: boolean; costs: Record<string, number>; variantCosts: Record<string, number>;
 }) {
   const { t, locale } = useI18n();
   const toast = useToast();
@@ -98,7 +99,7 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
       name: i.name, name_local: i.name_local ?? "", description: i.description ?? "", description_local: i.description_local ?? "",
       sku: i.sku ?? "", category_id: i.category_id ?? "", brand_id: i.brand_id ?? "", base_uom: i.base_uom, price: String(i.price), cost: costs[i.id] === undefined ? "" : String(costs[i.id]), reorder: i.reorder_level === null ? "" : String(i.reorder_level),
     });
-    setPacks(i === "new" ? [] : i.packs.map((p) => ({ name: p.name, qty: String(p.qty) })));
+    setPacks(i === "new" ? [] : packsToRows(i.packs));
     setActive(i === "new" ? true : i.is_active);
     setErrors({});
   }
@@ -112,9 +113,8 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
     if (reorder !== null && (!Number.isFinite(reorder) || reorder < 0)) return setErrors({ reorder: t("sk.item.reorderInvalid") });
     const cost = form.cost.trim() === "" ? null : Number(form.cost);
     if (canViewCost && cost !== null && (!Number.isFinite(cost) || cost < 0)) return setErrors({ cost: t("sk.cost.invalid") });
-    const cleanPacks = packs.filter((p) => p.name.trim() || p.qty.trim());
-    const parsed: Pack[] = cleanPacks.map((p) => ({ name: p.name.trim(), qty: Number(p.qty) }));
-    if (parsed.some((p) => !p.name || !Number.isInteger(p.qty) || p.qty < 2)) return setErrors({ packs: t("sk.item.packInvalid") });
+    const { packs: parsed, problem } = rowsToPacks(packs);
+    if (problem) return setErrors({ packs: t(problem === "pack" ? "sk.item.packInvalid" : problem === "weight" ? "sk.pack.netOver" : "sk.pack.measureInvalid") });
     setBusy(true);
     const values = {
       sku: form.sku.trim() || null, name: form.name.trim(), name_local: form.name_local.trim() || null,
@@ -274,24 +274,7 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
           <fieldset className="flex flex-col gap-3 rounded-card border border-line p-3">
             <legend className="px-1 font-semibold">{t("sk.item.packs")}</legend>
             <p className="text-muted">{t("sk.item.packsHint")}</p>
-            {packs.map((p, n) => (
-              <div key={n} className="flex items-end gap-2">
-                <div className="min-w-0 flex-1">
-                  <Input label={t("sk.item.packName")} value={p.name} maxLength={40}
-                    onChange={(e) => { setPacks((r) => r.map((x, k) => (k === n ? { ...x, name: e.target.value } : x))); setErrors({}); }} />
-                </div>
-                <div className="w-28 shrink-0">
-                  <Input label={t("sk.item.packQty")} type="number" inputMode="numeric" min={2} step={1} value={p.qty}
-                    onChange={(e) => { setPacks((r) => r.map((x, k) => (k === n ? { ...x, qty: e.target.value } : x))); setErrors({}); }} />
-                </div>
-                <button type="button" aria-label={t("sk.item.packRemove")} onClick={() => setPacks((r) => r.filter((_, k) => k !== n))}
-                  className="mb-0.5 grid size-11 shrink-0 place-items-center rounded-control text-muted transition-colors hover:bg-danger-soft"><X className="size-5" aria-hidden /></button>
-              </div>
-            ))}
-            {errors.packs && <p role="alert" className="text-danger">{errors.packs}</p>}
-            {packs.length < 10 && (
-              <Button onClick={() => setPacks((r) => [...r, { name: "", qty: "" }])}><Plus className="size-[18px]" aria-hidden />{t("sk.item.packAdd")}</Button>
-            )}
+            <PackEditor rows={packs} onChange={(r) => { setPacks(r); setErrors({}); }} error={errors.packs} />
           </fieldset>
 
           <Input label={t("sk.item.sku")} hint={t("sk.item.skuHint")} value={form.sku} maxLength={60} onChange={set("sku")} error={errors.sku} />
@@ -313,7 +296,8 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
       <ItemPictures item={picturesOf} images={images} companyId={companyId} canManage={canManage} onClose={() => setPicturesOf(null)} />
 
       <ItemProperties item={items.find((x) => x.id === propsOf) ?? null} currency={items.find((x) => x.id === propsOf)?.currency_code ?? currency} canManage={canManage} onClose={() => setPropsOf(null)} />
-      <ItemVariants item={variantsOf} variants={variants} images={images} currency={variantsOf?.currency_code ?? currency} companyId={companyId} canManage={canManage} onClose={() => setVariantsOf(null)} />
+      <ItemVariants item={variantsOf} variants={variants} images={images} currency={variantsOf?.currency_code ?? currency} companyId={companyId} canManage={canManage} canViewCost={canViewCost}
+        itemCost={variantsOf ? costs[variantsOf.id] : undefined} itemPacks={variantsOf?.packs ?? []} variantCosts={variantCosts} onClose={() => setVariantsOf(null)} />
 
       <Modal open={removing !== null} onClose={() => setRemoving(null)} closeLabel={t("sk.close")} title={t("sk.item.deleteTitle")}
         footer={<><Button onClick={() => setRemoving(null)}>{t("sk.cancel")}</Button><Button variant="danger" loading={busy} onClick={() => removing && remove(removing)}>{t("sk.delete")}</Button></>}>
