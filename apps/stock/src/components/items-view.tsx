@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Boxes, FileUp, ImagePlus, ListChecks, Info, Lock, Package, Pencil, Plus, Search, Trash2, X } from "lucide-react";
-import { Badge, BarcodeScanner, Button, EmptyState, ErrorState, Input, Modal, ScanButton, Select, SidePanel, Textarea, Toggle, useToast } from "@uplif/ui";
+import { ActionMenu, type ActionMenuItem, Badge, BarcodeScanner, Button, EmptyState, ErrorState, Input, Modal, ScanButton, Select, SidePanel, Textarea, Toggle, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
@@ -146,6 +146,24 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
     router.refresh();
   }
 
+  // One visible action per row; the rest live behind the "more" button.
+  function rowActions(i: Item) {
+    const all: ActionMenuItem[] = [];
+    if (canManage) all.push({ key: "edit", label: t("sk.edit"), icon: Pencil, onClick: () => open(i) });
+    if (canManage || variantCount.get(i.id)) all.push({ key: "var", label: fill(t("sk.var.open"), { name: i.name }), icon: Boxes, onClick: () => setVariantsOf(i) });
+    if (canManage || i.properties.length > 0) all.push({ key: "prop", label: fill(t("sk.prop.open"), { name: i.name }), icon: ListChecks, onClick: () => setPropsOf(i.id) });
+    if (canManage || countByItem.get(i.id)) all.push({ key: "pic", label: fill(t("sk.pics.open"), { name: i.name }), icon: ImagePlus, onClick: () => setPicturesOf(i) });
+    if (canManage) all.push({ key: "del", label: t("sk.delete"), icon: Trash2, danger: true, onClick: () => setRemoving(i) });
+    const [main, ...rest] = all;
+    if (!main) return null;
+    return (
+      <div className="flex shrink-0 items-center">
+        <button type="button" aria-label={`${main.label}: ${i.name}`} onClick={main.onClick} className="grid size-11 place-items-center rounded-control text-primary-ink transition-colors hover:bg-primary-soft active:scale-95"><main.icon className="size-5" aria-hidden /></button>
+        <ActionMenu items={rest} title={pick(locale, i.name, i.name_local)} label={t("sk.more")} closeLabel={t("sk.close")} />
+      </div>
+    );
+  }
+
   const add = <Button variant="primary" className="w-full sm:w-auto" onClick={() => open("new")}><Plus className="size-[18px]" aria-hidden />{t("sk.item.add")}</Button>;
   const costN = form.cost.trim() === "" ? null : Number(form.cost), priceN = Number(form.price);
   const margin = canViewCost && costN !== null && Number.isFinite(costN) && Number.isFinite(priceN) && priceN > 0
@@ -153,7 +171,7 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
   const editCurrency = editing && editing !== "new" ? editing.currency_code : currency;
 
   return (
-    <main className="flex flex-col gap-4 p-4">
+    <main className="flex min-w-0 flex-col gap-4 overflow-x-hidden p-4">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{t("sk.item.title")}</h1>
         <p className="mt-1 text-muted">{t("sk.item.subtitle")}</p>
@@ -190,7 +208,7 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
               {shown.map((i) => {
                 const sub = [catPath(i.category_id), i.brand_id ? brandById.get(i.brand_id) && label(brandById.get(i.brand_id)!) : ""].filter(Boolean).join(" · ");
                 return (
-                  <li key={i.id} className="flex min-h-20 items-center gap-3 border-t border-line p-3 first:border-t-0">
+                  <li key={i.id} className="flex min-h-20 min-w-0 items-center gap-2 border-t border-line p-3 first:border-t-0">
                     <span className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-card bg-primary-soft text-primary-ink">
                       {mainByItem.get(i.id) ? <img src={mainByItem.get(i.id)!} alt="" className="size-full object-cover" /> : <Package className="size-6" aria-hidden />}
                     </span>
@@ -198,24 +216,10 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
                       <b className="block break-words">{pick(locale, i.name, i.name_local)}</b>
                       {i.name_local && <small className="block break-words text-muted">{locale === "en" ? i.name_local : i.name}</small>}
                       {sub && <small className="block break-words text-muted">{sub}</small>}
-                      <small className="block text-muted">{money(locale, i.price, i.currency_code)} · {i.base_uom}{i.sku ? ` · ${i.sku}` : ""}{variantCount.get(i.id) ? ` · ${fill(t("sk.var.count"), { n: String(variantCount.get(i.id)) })}` : ""}</small>
+                      <small className="block break-words text-muted">{money(locale, i.price, i.currency_code)} · {i.base_uom}{i.sku ? ` · ${i.sku}` : ""}{variantCount.get(i.id) ? ` · ${fill(t("sk.var.count"), { n: String(variantCount.get(i.id)) })}` : ""}</small>
                       {!i.is_active && <Badge tone="neutral">{t("sk.brands.inactive")}</Badge>}
                     </div>
-                    <div className="flex shrink-0 gap-1">
-                      {(canManage || variantCount.get(i.id)) && (
-                        <button type="button" aria-label={fill(t("sk.var.open"), { name: i.name })} onClick={() => setVariantsOf(i)} className="grid size-11 place-items-center rounded-control text-muted transition-colors hover:bg-primary-soft"><Boxes className="size-5" aria-hidden /></button>
-                      )}
-                      {(canManage || i.properties.length > 0) && (
-                        <button type="button" aria-label={fill(t("sk.prop.open"), { name: i.name })} onClick={() => setPropsOf(i.id)} className="grid size-11 place-items-center rounded-control text-muted transition-colors hover:bg-primary-soft"><ListChecks className="size-5" aria-hidden /></button>
-                      )}
-                      {(canManage || countByItem.get(i.id)) && (
-                        <button type="button" aria-label={fill(t("sk.pics.open"), { name: i.name })} onClick={() => setPicturesOf(i)} className="grid size-11 place-items-center rounded-control text-muted transition-colors hover:bg-primary-soft"><ImagePlus className="size-5" aria-hidden /></button>
-                      )}
-                      {canManage && (<>
-                        <button type="button" aria-label={`${t("sk.edit")}: ${i.name}`} onClick={() => open(i)} className="grid size-11 place-items-center rounded-control text-muted transition-colors hover:bg-primary-soft"><Pencil className="size-5" aria-hidden /></button>
-                        <button type="button" aria-label={`${t("sk.delete")}: ${i.name}`} onClick={() => setRemoving(i)} className="grid size-11 place-items-center rounded-control text-muted transition-colors hover:bg-danger-soft"><Trash2 className="size-5" aria-hidden /></button>
-                      </>)}
-                    </div>
+                    {rowActions(i)}
                   </li>
                 );
               })}
