@@ -10,6 +10,7 @@ import { fill } from "@/lib/messages";
 import { scanLabels } from "@/lib/scan-labels";
 import { pick } from "@/lib/format";
 import { AdjustForm } from "./adjust-form";
+import { CountSheet } from "./count-sheet";
 import { TransferPanel, type TransitTransfer } from "./transfer-panel";
 
 export interface ReceiveOption {
@@ -106,8 +107,9 @@ export function MoveView({ locations, suppliers, options, balances, transit, wri
             <EmptyState title={t("sk.mv.noItems")} body={t("sk.mv.noItemsBody")} action={<Link href="/items"><Button variant="primary">{t("sk.item.add")}</Button></Link>} />
           ) : (
             <>
-            <Tabs label={t("sk.mv.tabs")} value={mode} onChange={setMode} items={[{ id: "receive", label: t("sk.mv.tabReceive") }, { id: "adjust", label: t("sk.mv.tabAdjust") }, { id: "transfer", label: t("sk.mv.tabTransfer") }]} />
+            <Tabs label={t("sk.mv.tabs")} value={mode} onChange={setMode} items={[{ id: "receive", label: t("sk.mv.tabReceive") }, { id: "adjust", label: t("sk.mv.tabAdjust") }, { id: "count", label: t("sk.mv.tabCount") }, { id: "transfer", label: t("sk.mv.tabTransfer") }]} />
             {mode === "adjust" ? <AdjustForm locations={mineLocs} options={options} balances={balances} /> :
+            mode === "count" ? <CountSheet locations={mineLocs} options={options} balances={balances} /> :
             mode === "transfer" ? (locations.length < 2
               ? <EmptyState title={t("sk.tr.needTwo")} body={t("sk.tr.needTwoBody")} action={<Link href="/locations"><Button variant="primary">{t("sk.mv.addLocation")}</Button></Link>} />
               : <TransferPanel locations={locations} writableIds={writableIds} options={options} balances={balances} transit={transit} />) :
