@@ -27,3 +27,5 @@ export async function loadSignInMethods(supabase: SupabaseClient): Promise<{ met
   const { data, error } = await supabase.rpc("my_sign_in_methods");
   return { methods: (data as SignInMethodsData | null) ?? null, failed: !!error };
 }
+
+export { ssoEnabledFor, ssoStartRoute, ssoReturnRoute, ssoHubRoute } from "./sso";
