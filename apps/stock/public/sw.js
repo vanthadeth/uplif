@@ -1,6 +1,6 @@
 // UPLIF service worker. It never stores pages, API calls or Supabase responses, because those
 // are tenant data. It keeps only static build files and icons, plus one offline fallback page.
-const VERSION = "v2";
+const VERSION = "v3";
 const STATIC_CACHE = `uplif-static-${VERSION}`;
 const OFFLINE_URL = "/offline.html";
 
@@ -20,7 +20,7 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-const isStaticAsset = (url) => url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/");
+const isStaticAsset = (url) => url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/") || url.pathname === "/zxing_reader.wasm";
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;

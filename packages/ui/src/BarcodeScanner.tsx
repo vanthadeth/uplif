@@ -9,10 +9,19 @@ import { cn } from "./cn";
 interface Detector { detect(source: CanvasImageSource): Promise<{ rawValue: string }[]> }
 type DetectorCtor = (new (opts?: { formats?: string[] }) => Detector) & { getSupportedFormats?: () => Promise<string[]> };
 
-/** True when this browser can scan with the camera (needs the barcode reader and a camera). */
+/** True when this browser can scan with the camera. Without the built-in reader (iPhone Safari) a bundled reader is loaded on demand. */
 export function canScanBarcodes(): boolean {
   if (typeof window === "undefined") return false;
-  return "BarcodeDetector" in window && !!navigator.mediaDevices?.getUserMedia;
+  if (!navigator.mediaDevices?.getUserMedia) return false;
+  return "BarcodeDetector" in window || typeof WebAssembly === "object";
+}
+
+/** The built-in reader when there is one, otherwise the bundled one. The bundled reader fetches its engine from wasmUrl (same site, so it also works offline). */
+async function loadDetectorCtor(wasmUrl = "/zxing_reader.wasm"): Promise<DetectorCtor> {
+  if ("BarcodeDetector" in window) return (window as unknown as { BarcodeDetector: DetectorCtor }).BarcodeDetector;
+  const mod = await import("barcode-detector/ponyfill");
+  mod.setZXingModuleOverrides({ locateFile: (name: string, prefix: string) => (name.endsWith(".wasm") ? wasmUrl : prefix + name) });
+  return mod.BarcodeDetector as unknown as DetectorCtor;
 }
 
 export interface BarcodeScannerLabels {
@@ -31,18 +40,20 @@ export interface BarcodeScannerLabels {
  * Camera barcode scanner in a dialog. Calls onScan once with the first code it reads, then closes itself.
  * The camera is only on while the dialog is open and is always switched off again.
  */
-export function BarcodeScanner({ open, onClose, onScan, labels }: {
+export function BarcodeScanner({ open, onClose, onScan, labels, wasmUrl }: {
   open: boolean; onClose: () => void; onScan: (code: string) => void; labels: BarcodeScannerLabels;
+  /** Where the bundled reader's engine file is served from (default /zxing_reader.wasm, which an app copies into its public folder). Only used in browsers without a built-in reader. */
+  wasmUrl?: string;
 }) {
   return (
     <Modal open={open} onClose={onClose} closeLabel={labels.close} title={labels.title}
       footer={<Button onClick={onClose}>{labels.cancel}</Button>}>
-      {open && <ScannerBody onClose={onClose} onScan={onScan} labels={labels} />}
+      {open && <ScannerBody onClose={onClose} onScan={onScan} labels={labels} wasmUrl={wasmUrl} />}
     </Modal>
   );
 }
 
-function ScannerBody({ onClose, onScan, labels }: { onClose: () => void; onScan: (code: string) => void; labels: BarcodeScannerLabels }) {
+function ScannerBody({ onClose, onScan, labels, wasmUrl }: { onClose: () => void; onScan: (code: string) => void; labels: BarcodeScannerLabels; wasmUrl?: string }) {
   const video = useRef<HTMLVideoElement>(null);
   const [state, setState] = useState<"starting" | "live" | "denied" | "unsupported">(canScanBarcodes() ? "starting" : "unsupported");
   // Latest callbacks without restarting the camera when the parent re-renders.
@@ -63,7 +74,8 @@ function ScannerBody({ onClose, onScan, labels }: { onClose: () => void; onScan:
         el.srcObject = stream;
         await el.play();
         setState("live");
-        const Ctor = (window as unknown as { BarcodeDetector: DetectorCtor }).BarcodeDetector;
+        const Ctor = await loadDetectorCtor(wasmUrl);
+        if (stopped) return;
         const supported = (await Ctor.getSupportedFormats?.().catch(() => undefined)) ?? undefined;
         const detector = supported?.length ? new Ctor({ formats: supported }) : new Ctor();
         const tick = async () => {

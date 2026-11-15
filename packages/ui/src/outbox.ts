@@ -88,3 +88,10 @@ export function createOutbox<T>(name: string): Outbox<T> {
     subscribe(fn) { listeners.add(fn); return () => { listeners.delete(fn); }; },
   };
 }
+
+/** True for a failure caused by the connection, not by a rule on the server. Those are tried again later. */
+export function isNetworkError(e: { message?: string; code?: string } | null | undefined): boolean {
+  if (!e) return false;
+  if (typeof navigator !== "undefined" && navigator.onLine === false) return true;
+  return !e.code && /fetch|network|load failed|timed? ?out|offline/i.test(e.message ?? "");
+}

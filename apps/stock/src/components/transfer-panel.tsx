@@ -9,6 +9,7 @@ import { fill } from "@/lib/messages";
 import { scanLabels } from "@/lib/scan-labels";
 import { pick, qtyText } from "@/lib/format";
 import type { ReceiveOption } from "./move-view";
+import { useStockOutbox } from "./outbox-context";
 
 interface Named { id: string; name: string; name_local: string | null }
 export interface TransitTransfer { id: string; fromId: string; toId: string; sentAt: string; note: string | null; lines: { variantId: string; qty: number }[] }
@@ -20,6 +21,7 @@ export function TransferPanel({ locations, writableIds, options, balances, trans
 }) {
   const { t, locale } = useI18n();
   const toast = useToast();
+  const outbox = useStockOutbox();
   const router = useRouter();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -69,10 +71,10 @@ export function TransferPanel({ locations, writableIds, options, balances, trans
     if (parsed.some((l) => !Number.isFinite(l.qty) || l.qty <= 0)) return setErrors({ lines: t("sk.tr.qtyInvalid") });
     if (parsed.some((l) => l.qty > avail(l.variant_id))) return setErrors({ lines: t("sk.tr.tooMuch") });
     setBusy(true);
-    const { error } = await createClient().rpc("send_transfer", { p_request_id: requestId, p_from: from, p_to: to, p_note: note.trim() || null, p_lines: parsed });
+    const { error, queued } = await outbox.submit({ fn: "send_transfer", kind: "transfer", args: { p_request_id: requestId, p_from: from, p_to: to, p_note: note.trim() || null, p_lines: parsed } });
     setBusy(false);
     if (error) return toast("error", errMsg(error.code, error.message, t("sk.tr.failed")));
-    toast("success", t("sk.tr.done"));
+    toast("success", queued ? t("sk.ob.saved") : t("sk.tr.done"));
     setLines([]); setNote(""); setQuery(""); setErrors({});
     setRequestId(crypto.randomUUID());
     router.refresh();
@@ -82,10 +84,10 @@ export function TransferPanel({ locations, writableIds, options, balances, trans
     const parsed = tr.lines.map((l) => ({ variant_id: l.variantId, received: Number(got[`${tr.id}|${l.variantId}`] ?? l.qty) }));
     if (parsed.some((l, i) => !Number.isFinite(l.received) || l.received < 0 || l.received > tr.lines[i].qty)) return toast("error", t("sk.tr.receiveInvalid"));
     setActing(tr.id);
-    const { error } = await createClient().rpc("receive_transfer", { p_transfer_id: tr.id, p_lines: parsed });
+    const { error, queued } = await outbox.submit({ fn: "receive_transfer", kind: "arrival", args: { p_transfer_id: tr.id, p_lines: parsed } });
     setActing(null);
     if (error) { if (error.message === "transfer_closed") router.refresh(); return toast("error", errMsg(error.code, error.message, t("sk.tr.failed"))); }
-    toast("success", t("sk.tr.receiveDone")); setOpen(null); router.refresh();
+    toast("success", queued ? t("sk.ob.saved") : t("sk.tr.receiveDone")); setOpen(null); router.refresh();
   }
 
   async function cancel(tr: TransitTransfer) {

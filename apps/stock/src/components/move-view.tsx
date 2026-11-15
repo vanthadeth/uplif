@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Info, Plus, Search, Trash2 } from "lucide-react";
 import { BarcodeScanner, Button, EmptyState, ErrorState, Input, Select, Tabs, Textarea, useToast, ScanButton } from "@uplif/ui";
-import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
 import { scanLabels } from "@/lib/scan-labels";
 import { pick } from "@/lib/format";
+import { useStockOutbox } from "./outbox-context";
 import { AdjustForm } from "./adjust-form";
 import { CountSheet } from "./count-sheet";
 import { TransferPanel, type TransitTransfer } from "./transfer-panel";
@@ -29,6 +29,7 @@ export function MoveView({ locations, suppliers, options, balances, transit, wri
 }) {
   const { t, locale } = useI18n();
   const toast = useToast();
+  const outbox = useStockOutbox();
   const router = useRouter();
   const [mode, setMode] = useState("receive");
   const mineLocs = mine(locations, writableIds);
@@ -68,13 +69,13 @@ export function MoveView({ locations, suppliers, options, balances, transit, wri
     const parsed = lines.map((l) => ({ variant_id: l.variantId, qty: Number(l.qty) }));
     if (parsed.some((l) => !Number.isFinite(l.qty) || l.qty <= 0)) return setErrors({ lines: t("sk.mv.qtyInvalid") });
     setBusy(true);
-    const { error } = await createClient().rpc("receive_stock", {
+    const { error, queued } = await outbox.submit({ fn: "receive_stock", kind: "receive", args: {
       p_request_id: requestId, p_location_id: location, p_supplier_id: supplier || null,
       p_reference: reference.trim() || null, p_note: note.trim() || null, p_lines: parsed,
-    });
+    } });
     setBusy(false);
     if (error) return toast("error", error.code === "42501" ? t("sk.forbidden") : error.code === "P0001" ? t("sk.mv.failed") : t("sk.saveError"));
-    toast("success", t("sk.mv.done"));
+    toast("success", queued ? t("sk.ob.saved") : t("sk.mv.done"));
     setLines([]); setReference(""); setNote(""); setSupplier(""); setQuery(""); setErrors({});
     setRequestId(crypto.randomUUID());
     router.refresh();

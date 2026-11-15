@@ -3,12 +3,12 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, Trash2 } from "lucide-react";
 import { BarcodeScanner, Button, Input, Select, Textarea, useToast, ScanButton } from "@uplif/ui";
-import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
 import { scanLabels } from "@/lib/scan-labels";
 import { pick, qtyText } from "@/lib/format";
 import type { ReceiveOption } from "./move-view";
+import { useStockOutbox } from "./outbox-context";
 
 interface Named { id: string; name: string; name_local: string | null }
 type Line = { variantId: string; counted: string };
@@ -18,6 +18,7 @@ const REASONS = ["count", "damage", "loss", "found", "other"] as const;
 export function AdjustForm({ locations, options, balances }: { locations: Named[]; options: ReceiveOption[]; balances: Record<string, number> }) {
   const { t, locale } = useI18n();
   const toast = useToast();
+  const outbox = useStockOutbox();
   const router = useRouter();
   const [location, setLocation] = useState(locations.length === 1 ? locations[0].id : "");
   const [reason, setReason] = useState("count");
@@ -51,12 +52,12 @@ export function AdjustForm({ locations, options, balances }: { locations: Named[
     if (parsed.some((l) => !Number.isFinite(l.counted) || l.counted < 0)) return setErrors({ lines: t("sk.ad.countedInvalid") });
     if (parsed.every((l) => l.counted === system(l.variant_id))) return setErrors({ lines: t("sk.ad.noChange") });
     setBusy(true);
-    const { error } = await createClient().rpc("adjust_stock", {
+    const { error, queued } = await outbox.submit({ fn: "adjust_stock", kind: "adjust", args: {
       p_request_id: requestId, p_location_id: location, p_reason: reason, p_note: note.trim() || null, p_lines: parsed,
-    });
+    } });
     setBusy(false);
     if (error) return toast("error", error.code === "42501" ? t("sk.forbidden") : error.message === "no_change" ? t("sk.ad.noChange") : error.code === "P0001" ? t("sk.ad.failed") : t("sk.saveError"));
-    toast("success", t("sk.ad.done"));
+    toast("success", queued ? t("sk.ob.saved") : t("sk.ad.done"));
     setLines([]); setNote(""); setQuery(""); setErrors({}); setReason("count");
     setRequestId(crypto.randomUUID());
     router.refresh();

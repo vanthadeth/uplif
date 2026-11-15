@@ -3,12 +3,12 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { BarcodeScanner, Button, Input, ScanButton, Select, Textarea, useToast } from "@uplif/ui";
-import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
 import { scanLabels } from "@/lib/scan-labels";
 import { pick, qtyText } from "@/lib/format";
 import type { ReceiveOption } from "./move-view";
+import { useStockOutbox } from "./outbox-context";
 
 interface Named { id: string; name: string; name_local: string | null }
 const MAX_LINES = 200; // adjust_stock takes at most this many lines in one go
@@ -20,6 +20,7 @@ const MAX_LINES = 200; // adjust_stock takes at most this many lines in one go
 export function CountSheet({ locations, options, balances }: { locations: Named[]; options: ReceiveOption[]; balances: Record<string, number> }) {
   const { t, locale } = useI18n();
   const toast = useToast();
+  const outbox = useStockOutbox();
   const router = useRouter();
   const [location, setLocation] = useState(locations.length === 1 ? locations[0].id : "");
   const [showAll, setShowAll] = useState(false);
@@ -62,14 +63,14 @@ export function CountSheet({ locations, options, balances }: { locations: Named[
     if (changes.some((c) => !Number.isFinite(c.counted) || c.counted < 0)) return setError(t("sk.ad.countedInvalid"));
     const send = changes.slice(0, MAX_LINES);
     setBusy(true);
-    const { error: err } = await createClient().rpc("adjust_stock", {
+    const { error: err, queued } = await outbox.submit({ fn: "adjust_stock", kind: "count", args: {
       p_request_id: requestId, p_location_id: location, p_reason: "count", p_note: note.trim() || null,
       p_lines: send.map((c) => ({ variant_id: c.variantId, counted: c.counted })),
-    });
+    } });
     setBusy(false);
     if (err) return toast("error", err.code === "42501" ? t("sk.forbidden") : err.message === "no_change" ? t("sk.ad.noChange") : err.code === "P0001" ? t("sk.ad.failed") : t("sk.saveError"));
     const left = changes.length - send.length;
-    toast("success", fill(t("sk.ct.done"), { n: send.length }) + (left > 0 ? ` ${fill(t("sk.ct.more"), { n: left })}` : ""));
+    toast("success", (queued ? t("sk.ob.saved") + " " : "") + fill(t("sk.ct.done"), { n: send.length }) + (left > 0 ? ` ${fill(t("sk.ct.more"), { n: left })}` : ""));
     // Saved rows leave the sheet (their system quantity is now what was counted); the rest stay for the next save.
     setCounted((c) => Object.fromEntries(Object.entries(c).filter(([id]) => !send.some((s) => s.variantId === id))));
     setNote(""); setError(""); setRequestId(crypto.randomUUID());

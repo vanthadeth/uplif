@@ -2,6 +2,7 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 export interface StockState {
+  userId: string;
   companyId: string;
   companyName: string;
   companyNameLocal: string | null;
@@ -18,7 +19,8 @@ export const getStockState = cache(async (): Promise<StockState | null> => {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const companyId = (data?.claims?.app_metadata as { company_id?: string } | undefined)?.company_id;
-  if (!companyId) return null;
+  const userId = data?.claims?.sub;
+  if (!companyId || !userId) return null;
   const [mods, perms, companies] = await Promise.all([
     supabase.rpc("my_enabled_modules"), supabase.rpc("my_permissions"), supabase.rpc("list_my_companies"),
   ]);
@@ -27,7 +29,7 @@ export const getStockState = cache(async (): Promise<StockState | null> => {
   const keys = new Map((perms.data ?? []).map((p) => [p.permission_key, p.data_scope]));
   const manage = keys.get("stock.catalog.manage") === "company";
   return {
-    companyId, companyName: company.name, companyNameLocal: company.name_local,
+    userId, companyId, companyName: company.name, companyNameLocal: company.name_local,
     module: (mods.data ?? []).includes("inventory"),
     canRead: manage || keys.has("stock.catalog.read") || keys.has("stock.catalog.manage"),
     canManage: manage,
