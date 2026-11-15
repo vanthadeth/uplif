@@ -8,24 +8,8 @@ import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
 import { money, pick } from "@/lib/format";
 
-export type PropOption = { name: string; name_local: string | null; extra_charge: number };
-export type PropGroup = { name: string; name_local: string | null; selection: "one" | "many"; required: boolean; options: PropOption[] };
-export const MAX_GROUPS = 20;
-const MAX_OPTIONS = 30;
-
-/** Read the stored jsonb back into typed groups, ignoring anything malformed. */
-export function parseProperties(raw: unknown): PropGroup[] {
-  if (!Array.isArray(raw)) return [];
-  return raw.flatMap((g) => {
-    if (!g || typeof g !== "object" || !Array.isArray((g as PropGroup).options)) return [];
-    const x = g as PropGroup;
-    return [{
-      name: String(x.name ?? ""), name_local: x.name_local ? String(x.name_local) : null,
-      selection: x.selection === "many" ? "many" as const : "one" as const, required: x.required === true,
-      options: x.options.map((o) => ({ name: String(o.name ?? ""), name_local: o.name_local ? String(o.name_local) : null, extra_charge: Number(o.extra_charge) || 0 })),
-    }];
-  });
-}
+import { MAX_GROUPS, MAX_OPTIONS, type PropGroup, type PropOption } from "@/lib/item-properties";
+export { MAX_GROUPS, parseProperties, type PropGroup, type PropOption } from "@/lib/item-properties";
 
 type OptRow = { name: string; name_local: string; extra: string };
 const blankOpt = (): OptRow => ({ name: "", name_local: "", extra: "0" });
