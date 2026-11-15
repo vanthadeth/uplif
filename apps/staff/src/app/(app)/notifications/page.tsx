@@ -1,8 +1,8 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Award, CalendarDays, CircleCheck, FilePenLine, TrendingUp } from "lucide-react";
-import { Badge, Button, Card, EmptyState, ErrorState, Reveal, Skeleton, Toggle } from "@uplif/ui";
+import { Award, CalendarDays, CircleCheck, FilePenLine, PackageMinus, TrendingUp } from "lucide-react";
+import { APPS, Badge, Button, Card, EmptyState, ErrorState, Reveal, Skeleton, Toggle } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill, type MessageKey } from "@/lib/messages";
@@ -20,7 +20,13 @@ const KINDS: Record<string, { key: MessageKey; href: string; icon: typeof Award 
   performance_review: { key: "st.notif.performance_review", href: "/record/performance", icon: TrendingUp },
   promotion: { key: "st.notif.promotion", href: "/record/job", icon: Award },
   transfer: { key: "st.notif.transfer", href: "/record/job", icon: Award },
+  low_stock: { key: "st.notif.low_stock", href: "", icon: PackageMinus },
 };
+
+/** Where a notification opens. Low stock opens the item in the Stock app, which lives at its own address. */
+const STOCK_URL = APPS.find((a) => a.key === "stock")?.url ?? "";
+const target = (n: { kind: string; data: Record<string, unknown> }, href: string) =>
+  n.kind === "low_stock" ? `${STOCK_URL}/stock/${String(n.data.item_id ?? "")}` : href;
 
 /** The person's inbox: what happened to them (decisions, reviews, promotions), with one switch for new updates. */
 export default function NotificationsPage() {
@@ -69,6 +75,8 @@ export default function NotificationsPage() {
       month: d.period ? day(d.period, { month: "long", year: "numeric" }) : "",
       percent: Number(d.percent ?? 0),
       position: String((locale !== "en" && d.to_local) || d.to || ""),
+      item: String((locale !== "en" && d.name_local) || d.name || ""),
+      qty: Number(d.qty ?? 0), level: Number(d.level ?? 0), unit: String(d.unit ?? ""),
     });
     return d.note ? `${base} ${fill(t("st.job.note"), { note: String(d.note) })}` : base;
   };
@@ -118,7 +126,7 @@ export default function NotificationsPage() {
                     if (!k) return null;
                     const Icon = k.icon;
                     return (
-                      <Link key={n.id} href={k.href} className={`flex items-start gap-3 p-4 hover:bg-ground ${n.read_at ? "" : "bg-primary-soft/40"}`}>
+                      <Link key={n.id} href={target(n, k.href)} className={`flex items-start gap-3 p-4 hover:bg-ground ${n.read_at ? "" : "bg-primary-soft/40"}`}>
                         <span className="grid size-9 shrink-0 place-items-center rounded-control bg-primary-soft text-primary-ink"><Icon className="size-4" aria-hidden /></span>
                         <span className="min-w-0 flex-1"><span className="block break-words">{text(n)}</span><span className="text-sm text-muted">{ago(n.created_at)}</span></span>
                         {!n.read_at && <Badge tone="info">•</Badge>}

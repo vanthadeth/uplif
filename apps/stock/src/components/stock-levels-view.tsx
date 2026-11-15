@@ -2,8 +2,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
-import { Badge, Button, EmptyState, ErrorState } from "@uplif/ui";
+import { Download, Search } from "lucide-react";
+import { Badge, Button, EmptyState, ErrorState, downloadCsv, toCsv } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
 import { pick, qtyText } from "@/lib/format";
@@ -44,6 +44,15 @@ export function StockLevelsView({ rows, watch, failed }: { rows: LevelRow[]; wat
       .filter((g) => !lowOnly || (g.level !== null && g.total <= g.level));
   }, [rows, watch, query, lowOnly, locale, levelOf]);
 
+  function exportCsv() {
+    const out = groups.flatMap((g) => {
+      const status = g.level !== null && g.total <= g.level ? (g.total <= 0 ? "out" : "low") : "";
+      if (g.rows.length === 0) return [[g.name, "", g.sku, "", 0, g.uom, g.total, g.level, status]];
+      return g.rows.map((r) => [r.itemName, r.variantName, g.sku, r.locationName, r.qty, g.uom, g.total, g.level, status]);
+    });
+    downloadCsv("uplif-stock-levels.csv", toCsv(["item", "variant", "sku", "location", "qty", "unit", "item_total", "reorder_level", "status"], out));
+  }
+
   return (
     <main className="flex flex-col gap-4 p-4">
       <div>
@@ -67,6 +76,7 @@ export function StockLevelsView({ rows, watch, failed }: { rows: LevelRow[]; wat
               <span>{t("sk.lv.lowOnly")}</span>
             </label>
           )}
+          {groups.length > 0 && <div><Button onClick={exportCsv}><Download className="size-[18px]" aria-hidden />{t("sk.ex.button")}</Button></div>}
           {groups.length === 0 ? <p className="py-8 text-center text-muted">{lowOnly && !query.trim() ? t("sk.lv.noLow") : t("sk.lv.noMatch")}</p> : (
             <ul className="flex flex-col gap-3">
               {groups.map((g) => (
