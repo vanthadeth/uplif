@@ -810,6 +810,63 @@ export type Database = {
         }
         Relationships: []
       }
+      variant_costs: {
+        Row: {
+          company_id: string
+          cost: number
+          updated_at: string
+          variant_id: string
+        }
+        Insert: {
+          company_id: string
+          cost: number
+          updated_at?: string
+          variant_id: string
+        }
+        Update: {
+          company_id?: string
+          cost?: number
+          updated_at?: string
+          variant_id?: string
+        }
+        Relationships: []
+      }
+      price_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          changed_by_name: string | null
+          company_id: string
+          currency_code: string
+          id: string
+          item_id: string
+          new_price: number | null
+          old_price: number | null
+          variant_id: string | null
+          variant_name: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      cost_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          changed_by_name: string | null
+          company_id: string
+          currency_code: string
+          id: string
+          item_id: string
+          new_cost: number | null
+          old_cost: number | null
+          variant_id: string | null
+          variant_name: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       item_images: {
         Row: {
           company_id: string
@@ -849,6 +906,7 @@ export type Database = {
           item_id: string
           name: string
           name_local: string | null
+          packs: Json | null
           price: number | null
           sku: string | null
           updated_at: string
@@ -864,6 +922,7 @@ export type Database = {
           item_id: string
           name: string
           name_local?: string | null
+          packs?: Json | null
           price?: number | null
           sku?: string | null
           updated_at?: string
@@ -879,6 +938,7 @@ export type Database = {
           item_id?: string
           name?: string
           name_local?: string | null
+          packs?: Json | null
           price?: number | null
           sku?: string | null
           updated_at?: string

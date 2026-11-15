@@ -9,14 +9,16 @@ import { fill } from "@/lib/messages";
 import { scanLabels } from "@/lib/scan-labels";
 import { money, pick } from "@/lib/format";
 import type { ItemImage } from "@/components/item-pictures";
+import { PackEditor } from "@/components/pack-editor";
+import { measureSummary, packsToRows, rowsToPacks, type Pack, type PackRow } from "@/lib/packs";
 
 export interface Variant {
   id: string; item_id: string; name: string; name_local: string | null; sku: string | null; barcode: string | null;
-  price: number | null; image_id: string | null; is_default: boolean; is_active: boolean;
+  price: number | null; image_id: string | null; is_default: boolean; is_active: boolean; packs: Pack[] | null;
 }
 export const MAX_VARIANTS = 100;
 
-const blank = { name: "", name_local: "", sku: "", barcode: "", price: "", image_id: "" };
+const blank = { name: "", name_local: "", sku: "", barcode: "", price: "", cost: "", image_id: "" };
 type Mode = "list" | "form" | "generate";
 
 /** Split a typed list ("S, M, L") into clean, distinct values. */
@@ -26,9 +28,10 @@ const parseList = (s: string) => {
 };
 
 /** The counted versions of one item (shirt sizes, cup sizes). Every action is saved at once. */
-export function ItemVariants({ item, variants, images, currency, companyId, canManage, onClose }: {
+export function ItemVariants({ item, variants, images, currency, companyId, canManage, canViewCost, itemCost, itemPacks, variantCosts, onClose }: {
   item: { id: string; name: string; name_local: string | null; price: number } | null; variants: Variant[]; images: ItemImage[];
   currency: string; companyId: string; canManage: boolean; onClose: () => void;
+  canViewCost: boolean; itemCost: number | undefined; itemPacks: Pack[]; variantCosts: Record<string, number>;
 }) {
   const { t, locale } = useI18n();
   const toast = useToast();
@@ -38,10 +41,12 @@ export function ItemVariants({ item, variants, images, currency, companyId, canM
   const [removing, setRemoving] = useState<Variant | null>(null);
   const [form, setForm] = useState(blank);
   const [active, setActive] = useState(true);
+  const [ownPacks, setOwnPacks] = useState(false);
+  const [packRows, setPackRows] = useState<PackRow[]>([]);
   const [list1, setList1] = useState("");
   const [list2, setList2] = useState("");
   const [help, setHelp] = useState(false);
-  const [errors, setErrors] = useState<{ name?: string; price?: string; sku?: string; barcode?: string; lists?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; price?: string; cost?: string; packs?: string; sku?: string; barcode?: string; lists?: string }>({});
   const [defaultBarcode, setDefaultBarcode] = useState<string | null>(null);
   const [scanFor, setScanFor] = useState<"default" | "variant" | null>(null);
   const [busy, setBusy] = useState(false);
@@ -66,7 +71,9 @@ export function ItemVariants({ item, variants, images, currency, companyId, canM
   function back() { setMode("list"); setEditing(null); setErrors({}); }
   function openForm(v: Variant | "new") {
     setEditing(v); setMode("form"); setErrors({});
-    setForm(v === "new" ? blank : { name: v.name, name_local: v.name_local ?? "", sku: v.sku ?? "", barcode: v.barcode ?? "", price: v.price == null ? "" : String(v.price), image_id: v.image_id ?? "" });
+    setForm(v === "new" ? blank : { name: v.name, name_local: v.name_local ?? "", sku: v.sku ?? "", barcode: v.barcode ?? "", price: v.price == null ? "" : String(v.price), cost: variantCosts[v.id] === undefined ? "" : String(variantCosts[v.id]), image_id: v.image_id ?? "" });
+    setOwnPacks(v !== "new" && v.packs != null);
+    setPackRows(v === "new" ? [] : packsToRows(v.packs));
     setActive(v === "new" ? true : v.is_active);
   }
   function failure(err: { code?: string; message?: string }) {
@@ -84,10 +91,14 @@ export function ItemVariants({ item, variants, images, currency, companyId, canM
     const price = form.price.trim() === "" ? null : Number(form.price);
     if (!form.name.trim()) return setErrors({ name: t("sk.var.nameRequired") });
     if (price !== null && (!Number.isFinite(price) || price < 0)) return setErrors({ price: t("sk.item.priceInvalid") });
+    const cost = form.cost.trim() === "" ? null : Number(form.cost);
+    if (canViewCost && cost !== null && (!Number.isFinite(cost) || cost < 0)) return setErrors({ cost: t("sk.cost.invalid") });
+    const { packs: parsedPacks, problem } = ownPacks ? rowsToPacks(packRows) : { packs: null, problem: undefined };
+    if (problem) return setErrors({ packs: t(problem === "pack" ? "sk.item.packInvalid" : problem === "weight" ? "sk.pack.netOver" : "sk.pack.measureInvalid") });
     setBusy(true);
     const values = {
       name: form.name.trim(), name_local: form.name_local.trim() || null, sku: form.sku.trim() || null,
-      barcode: form.barcode.trim() || null, price, image_id: form.image_id || null,
+      barcode: form.barcode.trim() || null, price, image_id: form.image_id || null, packs: parsedPacks,
     };
     const supabase = createClient();
     const res = editing === "new"
@@ -96,6 +107,14 @@ export function ItemVariants({ item, variants, images, currency, companyId, canM
     setBusy(false);
     if (res.error) return failure(res.error);
     if (!res.data?.length) return toast("error", t("sk.forbidden"));
+    if (canViewCost) {
+      const id = res.data[0].id;
+      const had = editing !== "new" && variantCosts[(editing as Variant).id] !== undefined;
+      const r = cost === null
+        ? (had ? await supabase.from("variant_costs").delete().eq("variant_id", id) : { error: null })
+        : await supabase.from("variant_costs").upsert({ variant_id: id, company_id: companyId, cost });
+      if (r.error) toast("error", t("sk.saveError"));
+    }
     toast("success", editing === "new" ? t("sk.var.added") : t("sk.var.saved"));
     back();
     router.refresh();
@@ -151,8 +170,8 @@ export function ItemVariants({ item, variants, images, currency, companyId, canM
     : mode === "generate"
       ? <><Button onClick={back}>{t("sk.cancel")}</Button><Button variant="primary" loading={busy} disabled={generated.length === 0} onClick={createMany}>{t("sk.var.genCreate")}</Button></>
       : canManage
-        ? <><Button onClick={() => { setMode("generate"); setErrors({}); }}><Wand2 className="size-[18px]" aria-hidden />{t("sk.var.generate")}</Button>
-          <Button variant="primary" onClick={() => openForm("new")}><Plus className="size-[18px]" aria-hidden />{t("sk.var.add")}</Button></>
+        ? <><Button className="shrink-0" onClick={() => { setMode("generate"); setErrors({}); }} aria-label={t("sk.var.generate")} title={t("sk.var.generate")}><Wand2 className="size-5" aria-hidden /></Button>
+          <Button variant="primary" className="min-w-0 flex-1" onClick={() => openForm("new")}><Plus className="size-[18px]" aria-hidden />{t("sk.var.add")}</Button></>
         : undefined;
 
   return (
@@ -199,6 +218,8 @@ export function ItemVariants({ item, variants, images, currency, companyId, canM
                       <b className="block break-words">{label(v)}</b>
                       {v.name_local && <small className="block break-words text-muted">{locale === "en" ? v.name_local : v.name}</small>}
                       <small className="block text-muted">{money(locale, v.price ?? item?.price ?? 0, currency)}{v.barcode ? ` · ${v.barcode}` : ""}{v.sku ? ` · ${v.sku}` : ""}</small>
+                      {canViewCost && variantCosts[v.id] !== undefined && <small className="block text-muted">{t("sk.var.cost")}: {money(locale, variantCosts[v.id], currency)}</small>}
+                      {(v.packs ?? itemPacks).length > 0 && <small className="block break-words text-muted">{(v.packs ?? itemPacks).map((p) => `${p.name} ${p.qty}${measureSummary(p) ? ` (${measureSummary(p)})` : ""}`).join(" · ")}</small>}
                       {!v.is_active && <Badge tone="neutral">{t("sk.brands.inactive")}</Badge>}
                     </div>
                     {canManage && (
@@ -219,11 +240,24 @@ export function ItemVariants({ item, variants, images, currency, companyId, canM
             <Input label={t("sk.var.name")} value={form.name} maxLength={160} onChange={set("name")} error={errors.name} />
             <Input label={t("sk.brands.nameLocal")} hint={t("sk.brands.nameLocalHint")} value={form.name_local} maxLength={160} onChange={set("name_local")} />
             <Input label={t("sk.var.price")} hint={`${t("sk.var.priceHint")} (${currency})`} type="number" inputMode="decimal" min={0} step="any" value={form.price} onChange={set("price")} error={errors.price} />
+            {canViewCost && (
+              <Input label={t("sk.var.cost")} hint={`${t("sk.var.costHint")} (${currency})${itemCost !== undefined ? ` ${money(locale, itemCost, currency)}` : ""}`} type="number" inputMode="decimal" min={0} step="any" value={form.cost} onChange={set("cost")} error={errors.cost} />
+            )}
             <div className="flex items-end gap-2">
               <div className="min-w-0 flex-1"><Input label={t("sk.var.barcode")} value={form.barcode} maxLength={60} onChange={set("barcode")} error={errors.barcode} /></div>
               <ScanButton onClick={() => setScanFor("variant")} label={t("sk.scan.open")} />
             </div>
             <Input label={t("sk.var.sku")} value={form.sku} maxLength={60} onChange={set("sku")} error={errors.sku} />
+            <fieldset className="flex flex-col gap-3 rounded-card border border-line p-3">
+              <legend className="px-1 font-semibold">{t("sk.item.packs")}</legend>
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0"><b className="block">{t("sk.var.ownPacks")}</b><small className="block text-muted">{t("sk.var.ownPacksHint")}</small></div>
+                <Toggle checked={ownPacks} onChange={setOwnPacks} label={t("sk.var.ownPacks")} />
+              </div>
+              {ownPacks
+                ? <PackEditor rows={packRows} onChange={(r) => { setPackRows(r); setErrors({}); }} error={errors.packs} />
+                : <p className="break-words text-muted">{itemPacks.length ? itemPacks.map((p) => `${p.name} ${p.qty}`).join(" · ") : t("sk.var.usesItem")}</p>}
+            </fieldset>
             <fieldset className="flex flex-col gap-2">
               <legend className="mb-1 text-[14px] font-semibold text-ink-2">{t("sk.var.picture")}</legend>
               <div className="flex flex-wrap gap-2">
