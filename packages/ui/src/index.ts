@@ -1,5 +1,6 @@
 export * from "./cn";
 export * from "./Button";
+export * from "./ActionMenu";
 export * from "./Field";
 export * from "./FloatingBar";
 export * from "./Select";
