@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { ssoEnabledFor } from "@uplif/auth/server";
 import { supabasePublishableKey, supabaseUrl } from "@uplif/supabase/env";
 
 // Refreshes the Supabase session cookie and keeps signed-out visitors on the sign-in page.
@@ -21,7 +22,8 @@ export async function proxy(request: NextRequest) {
   const open = ["/login", "/auth"].some((p) => pathname === p || pathname.startsWith(`${p}/`));
   if (!data?.claims && !open) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    // Single sign-on: ask the hub first; /login is the fallback (and stays reachable by hand).
+    url.pathname = ssoEnabledFor(request.nextUrl.origin) ? "/auth/sso/start" : "/login";
     url.search = pathname === "/" ? "" : `?next=${encodeURIComponent(pathname)}`;
     return NextResponse.redirect(url);
   }
