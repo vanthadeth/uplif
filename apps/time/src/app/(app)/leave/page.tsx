@@ -1,5 +1,5 @@
-import { Soon } from "@/components/soon";
+import { LeaveView } from "@/components/leave-view";
 
 export default function Page() {
-  return <Soon title="tm.leave.title" />;
+  return <LeaveView />;
 }

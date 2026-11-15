@@ -1785,6 +1785,14 @@ export type Database = {
         Args: { p_from: string; p_days?: number; p_branch_id?: string }
         Returns: { employee_id: string; name: string; name_local: string | null; branch_id: string | null; position_name: string | null; position_name_local: string | null; days: string[]; work_days: number; on_time: number; late: number; early_leave: number; absent: number; leave_days: number; incomplete: number; late_min: number; overtime_min: number; worked_min: number; flagged_days: number }[]
       }
+      time_leave_balances: {
+        Args: { p_year?: number }
+        Returns: { employee_id: string; name: string; name_local: string | null; type_id: string; type_code: string; type_name: string; type_name_local: string | null; entitled: number; allowance: number; used: number; pending: number }[]
+      }
+      grant_leave_allowance: {
+        Args: { p_employee_id: string; p_type_id: string; p_year: number; p_days: number; p_reason: string }
+        Returns: string
+      }
       time_today: {
         Args: { p_branch_id?: string }
         Returns: { employee_id: string; name: string; name_local: string | null; branch_id: string | null; position_name: string | null; position_name_local: string | null; status: string; first_in: string | null; late_min: number; overtime_min: number; flagged: boolean }[]

@@ -10,6 +10,8 @@ export interface TimeState {
   module: boolean;
   /** Time is for people who may read other people's attendance: team, branch or company scope. */
   canLook: boolean;
+  /** May give or take leave days (leave.allowance.manage, company scope). */
+  canGiveLeave: boolean;
 }
 
 /** The signed-in person's company, plan and attendance scope. Cached for one request so the layout and pages share it. */
@@ -29,5 +31,6 @@ export const getTimeState = cache(async (): Promise<TimeState | null> => {
     userId, companyId, companyName: company.name, companyNameLocal: company.name_local,
     module: (mods.data ?? []).includes("attendance"),
     canLook: !!scope && scope !== "own",
+    canGiveLeave: (perms.data ?? []).some((p) => p.permission_key === "leave.allowance.manage" && p.data_scope === "company"),
   };
 });
