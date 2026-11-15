@@ -1,5 +1,5 @@
-import { Soon } from "@/components/soon";
+import { PayrollView } from "@/components/payroll-view";
 
 export default function Page() {
-  return <Soon title="tm.payroll.title" />;
+  return <PayrollView />;
 }

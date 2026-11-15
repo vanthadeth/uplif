@@ -12,6 +12,10 @@ export interface TimeState {
   canLook: boolean;
   /** May give or take leave days (leave.allowance.manage, company scope). */
   canGiveLeave: boolean;
+  /** Pay permissions, always company scope (payroll.terms.view / .manage / payroll.settings.manage). */
+  canViewPay: boolean;
+  canManagePay: boolean;
+  canPaySettings: boolean;
 }
 
 /** The signed-in person's company, plan and attendance scope. Cached for one request so the layout and pages share it. */
@@ -27,10 +31,14 @@ export const getTimeState = cache(async (): Promise<TimeState | null> => {
   const company = companies.data?.find((c) => c.company_id === companyId);
   if (!company) return null;
   const scope = (perms.data ?? []).find((p) => p.permission_key === "attendance.record.read")?.data_scope;
+  const company$ = (key: string) => (perms.data ?? []).some((p) => p.permission_key === key && p.data_scope === "company");
   return {
     userId, companyId, companyName: company.name, companyNameLocal: company.name_local,
     module: (mods.data ?? []).includes("attendance"),
     canLook: !!scope && scope !== "own",
-    canGiveLeave: (perms.data ?? []).some((p) => p.permission_key === "leave.allowance.manage" && p.data_scope === "company"),
+    canGiveLeave: company$("leave.allowance.manage"),
+    canViewPay: company$("payroll.terms.view"),
+    canManagePay: company$("payroll.terms.manage"),
+    canPaySettings: company$("payroll.settings.manage"),
   };
 });
