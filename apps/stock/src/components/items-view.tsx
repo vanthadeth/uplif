@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileUp, ImagePlus, ListChecks, Info, Lock, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { FileUp, History, ImagePlus, ListChecks, Info, Lock, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { ActionMenu, type ActionMenuItem, Badge, BarcodeScanner, Button, EmptyState, ErrorState, Input, Modal, ScanButton, Select, SidePanel, Textarea, Toggle, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
@@ -14,6 +14,7 @@ import { ItemProperties, type PropGroup } from "@/components/item-properties";
 import { ItemsImport } from "@/components/items-import";
 import { scanLabels } from "@/lib/scan-labels";
 import { PackEditor } from "@/components/pack-editor";
+import { PriceHistorySheet } from "@/components/price-history-sheet";
 import { packsToRows, rowsToPacks, type Pack, type PackRow } from "@/lib/packs";
 export type { Pack };
 
@@ -40,6 +41,7 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
   const [picturesOf, setPicturesOf] = useState<Item | null>(null);
   const [variantsOf, setVariantsOf] = useState<Item | null>(null);
   const [propsOf, setPropsOf] = useState<string | null>(null);
+  const [historyOf, setHistoryOf] = useState<Item | null>(null);
   const [importing, setImporting] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [form, setForm] = useState(blank);
@@ -163,6 +165,7 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
     if (canManage) all.push({ key: "edit", label: t("sk.edit"), icon: Pencil, onClick: () => open(i) });
     if (canManage || i.properties.length > 0) all.push({ key: "prop", label: fill(t("sk.prop.open"), { name: i.name }), icon: ListChecks, onClick: () => setPropsOf(i.id) });
     if (canManage || countByItem.get(i.id)) all.push({ key: "pic", label: fill(t("sk.pics.open"), { name: i.name }), icon: ImagePlus, onClick: () => setPicturesOf(i) });
+    all.push({ key: "hist", label: t("sk.hist.open"), icon: History, onClick: () => setHistoryOf(i) });
     if (canManage) all.push({ key: "del", label: t("sk.delete"), icon: Trash2, danger: true, onClick: () => setRemoving(i) });
     return <ActionMenu items={all} title={pick(locale, i.name, i.name_local)} label={t("sk.more")} closeLabel={t("sk.close")} />;
   }
@@ -298,6 +301,8 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
       <ItemProperties item={items.find((x) => x.id === propsOf) ?? null} currency={items.find((x) => x.id === propsOf)?.currency_code ?? currency} canManage={canManage} onClose={() => setPropsOf(null)} />
       <ItemVariants item={variantsOf} variants={variants} images={images} currency={variantsOf?.currency_code ?? currency} companyId={companyId} canManage={canManage} canViewCost={canViewCost}
         itemCost={variantsOf ? costs[variantsOf.id] : undefined} itemPacks={variantsOf?.packs ?? []} variantCosts={variantCosts} onClose={() => setVariantsOf(null)} />
+
+      <PriceHistorySheet item={historyOf} canViewCost={canViewCost} onClose={() => setHistoryOf(null)} />
 
       <Modal open={removing !== null} onClose={() => setRemoving(null)} closeLabel={t("sk.close")} title={t("sk.item.deleteTitle")}
         footer={<><Button onClick={() => setRemoving(null)}>{t("sk.cancel")}</Button><Button variant="danger" loading={busy} onClick={() => removing && remove(removing)}>{t("sk.delete")}</Button></>}>

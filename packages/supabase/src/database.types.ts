@@ -831,6 +831,42 @@ export type Database = {
         }
         Relationships: []
       }
+      price_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          changed_by_name: string | null
+          company_id: string
+          currency_code: string
+          id: string
+          item_id: string
+          new_price: number | null
+          old_price: number | null
+          variant_id: string | null
+          variant_name: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      cost_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          changed_by_name: string | null
+          company_id: string
+          currency_code: string
+          id: string
+          item_id: string
+          new_cost: number | null
+          old_cost: number | null
+          variant_id: string | null
+          variant_name: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       item_images: {
         Row: {
           company_id: string
