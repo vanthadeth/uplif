@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Boxes, FileUp, ImagePlus, ListChecks, Info, Lock, Package, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { FileUp, ImagePlus, ListChecks, Info, Lock, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { ActionMenu, type ActionMenuItem, Badge, BarcodeScanner, Button, EmptyState, ErrorState, Input, Modal, ScanButton, Select, SidePanel, Textarea, Toggle, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
@@ -48,9 +48,7 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
   const [busy, setBusy] = useState(false);
   const set = (k: keyof typeof blank) => (e: { target: { value: string } }) => { setForm((f) => ({ ...f, [k]: e.target.value })); setErrors({}); };
 
-  const mainByItem = useMemo(() => new Map(images.filter((i) => i.is_main).map((i) => [i.item_id, i.url])), [images]);
   const countByItem = useMemo(() => images.reduce((m, i) => m.set(i.item_id, (m.get(i.item_id) ?? 0) + 1), new Map<string, number>()), [images]);
-  const variantCount = useMemo(() => variants.filter((v) => !v.is_default).reduce((m, v) => m.set(v.item_id, (m.get(v.item_id) ?? 0) + 1), new Map<string, number>()), [variants]);
   const catById = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
   const brandById = useMemo(() => new Map(brands.map((b) => [b.id, b])), [brands]);
   const label = (n: { name: string; name_local: string | null }) => pick(locale, n.name, n.name_local);
@@ -80,6 +78,19 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
     const q = query.trim().toLowerCase();
     return items.filter((i) => !q || [i.name, i.name_local, i.sku, codesByItem.get(i.id)].filter(Boolean).join(" ").toLowerCase().includes(q));
   }, [items, query, codesByItem]);
+
+  const variantsByItem = useMemo(() => variants.filter((v) => !v.is_default).reduce((m, v) => m.set(v.item_id, [...(m.get(v.item_id) ?? []), v]), new Map<string, Variant[]>()), [variants]);
+  // Items grouped by category (a sub-category shows as "Main › Sub"); items without one come last.
+  const groups = useMemo(() => {
+    const by = new Map<string, { key: string; title: string; items: Item[] }>();
+    for (const i of shown) {
+      const key = i.category_id ?? "";
+      if (!by.has(key)) by.set(key, { key: key || "none", title: key ? catPath(key) : t("sk.item.noCategory"), items: [] });
+      by.get(key)!.items.push(i);
+    }
+    return [...by.values()].sort((a, b) => (a.key === "none" ? 1 : b.key === "none" ? -1 : a.title.localeCompare(b.title, locale)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shown, categories, locale]);
 
   function open(i: Item | "new") {
     setEditing(i);
@@ -146,22 +157,14 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
     router.refresh();
   }
 
-  // One visible action per row; the rest live behind the "more" button.
-  function rowActions(i: Item) {
+  // Tapping a row shows its variants; every other action sits behind the "more" button.
+  function rowMenu(i: Item) {
     const all: ActionMenuItem[] = [];
     if (canManage) all.push({ key: "edit", label: t("sk.edit"), icon: Pencil, onClick: () => open(i) });
-    if (canManage || variantCount.get(i.id)) all.push({ key: "var", label: fill(t("sk.var.open"), { name: i.name }), icon: Boxes, onClick: () => setVariantsOf(i) });
     if (canManage || i.properties.length > 0) all.push({ key: "prop", label: fill(t("sk.prop.open"), { name: i.name }), icon: ListChecks, onClick: () => setPropsOf(i.id) });
     if (canManage || countByItem.get(i.id)) all.push({ key: "pic", label: fill(t("sk.pics.open"), { name: i.name }), icon: ImagePlus, onClick: () => setPicturesOf(i) });
     if (canManage) all.push({ key: "del", label: t("sk.delete"), icon: Trash2, danger: true, onClick: () => setRemoving(i) });
-    const [main, ...rest] = all;
-    if (!main) return null;
-    return (
-      <div className="flex shrink-0 items-center">
-        <button type="button" aria-label={`${main.label}: ${i.name}`} onClick={main.onClick} className="grid size-11 place-items-center rounded-control text-primary-ink transition-colors hover:bg-primary-soft active:scale-95"><main.icon className="size-5" aria-hidden /></button>
-        <ActionMenu items={rest} title={pick(locale, i.name, i.name_local)} label={t("sk.more")} closeLabel={t("sk.close")} />
-      </div>
-    );
+    return <ActionMenu items={all} title={pick(locale, i.name, i.name_local)} label={t("sk.more")} closeLabel={t("sk.close")} />;
   }
 
   const add = <Button variant="primary" className="w-full sm:w-auto" onClick={() => open("new")}><Plus className="size-[18px]" aria-hidden />{t("sk.item.add")}</Button>;
@@ -209,26 +212,34 @@ export function ItemsView({ items, images, variants, categories, brands, currenc
           {shown.length === 0 ? (
             <p className="py-8 text-center text-muted">{t("sk.item.noMatch")}</p>
           ) : (
-            <ul className="overflow-hidden rounded-card border border-line bg-surface">
-              {shown.map((i) => {
-                const sub = [catPath(i.category_id), i.brand_id ? brandById.get(i.brand_id) && label(brandById.get(i.brand_id)!) : ""].filter(Boolean).join(" · ");
-                return (
-                  <li key={i.id} className="flex min-h-20 min-w-0 items-center gap-2 border-t border-line p-3 first:border-t-0">
-                    <span className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-card bg-primary-soft text-primary-ink">
-                      {mainByItem.get(i.id) ? <img src={mainByItem.get(i.id)!} alt="" className="size-full object-cover" /> : <Package className="size-6" aria-hidden />}
-                    </span>
-                    <div className="min-w-0 flex-1 leading-snug">
-                      <b className="block break-words">{pick(locale, i.name, i.name_local)}</b>
-                      {i.name_local && <small className="block break-words text-muted">{locale === "en" ? i.name_local : i.name}</small>}
-                      {sub && <small className="block break-words text-muted">{sub}</small>}
-                      <small className="block break-words text-muted">{money(locale, i.price, i.currency_code)} · {i.base_uom}{i.sku ? ` · ${i.sku}` : ""}{variantCount.get(i.id) ? ` · ${fill(t("sk.var.count"), { n: String(variantCount.get(i.id)) })}` : ""}</small>
-                      {!i.is_active && <Badge tone="neutral">{t("sk.brands.inactive")}</Badge>}
-                    </div>
-                    {rowActions(i)}
-                  </li>
-                );
-              })}
-            </ul>
+            <div className="flex flex-col gap-4">
+              {groups.map((g) => (
+                <section key={g.key} aria-label={g.title}>
+                  <h2 className="mb-2 flex items-baseline gap-2 px-1 text-sm font-semibold uppercase tracking-wide text-muted">
+                    <span className="min-w-0 break-words">{g.title}</span><span className="font-normal">{g.items.length}</span>
+                  </h2>
+                  <ul className="overflow-hidden rounded-card border border-line bg-surface">
+                    {g.items.map((i) => {
+                      const brand = i.brand_id ? brandById.get(i.brand_id) : undefined;
+                      const vs = variantsByItem.get(i.id) ?? [];
+                      return (
+                        <li key={i.id} className="flex min-w-0 items-stretch border-t border-line first:border-t-0">
+                          <button type="button" onClick={() => setVariantsOf(i)} aria-label={fill(t("sk.var.open"), { name: i.name })}
+                            className="flex min-h-16 min-w-0 flex-1 flex-col justify-center p-3 text-left leading-snug transition-colors hover:bg-primary-soft active:bg-primary-soft">
+                            <b className="block break-words">{pick(locale, i.name, i.name_local)}</b>
+                            {i.name_local && <small className="block break-words text-muted">{locale === "en" ? i.name_local : i.name}</small>}
+                            {brand && <small className="block break-words text-muted">{label(brand)}</small>}
+                            {vs.length > 0 && <small className="block break-words text-muted">{vs.map((v) => pick(locale, v.name, v.name_local)).join(" · ")}</small>}
+                            {!i.is_active && <span className="mt-1"><Badge tone="neutral">{t("sk.brands.inactive")}</Badge></span>}
+                          </button>
+                          <div className="flex shrink-0 items-center pr-1">{rowMenu(i)}</div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              ))}
+            </div>
           )}
         </>
       )}
