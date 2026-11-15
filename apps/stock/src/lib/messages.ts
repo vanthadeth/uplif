@@ -496,6 +496,7 @@ export const en = {
   "sk.ob.k.count": "Stock count",
   "sk.ob.k.transfer": "Transfer",
   "sk.ob.k.arrival": "Transfer arrival",
+  "sk.ex.button": "Export CSV",
   "sk.inuse": "This has stock records, so it cannot be deleted. Turn it off instead.",
   "sk.var.count": "{n} variants",
   // Shared with the apps switcher (strings already in the database).
@@ -1026,6 +1027,7 @@ export const km: Record<MessageKey, string> = {
   "sk.ob.k.count": "ការរាប់ស្តុក",
   "sk.ob.k.transfer": "ការផ្ទេរ",
   "sk.ob.k.arrival": "ការមកដល់នៃការផ្ទេរ",
+  "sk.ex.button": "នាំចេញ CSV",
   "sk.inuse": "នេះមានកំណត់ត្រាស្តុក ដូច្នេះមិនអាចលុបបានទេ។ សូមបិទវាជំនួសវិញ។",
   "sk.var.count": "ជម្រើស {n}",
   // Shared with the apps switcher.

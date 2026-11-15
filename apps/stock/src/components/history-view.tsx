@@ -2,8 +2,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Search } from "lucide-react";
-import { Badge, Button, EmptyState, ErrorState, Select } from "@uplif/ui";
+import { ArrowLeft, Download, Search } from "lucide-react";
+import { Badge, Button, EmptyState, ErrorState, Select, downloadCsv, toCsv } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
 import { pick, qtyText } from "@/lib/format";
 
@@ -34,6 +34,12 @@ export function HistoryView({ rows, locations, more, nextLimit, failed }: { rows
     return t("sk.mv.kindReceive");
   };
 
+  function exportCsv() {
+    downloadCsv("uplif-stock-history.csv", toCsv(
+      ["date", "type", "reason", "step", "item", "variant", "location", "qty_change", "unit", "reference"],
+      shown.map((r) => [r.at, r.kind, r.reason, r.step, r.itemName, r.variantName, r.locationName, r.qty, r.uom, r.reference])));
+  }
+
   return (
     <main className="flex flex-col gap-4 p-4">
       <div>
@@ -61,6 +67,7 @@ export function HistoryView({ rows, locations, more, nextLimit, failed }: { rows
               <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("sk.hi.search")} aria-label={t("sk.hi.search")}
                 className="min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-muted" />
             </label>
+            {shown.length > 0 && <div><Button onClick={exportCsv}><Download className="size-[18px]" aria-hidden />{t("sk.ex.button")}</Button></div>}
             {shown.length === 0 ? <p className="py-8 text-center text-muted">{t("sk.hi.noMatch")}</p> : (
               <ul className="overflow-hidden rounded-card border border-line bg-surface">
                 {shown.map((r) => {
