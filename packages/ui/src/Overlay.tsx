@@ -12,14 +12,17 @@ interface OverlayProps {
   closeLabel?: string;
   children: ReactNode;
   footer?: ReactNode;
+  /** Phone sheet only: hold the sheet closed, showing a waiting indicator, until the panel's own data has loaded. Pictures should not count. */
+  loading?: boolean;
 }
 
 /** Native <dialog>: focus trap, Esc to close and focus return come from the browser. */
-function Overlay({ open, onClose, title, closeLabel = "Close", children, footer, side, sheet }: OverlayProps & { side?: boolean; sheet?: boolean }) {
+function Overlay({ open, onClose, title, closeLabel = "Close", children, footer, loading, side, sheet }: OverlayProps & { side?: boolean; sheet?: boolean }) {
   const ref = useRef<HTMLDialogElement>(null);
   const slid = useSheetReady(open);
   const asSheet = !!(side && sheet);
   const phone = useIsPhone();
+  const phoneSheet = asSheet && phone;
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
@@ -34,6 +37,7 @@ function Overlay({ open, onClose, title, closeLabel = "Close", children, footer,
         onClose={onClose}
         title={title}
         closeLabel={closeLabel}
+        loading={loading}
         footer={footer && <div className="flex w-full gap-2 [&>*:last-child]:h-12 [&>*:last-child]:flex-1 [&>*:last-child]:text-[17px]">{footer}</div>}
       >
         {children}
@@ -66,7 +70,7 @@ function Overlay({ open, onClose, title, closeLabel = "Close", children, footer,
           </button>
         </div>
         <div className={cn("flex-1 overflow-y-auto p-5", asSheet && "max-sm:min-h-[42dvh] max-sm:overscroll-contain max-sm:pb-[max(2rem,calc(env(safe-area-inset-bottom)+1.5rem))]")}>
-          {asSheet && !slid ? <SheetSkeleton /> : children}
+          {(asSheet && !slid) || (loading && !phoneSheet) ? <SheetSkeleton /> : children}
         </div>
         {footer && <div className={cn("flex justify-end gap-2 border-t border-line px-5 py-3.5", asSheet && "max-sm:pb-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.75rem))]")}>{footer}</div>}
       </div>

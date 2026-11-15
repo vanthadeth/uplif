@@ -259,7 +259,7 @@ export function Select({ label, hint, error, id, name, className, disabled, requ
   );
 
   const layer = sheet ? (
-    <BottomSheet open={open} onClose={close} title={label ?? ""} container={host} hideClose autoFocus={false} skeletonRows={Math.min(options.length, 6)}>
+    <BottomSheet open={open} onClose={close} title={label ?? ""} container={host} hideClose autoFocus={false}>
       <div className="-mx-3 -mt-4">{ul}</div>
     </BottomSheet>
   ) : open && host ? createPortal(ul, host) : null;

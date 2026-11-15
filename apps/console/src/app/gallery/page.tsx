@@ -1,6 +1,6 @@
 "use client";
 import { X } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   AppSwitcher, Avatar, Badge, BottomSheet, Button, SheetActions, Card, CardBody, CardHeader, EmptyState, ErrorState, Input, Modal, ScopePill, Select,
   SidePanel, Skeleton, Spinner, TabPanel, Table, TBody, TD, TH, THead, Tabs, Toggle, TR, useToast,
@@ -36,6 +36,15 @@ export default function Gallery() {
   const [modal, setModal] = useState(false);
   const [panel, setPanel] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  // Demo of a sheet whose data loads first: it opens only once the (pretend) fetch is done.
+  const [slowOpen, setSlowOpen] = useState(false);
+  const [slowLoading, setSlowLoading] = useState(false);
+  const openSlowSheet = () => { setSlowLoading(true); setSlowOpen(true); };
+  useEffect(() => {
+    if (!slowOpen || !slowLoading) return;
+    const id = window.setTimeout(() => setSlowLoading(false), 1500);
+    return () => window.clearTimeout(id);
+  }, [slowOpen, slowLoading]);
   const [tab, setTab] = useState("general");
   const [approval, setApproval] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -155,6 +164,7 @@ export default function Gallery() {
           <Button onClick={() => setModal(true)}>{t("overlay.openModal")}</Button>
           <Button onClick={() => setPanel(true)}>{t("overlay.openPanel")}</Button>
           <Button onClick={() => setSheetOpen(true)}>{t("overlay.openSheet")}</Button>
+          <Button onClick={openSlowSheet}>{t("overlay.openSlowSheet")}</Button>
         </div>
         <Modal
           open={modal}
@@ -173,6 +183,17 @@ export default function Gallery() {
           footer={<SheetActions primary={{ label: t("btn.primary"), onClick: () => setSheetOpen(false) }} secondary={[{ label: t("btn.secondary"), icon: <X className="size-5" aria-hidden="true" />, onClick: () => setSheetOpen(false) }]} />}
         >
           <p className="text-muted">{t("overlay.sheetBody")}</p>
+        </BottomSheet>
+        <BottomSheet
+          open={slowOpen}
+          loading={slowLoading}
+          loadingLabel={t("loading.page")}
+          onClose={() => setSlowOpen(false)}
+          title={t("overlay.panelTitle")}
+          closeLabel={t("overlay.close")}
+          footer={<SheetActions primary={{ label: t("btn.primary"), onClick: () => setSlowOpen(false) }} />}
+        >
+          <p className="text-muted">{t("overlay.slowSheetBody")}</p>
         </BottomSheet>
         <SidePanel sheet open={panel} onClose={() => setPanel(false)} title={t("overlay.panelTitle")} closeLabel={t("overlay.close")}>
           <p className="text-muted">{t("overlay.panelBody")}</p>

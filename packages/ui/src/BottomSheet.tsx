@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { Button, type ButtonVariant } from "./Button";
 import { cn } from "./cn";
-import { SHEET_SLIDE_MS, SheetSkeleton } from "./Sheet";
+import { Loader2 } from "lucide-react";
 
 export interface BottomSheetProps {
   open: boolean;
@@ -15,9 +15,16 @@ export interface BottomSheetProps {
   children: ReactNode;
   /** Sticky action row under the scrolling content. */
   footer?: ReactNode;
-  /** Draw a skeleton instead of `children` until the sheet has landed (and while `loading` is true). */
-  skeletonRows?: number;
+  /**
+   * True while the sheet's own data is still loading. The sheet does not open yet: a small waiting indicator shows
+   * over the dimmed page, and the sheet slides up with its content in place once `loading` turns false.
+   * Pictures and other external files must not be waited on: let them load in with their own skeletons.
+   */
   loading?: boolean;
+  /** Accessible text for the waiting indicator. */
+  loadingLabel?: string;
+  /** Show the waiting indicator only after this long, so a fast load never flashes it. */
+  waitDelayMs?: number;
   /** Where to mount. Inside a modal <dialog> pass the dialog, because a modal dialog makes the rest of the page inert. */
   container?: Element | null;
   /** Move focus into the sheet on open. Turn off when focus must stay where it is (a list driven from its own button). */
@@ -34,15 +41,17 @@ const DISMISS_VELOCITY = 0.6; // px per ms
 /**
  * Reusable slide-up panel. Slides in with a soft landing, slides out on close, drags down to dismiss,
  * closes on backdrop tap or Esc, keeps the page from scrolling behind it, and respects the phone's safe area.
- * Heavy content is drawn only once the slide has landed; a skeleton holds the space until then.
+ * It opens only once its content is ready (`loading` false); until then a waiting indicator is shown.
  * On wide screens it is a centred panel of the same shape.
  */
 export function BottomSheet({
-  open, onClose, title, closeLabel = "Close", children, footer, skeletonRows = 4, loading = false, container, hideClose, autoFocus = true, className,
+  open, onClose, title, closeLabel = "Close", children, footer, loading = false, loadingLabel = "Loading", waitDelayMs = 150, container, hideClose, autoFocus = true, className,
 }: BottomSheetProps) {
-  const [mounted, setMounted] = useState(open);
+  // The sheet itself opens only when `open` and not `loading`; `waiting` covers the gap.
+  const want = open && !loading;
+  const [mounted, setMounted] = useState(want);
   const [leaving, setLeaving] = useState(false);
-  const [landed, setLanded] = useState(false);
+  const [waitShown, setWaitShown] = useState(false);
   const [drag, setDrag] = useState(0);
   const panel = useRef<HTMLDivElement>(null);
   const start = useRef<{ y: number; t: number; id: number } | null>(null);
@@ -50,11 +59,9 @@ export function BottomSheet({
 
   // Mount on open; play the slide-out on close, then unmount.
   useEffect(() => {
-    if (open) {
-      opener.current = document.activeElement;
-      setMounted(true); setLeaving(false); setDrag(0); setLanded(false);
-      const t = window.setTimeout(() => setLanded(true), SHEET_SLIDE_MS + 30);
-      return () => window.clearTimeout(t);
+    if (want) {
+      setMounted(true); setLeaving(false); setDrag(0);
+      return;
     }
     if (!mounted) return;
     setLeaving(true);
@@ -64,7 +71,18 @@ export function BottomSheet({
     }, CLOSE_MS);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [want]);
+
+  // Remember what had focus when the user asked to open, even while waiting.
+  useEffect(() => { if (open && !mounted) opener.current = document.activeElement; }, [open, mounted]);
+
+  // Waiting indicator: appears after a short delay, and only while an open request is held back by loading.
+  const waiting = open && loading && !mounted;
+  useEffect(() => {
+    if (!waiting) { setWaitShown(false); return; }
+    const t = window.setTimeout(() => setWaitShown(true), waitDelayMs);
+    return () => window.clearTimeout(t);
+  }, [waiting, waitDelayMs]);
 
   // Lock page scroll, close on Esc, move focus into the sheet.
   useEffect(() => {
@@ -95,7 +113,22 @@ export function BottomSheet({
     if (dy > DISMISS_PX || (dy > 24 && v > DISMISS_VELOCITY)) onClose(); else setDrag(0);
   }, [onClose]);
 
-  if (!mounted) return null;
+  if (!mounted) {
+    if (!waiting || !waitShown) return null;
+    return createPortal(
+      <div
+        className="fixed inset-0 z-[100] grid place-items-center animate-[uplif-fade_0.2s_ease-out]"
+        style={{ backgroundColor: "rgb(17 26 43 / 0.5)" }}
+        onPointerDown={onClose}
+      >
+        <div role="status" aria-live="polite" className="flex items-center gap-3 rounded-full bg-surface px-5 py-3 text-sm font-medium shadow-pop animate-[uplif-in_0.15s_ease-out]">
+          <Loader2 className="size-5 animate-[uplif-spin_0.8s_linear_infinite] text-primary" aria-hidden="true" />
+          {loadingLabel}
+        </div>
+      </div>,
+      container ?? document.body,
+    );
+  }
   const host = container ?? document.body;
   const dragging = start.current !== null;
 
@@ -131,7 +164,7 @@ export function BottomSheet({
           </div>
         </div>
         <div className="min-h-[30dvh] flex-1 overflow-y-auto overscroll-contain border-t border-line px-5 pt-4 pb-[max(2.5rem,calc(env(safe-area-inset-bottom)+2rem))]">
-          {landed && !loading ? children : <SheetSkeleton rows={skeletonRows} />}
+          {children}
         </div>
         {footer && (
           <div className="flex items-stretch gap-2 border-t border-line px-5 pt-3.5 pb-[max(2.5rem,calc(env(safe-area-inset-bottom)+2rem))]">{footer}</div>
