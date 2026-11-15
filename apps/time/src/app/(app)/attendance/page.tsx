@@ -1,5 +1,5 @@
-import { Soon } from "@/components/soon";
+import { ReportView } from "@/components/report-view";
 
 export default function Page() {
-  return <Soon title="tm.attendance.title" />;
+  return <ReportView />;
 }

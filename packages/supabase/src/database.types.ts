@@ -1781,6 +1781,10 @@ export type Database = {
         Args: { p_employee_id: string; p_from: string; p_days?: number }
         Returns: { day: string; status: string; first_in: string | null; last_out: string | null; late_min: number; early_min: number; worked_min: number; overtime_min: number; half_day: boolean; flagged: boolean }[]
       }
+      time_attendance_report: {
+        Args: { p_from: string; p_days?: number; p_branch_id?: string }
+        Returns: { employee_id: string; name: string; name_local: string | null; branch_id: string | null; position_name: string | null; position_name_local: string | null; days: string[]; work_days: number; on_time: number; late: number; early_leave: number; absent: number; leave_days: number; incomplete: number; late_min: number; overtime_min: number; worked_min: number; flagged_days: number }[]
+      }
       time_today: {
         Args: { p_branch_id?: string }
         Returns: { employee_id: string; name: string; name_local: string | null; branch_id: string | null; position_name: string | null; position_name_local: string | null; status: string; first_in: string | null; late_min: number; overtime_min: number; flagged: boolean }[]
