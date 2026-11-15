@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getStockState } from "@/lib/stock-state";
 import { ItemsView } from "@/components/items-view";
-import { parseProperties } from "@/components/item-properties";
+import { parseProperties } from "@/lib/item-properties";
 import type { ItemImage } from "@/components/item-pictures";
 import type { Variant } from "@/components/item-variants";
 
