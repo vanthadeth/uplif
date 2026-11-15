@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { Badge, Button, EmptyState, ErrorState } from "@uplif/ui";
@@ -71,7 +72,7 @@ export function StockLevelsView({ rows, watch, failed }: { rows: LevelRow[]; wat
               {groups.map((g) => (
                 <li key={g.id} className="rounded-card border border-line bg-surface p-3">
                   <div className="flex items-start justify-between gap-2">
-                    <b className="block min-w-0 break-words">{g.name}</b>
+                    <Link href={`/stock/${g.id}`} className="block min-w-0 break-words font-bold text-link">{g.name}</Link>
                     {g.level !== null && g.total <= g.level && <Badge tone={g.total <= 0 ? "danger" : "warning"}>{g.total <= 0 ? t("sk.lv.out") : t("sk.lv.low")}</Badge>}
                   </div>
                   <small className="block text-muted">{[g.sku, fill(t("sk.lv.total"), { qty: qtyText(locale, g.total), unit: g.uom }), g.level !== null ? fill(t("sk.lv.reorderAt"), { qty: qtyText(locale, g.level), unit: g.uom }) : null].filter(Boolean).join(" · ")}</small>

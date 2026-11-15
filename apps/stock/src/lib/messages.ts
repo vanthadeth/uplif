@@ -459,6 +459,10 @@ export const en = {
   "sk.hi.emptyBody": "Received, adjusted and transferred stock will be listed here.",
   "sk.hi.more": "Show more",
   "sk.hi.loadError": "History could not be loaded.",
+  "sk.id.back": "Back to stock levels",
+  "sk.id.where": "Where it is",
+  "sk.id.none": "No stock of this item right now.",
+  "sk.id.recent": "Latest movements",
   "sk.inuse": "This has stock records, so it cannot be deleted. Turn it off instead.",
   "sk.var.count": "{n} variants",
   // Shared with the apps switcher (strings already in the database).
@@ -952,6 +956,10 @@ export const km: Record<MessageKey, string> = {
   "sk.hi.emptyBody": "ស្តុកដែលបានទទួល កែតម្រូវ និងផ្ទេរ នឹងបង្ហាញនៅទីនេះ។",
   "sk.hi.more": "បង្ហាញបន្ថែម",
   "sk.hi.loadError": "មិនអាចផ្ទុកប្រវត្តិបានទេ។",
+  "sk.id.back": "ត្រឡប់ទៅកម្រិតស្តុក",
+  "sk.id.where": "ទីតាំងរបស់វា",
+  "sk.id.none": "បច្ចុប្បន្នមិនមានស្តុកទំនិញនេះទេ។",
+  "sk.id.recent": "ចលនាចុងក្រោយ",
   "sk.inuse": "នេះមានកំណត់ត្រាស្តុក ដូច្នេះមិនអាចលុបបានទេ។ សូមបិទវាជំនួសវិញ។",
   "sk.var.count": "ជម្រើស {n}",
   // Shared with the apps switcher.
