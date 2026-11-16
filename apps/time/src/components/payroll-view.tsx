@@ -46,7 +46,7 @@ export function PayrollView() {
     <main className="flex flex-col gap-4 p-4">
       <h1 className="text-2xl font-bold tracking-tight">{t("tm.payroll.title")}</h1>
       {tabs.length > 1 && <Tabs label={t("tm.payroll.title")} value={active} onChange={(v) => setTab(v as "people" | "runs" | "settings")} items={tabs} />}
-      {active === "people" ? <People t={t} locale={locale} /> : active === "runs" ? <RunsView t={t} locale={locale} /> : <><SettingsForm t={t} /><PlansForm t={t} locale={locale} /></>}
+      {active === "people" ? <People t={t} locale={locale} /> : active === "runs" ? <RunsView t={t} locale={locale} /> : <><SettingsForm t={t} /><RatesForm t={t} /><PlansForm t={t} locale={locale} /></>}
     </main>
   );
 }
@@ -300,5 +300,63 @@ function OvertimeField({ t, value, disabled, onCommit }: { t: T; value: number; 
   return (
     <Input label={t("tm.pr.set.ot")} inputMode="decimal" value={v} disabled={disabled} onChange={(e) => setV(e.target.value)}
       onBlur={() => { const n = Number(v); if (Number.isFinite(n) && n >= 1 && n <= 5 && n !== value) onCommit(n); else setV(String(value)); }} />
+  );
+}
+
+interface Rate { id: string; currency_code: string; rate_home: number; effective_date: string }
+function RatesForm({ t }: { t: T }) {
+  const toast = useToast();
+  const [rows, setRows] = useState<Rate[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [code, setCode] = useState("");
+  const [rate, setRate] = useState("");
+  const [from, setFrom] = useState(new Date().toISOString().slice(0, 10));
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    setFailed(false);
+    const { data, error } = await createClient().from("exchange_rates").select("id, currency_code, rate_home, effective_date").order("effective_date", { ascending: false }).limit(100);
+    if (error) { setFailed(true); return; }
+    setRows(data as Rate[]);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  async function add() {
+    const n = Number(rate);
+    if (!/^[A-Za-z]{3}$/.test(code) || !(n > 0) || !from) { toast("error", t("tm.pr.rates.bad")); return; }
+    setBusy(true);
+    const { error } = await createClient().rpc("payroll_rate_set", { p_currency: code, p_rate: n, p_date: from });
+    setBusy(false);
+    if (error) { toast("error", t("tm.pr.rates.bad")); return; }
+    setCode(""); setRate(""); toast("success", t("tm.pr.saved")); load();
+  }
+  async function remove(id: string) {
+    const { error } = await createClient().rpc("payroll_rate_delete", { p_id: id });
+    if (error) { toast("error", t("tm.pr.err.generic")); return; }
+    load();
+  }
+
+  if (failed) return <ErrorState title={t("tm.pr.error")} action={<Button onClick={load}><RefreshCw className="size-4" aria-hidden />{t("tm.retry")}</Button>} />;
+  return (
+    <section className="mt-6 flex flex-col gap-3" aria-labelledby="rates-h">
+      <h2 id="rates-h" className="text-lg font-semibold">{t("tm.pr.rates")}</h2>
+      <p className="text-sm text-muted">{t("tm.pr.rates.hint")}</p>
+      <div className="grid grid-cols-3 gap-2">
+        <Input label={t("tm.pr.rates.currency")} value={code} maxLength={3} onChange={(e) => setCode(e.target.value.toUpperCase())} />
+        <Input label={t("tm.pr.rates.rate")} inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value)} />
+        <Input label={t("tm.pr.rates.from")} type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+      </div>
+      <Button onClick={add} disabled={busy}>{t("tm.pr.rates.add")}</Button>
+      {!rows ? <Skeleton className="h-12 w-full rounded-card" /> : rows.length === 0 ? <p className="text-sm text-muted">{t("tm.pr.rates.empty")}</p> : (
+        <ul className="flex flex-col divide-y divide-border rounded-card border border-border">
+          {rows.map((r) => (
+            <li key={r.id} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
+              <span><b>{r.currency_code}</b> {r.rate_home} · {r.effective_date}</span>
+              <button type="button" className="text-danger" onClick={() => remove(r.id)}>{t("tm.pr.rates.remove")}</button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }

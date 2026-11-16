@@ -1146,6 +1146,12 @@ export type Database = {
         }
         Relationships: []
       }
+      exchange_rates: {
+        Row: { company_id: string; created_at: string; created_by: string | null; currency_code: string; effective_date: string; id: string; rate_home: number }
+        Insert: { company_id: string; created_at?: string; created_by?: string | null; currency_code: string; effective_date: string; id?: string; rate_home: number }
+        Update: { company_id?: string; created_at?: string; created_by?: string | null; currency_code?: string; effective_date?: string; id?: string; rate_home?: number }
+        Relationships: []
+      }
       company_settings: {
         Row: {
           timezone: string
@@ -1853,6 +1859,8 @@ export type Database = {
         Args: { p_employee_id: string; p_type_id: string; p_year: number; p_days: number; p_reason: string }
         Returns: string
       }
+      payroll_rate_set: { Args: { p_currency: string; p_rate: number; p_date: string }; Returns: string }
+      payroll_rate_delete: { Args: { p_id: string }; Returns: undefined }
       payroll_pay_items: {
         Args: Record<string, never>
         Returns: { id: string; code: string; name: string; name_local: string | null; kind: string; category: string; reference_only: boolean }[]
