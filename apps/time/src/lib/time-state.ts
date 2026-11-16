@@ -19,6 +19,7 @@ export interface TimeState {
   /** Payslips: see runs and drafts (view or prepare), prepare them, open runs. */
   canSlips: boolean;
   canPrepare: boolean;
+  canPost: boolean;
   canRuns: boolean;
 }
 
@@ -46,6 +47,7 @@ export const getTimeState = cache(async (): Promise<TimeState | null> => {
     canPaySettings: company$("payroll.settings.manage"),
     canSlips: company$("payroll.payslip.view") || company$("payroll.payslip.prepare"),
     canPrepare: company$("payroll.payslip.prepare"),
+    canPost: company$("payroll.payslip.post"),
     canRuns: company$("payroll.run.manage"),
   };
 });

@@ -14,7 +14,8 @@ export interface Plan { id: string; kind: string; name: string; name_local: stri
 interface Run { id: string; plan_id: string; plan_kind: string; name: string; period_start: string; period_end: string; open_date: string; status: string; slips: number; drafts: number; currency_code: string | null; net: number }
 interface Slip { payslip_id: string; employee_id: string; name: string; name_local: string | null; status: string; currency_code: string; gross: number; deductions: number; net: number }
 interface Line { id: string; pay_item_id: string; label: string; label_local: string | null; kind: string; qty: number; unit_amount: number; amount: number; source: string; source_ref: string | null; note: string | null }
-interface SlipDetail { id: string; status: string; run_status: string; currency_code: string; gross: number; deductions: number; net: number; lines: Line[]; snapshot: Record<string, unknown> }
+interface Review { id: string; message: string; status: string; answer: string | null; requested_at: string }
+interface SlipDetail { id: string; version: number; reviews: Review[]; status: string; run_status: string; currency_code: string; gross: number; deductions: number; net: number; lines: Line[]; snapshot: Record<string, unknown> }
 interface Sug { code: string; pay_item_id: string; label: string; qty: number; unit_amount: number; amount: number; note: string }
 interface Item { id: string; code: string; name: string; name_local: string | null; kind: string }
 
@@ -100,8 +101,11 @@ export function RunsView({ t, locale }: { t: T; locale: string }) {
   );
 }
 
+const errKey = (e: { code?: string; message: string }): MessageKey =>
+  e.message.includes("empty") ? "tm.pr.err.empty" : e.message.includes("second") ? "tm.pr.err.second" : e.message.includes("reason") ? "tm.pr.err.reason" : e.code === "P0001" ? "tm.pr.err.status" : "tm.pr.err.generic";
+
 function RunSheet({ t, locale, run, onClose, onChanged }: { t: T; locale: string; run: Run | null; onClose: () => void; onChanged: () => void }) {
-  const { canPrepare } = useTime();
+  const { canPrepare, canPost } = useTime();
   const toast = useToast();
   const [slips, setSlips] = useState<Slip[] | null>(null);
   const [slip, setSlip] = useState<Slip | null>(null);
@@ -140,6 +144,15 @@ function RunSheet({ t, locale, run, onClose, onChanged }: { t: T; locale: string
     if (error) { toast("error", t(error.code === "P0001" ? "tm.pr.err.status" : "tm.pr.err.generic")); return; }
     toast("success", t("tm.pr.runs.refreshed")); load(run.id); onChanged();
   }
+  async function postAll() {
+    if (!run) return;
+    setBusy(true);
+    const { data, error } = await createClient().rpc("payroll_post_run", { p_run_id: run.id });
+    setBusy(false);
+    if (error) { toast("error", t(errKey(error))); return; }
+    const r = data as { posted: number; skipped: number };
+    toast(r.posted > 0 ? "success" : "error", fill(t("tm.pr.postedAll"), { n: r.posted, s: r.skipped })); load(run.id); onChanged();
+  }
   async function addBonus() {
     if (!run) return;
     const n = Number(amount);
@@ -155,6 +168,7 @@ function RunSheet({ t, locale, run, onClose, onChanged }: { t: T; locale: string
     <>
       <BottomSheet open={!!run && !slip} onClose={onClose} title={run?.name ?? ""} closeLabel={t("tm.day.close")}>
         <div className="flex flex-col gap-4">
+          {run?.status === "open" && canPost && (slips ?? []).some((x) => x.status === "draft") && <Button disabled={busy} onClick={postAll}>{t("tm.pr.postAll")}</Button>}
           {run?.status === "open" && canPrepare && !isBonus && <Button variant="secondary" disabled={busy} onClick={refresh}><RefreshCw className="size-4" aria-hidden />{t("tm.pr.runs.refresh")}</Button>}
           {slips === null ? <Skeleton className="h-16 w-full rounded-card" /> : slips.length === 0 ? <p className="text-sm text-muted">{t("tm.pr.runs.noSlips")}</p> : (
             <ul className="flex flex-col overflow-hidden rounded-card border border-line bg-surface">
@@ -188,8 +202,9 @@ function RunSheet({ t, locale, run, onClose, onChanged }: { t: T; locale: string
 }
 
 function SlipSheet({ t, locale, slip, onClose, onChanged }: { t: T; locale: string; slip: Slip | null; onClose: () => void; onChanged: () => void }) {
-  const { canPrepare } = useTime();
+  const { canPrepare, canPost } = useTime();
   const toast = useToast();
+  const [answer, setAnswer] = useState("");
   const [d, setD] = useState<SlipDetail | null>(null);
   const [sugs, setSugs] = useState<Sug[]>([]);
   const [items, setItems] = useState<Item[]>([]);
@@ -212,7 +227,7 @@ function SlipSheet({ t, locale, slip, onClose, onChanged }: { t: T; locale: stri
   }, []);
   useEffect(() => {
     if (!slip) return;
-    setD(null); setEditing(null); setQty("1"); setUnit(""); setNote("");
+    setD(null); setEditing(null); setQty("1"); setUnit(""); setNote(""); setAnswer("");
     load(slip.payslip_id);
     createClient().rpc("payroll_pay_items").then(({ data }) => { const l = (data ?? []) as Item[]; setItems(l); setItemId(l.find((i) => i.code === "FINE")?.id ?? l[0]?.id ?? ""); });
   }, [slip, load]);
@@ -243,6 +258,28 @@ function SlipSheet({ t, locale, slip, onClose, onChanged }: { t: T; locale: stri
     if (error) { toast("error", t("tm.pr.err.status")); return; }
     await load(slip.payslip_id); onChanged();
   }
+  async function post() {
+    if (!slip) return;
+    setBusy(true);
+    const { error } = await createClient().rpc("payroll_post", { p_payslip_id: slip.payslip_id });
+    setBusy(false);
+    if (error) { toast("error", t(errKey(error))); return; }
+    toast("success", t("tm.pr.posted")); await load(slip.payslip_id); onChanged();
+  }
+  const openReview = d?.reviews.find((r) => r.status === "open");
+  async function reply(revise: boolean) {
+    if (!slip || !openReview) return;
+    if (!revise && answer.trim().length < 3) { toast("error", t("tm.pr.rv.needAnswer")); return; }
+    setBusy(true);
+    const { error } = revise
+      ? await createClient().rpc("payroll_revise_payslip", { p_review_id: openReview.id, p_note: answer.trim() || null })
+      : await createClient().rpc("payroll_answer_review", { p_review_id: openReview.id, p_answer: answer.trim() });
+    setBusy(false);
+    if (error) { toast("error", t(errKey(error))); return; }
+    toast("success", t(revise ? "tm.pr.rv.revised" : "tm.pr.rv.answered")); setAnswer("");
+    if (revise) { onChanged(); onClose(); return; }
+    await load(slip.payslip_id); onChanged();
+  }
   const startEdit = (l: Line) => { setEditing(l.id); setQty(String(l.qty)); setUnit(String(l.unit_amount)); setNote(l.note ?? ""); };
 
   return (
@@ -252,7 +289,26 @@ function SlipSheet({ t, locale, slip, onClose, onChanged }: { t: T; locale: stri
           <div className="flex items-center justify-between"><Badge tone={statusTone(d.status)}>{t(`tm.pr.st.${d.status}` as MessageKey)}</Badge><b className="text-xl">{money(locale, d.net, cur)}</b></div>
           <p className="text-sm text-muted">{t("tm.pr.slip.earnings")} {money(locale, d.gross, cur)} · {t("tm.pr.slip.deductions")} {money(locale, d.deductions, cur)}</p>
           {"work_days" in snap && num("work_days") > 0 && <p className="text-sm text-muted">{fill(t("tm.pr.slip.summary"), { w: num("work_days"), a: num("absent_days"), l: num("late_min"), o: num("overtime_min"), v: num("leave_days") })}</p>}
+          {d.version > 1 && <p className="text-sm text-muted">{fill(t("tm.pr.slip.version"), { n: d.version })}</p>}
           {!editable && <p className="text-sm text-muted">{t("tm.pr.slip.locked")}</p>}
+          {d.reviews.length > 0 && (
+            <section className="flex flex-col gap-2 rounded-card border border-line bg-surface p-3">
+              <b>{t(openReview ? "tm.pr.rv.title" : "tm.pr.rv.past")}</b>
+              {d.reviews.map((r) => (
+                <div key={r.id} className="flex flex-col gap-1 text-sm">
+                  <span>{r.message}</span>
+                  {r.answer && <span className="text-muted">{r.answer}</span>}
+                </div>
+              ))}
+              {openReview && canPrepare && (
+                <>
+                  <Input label={t("tm.pr.rv.answer")} value={answer} maxLength={500} onChange={(e) => setAnswer(e.target.value)} />
+                  <div className="flex gap-2"><Button disabled={busy} onClick={() => reply(false)}>{t("tm.pr.rv.stand")}</Button><Button variant="secondary" disabled={busy || d.run_status !== "open"} onClick={() => reply(true)}>{t("tm.pr.rv.revise")}</Button></div>
+                </>
+              )}
+            </section>
+          )}
+          {d.status === "draft" && d.run_status === "open" && canPost && <Button disabled={busy} onClick={post}>{t("tm.pr.post")}</Button>}
           <ul className="flex flex-col overflow-hidden rounded-card border border-line bg-surface">
             {d.lines.map((l) => (
               <li key={l.id} className="flex flex-col gap-2 border-b border-line px-3 py-2 last:border-b-0">

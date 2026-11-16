@@ -1917,6 +1917,42 @@ export type Database = {
         Args: { p_payslip_id: string }
         Returns: Json
       }
+      payroll_post: {
+        Args: { p_payslip_id: string }
+        Returns: undefined
+      }
+      payroll_post_run: {
+        Args: { p_run_id: string }
+        Returns: Json
+      }
+      payroll_reviews: {
+        Args: { p_only_open?: boolean }
+        Returns: { id: string; payslip_id: string; employee_id: string; name: string; name_local: string | null; run_name: string; version: number; message: string; status: string; answer: string | null; requested_at: string; run_status: string }[]
+      }
+      payroll_answer_review: {
+        Args: { p_review_id: string; p_answer: string }
+        Returns: undefined
+      }
+      payroll_revise_payslip: {
+        Args: { p_review_id: string; p_note?: string | null }
+        Returns: string
+      }
+      my_payslips: {
+        Args: Record<string, never>
+        Returns: { id: string; run_name: string; plan_kind: string; period_start: string; period_end: string; version: number; is_current: boolean; status: string; currency_code: string; net: number; posted_at: string; confirmed_at: string | null }[]
+      }
+      my_payslip: {
+        Args: { p_payslip_id: string }
+        Returns: Json
+      }
+      my_confirm_payslip: {
+        Args: { p_payslip_id: string }
+        Returns: undefined
+      }
+      my_request_payslip_review: {
+        Args: { p_payslip_id: string; p_message: string }
+        Returns: undefined
+      }
       payroll_save_line: {
         Args: { p_payslip_id: string; p_line_id: string | null; p_pay_item_id: string; p_qty: number; p_unit_amount: number; p_note: string | null; p_source?: string }
         Returns: string
