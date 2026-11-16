@@ -18,7 +18,7 @@ select lives_ok($$select public.create_company('Shop A', null, 'KH', 'USD', 'Mai
 select is((select count(*)::int from public.list_my_companies()), 1, 'picker lists the new company');
 reset role;
 
-select is((select count(*)::int from public.roles r join public.companies c on c.id = r.company_id where c.name = 'Shop A' and r.is_system), 7, 'seven system roles seeded');
+select is((select count(*)::int from public.roles r join public.companies c on c.id = r.company_id where c.name = 'Shop A' and r.is_system), 8, 'eight system roles seeded (HR included)');
 select is((select count(*)::int from public.audit_log where action = 'company.create'), 1, 'creation is audited');
 select is((select count(*)::int from public.membership_roles mr join public.roles r on r.id = mr.role_id where r.name = 'Owner' and r.company_id = (select id from public.companies where name = 'Shop A')), 1, 'creator is Owner');
 
