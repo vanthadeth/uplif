@@ -8,6 +8,7 @@ import { useTime } from "@/components/time-context";
 import { languageOf } from "@/lib/languages";
 import { money, pick } from "@/lib/format";
 import { fill, type MessageKey } from "@/lib/messages";
+import { RunReport } from "@/components/run-report";
 
 type T = (k: MessageKey) => string;
 export interface Plan { id: string; kind: string; name: string; name_local: string | null; open_day: number | null; covers: string; auto_open: boolean; active: boolean; rule_kind: string | null; rule_config: unknown }
@@ -109,6 +110,7 @@ function RunSheet({ t, locale, run, onClose, onChanged }: { t: T; locale: string
   const toast = useToast();
   const [slips, setSlips] = useState<Slip[] | null>(null);
   const [slip, setSlip] = useState<Slip | null>(null);
+  const [reporting, setReporting] = useState(false);
   const [people, setPeople] = useState<{ employee_id: string; name: string; name_local: string | null; pay_currency: string | null }[]>([]);
   const [who, setWho] = useState("");
   const [amount, setAmount] = useState("");
@@ -166,8 +168,9 @@ function RunSheet({ t, locale, run, onClose, onChanged }: { t: T; locale: string
 
   return (
     <>
-      <BottomSheet open={!!run && !slip} onClose={onClose} title={run?.name ?? ""} closeLabel={t("tm.day.close")}>
+      <BottomSheet open={!!run && !slip && !reporting} onClose={onClose} title={run?.name ?? ""} closeLabel={t("tm.day.close")}>
         <div className="flex flex-col gap-4">
+          {run && (slips ?? []).some((x) => x.status !== "draft") && <Button variant="secondary" onClick={() => setReporting(true)}>{t("tm.pr.report")}</Button>}
           {run?.status === "open" && canPost && (slips ?? []).some((x) => x.status === "draft") && <Button disabled={busy} onClick={postAll}>{t("tm.pr.postAll")}</Button>}
           {run?.status === "open" && canPrepare && !isBonus && <Button variant="secondary" disabled={busy} onClick={refresh}><RefreshCw className="size-4" aria-hidden />{t("tm.pr.runs.refresh")}</Button>}
           {slips === null ? <Skeleton className="h-16 w-full rounded-card" /> : slips.length === 0 ? <p className="text-sm text-muted">{t("tm.pr.runs.noSlips")}</p> : (
@@ -196,6 +199,7 @@ function RunSheet({ t, locale, run, onClose, onChanged }: { t: T; locale: string
           )}
         </div>
       </BottomSheet>
+      <RunReport t={t} locale={locale} run={reporting && run ? run : null} onClose={() => setReporting(false)} onChanged={() => { if (run) load(run.id); onChanged(); }} />
       <SlipSheet t={t} locale={locale} slip={slip} onClose={() => setSlip(null)} onChanged={() => { if (run) load(run.id); onChanged(); }} />
     </>
   );

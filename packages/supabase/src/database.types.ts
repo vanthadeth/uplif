@@ -1953,6 +1953,16 @@ export type Database = {
         Args: { p_payslip_id: string; p_message: string }
         Returns: undefined
       }
+      payroll_close: { Args: { p_run_id: string }; Returns: undefined }
+      payroll_reopen: { Args: { p_run_id: string; p_reason: string }; Returns: undefined }
+      payroll_mark_paid: { Args: { p_run_id: string; p_date: string }; Returns: undefined }
+      payroll_lock: { Args: { p_run_id: string }; Returns: undefined }
+      payroll_run_info: { Args: { p_run_id: string }; Returns: Json }
+      payroll_log_export: { Args: { p_run_id: string; p_kind: string; p_rows: number }; Returns: undefined }
+      payroll_report: {
+        Args: { p_run_id: string }
+        Returns: { payslip_id: string; employee_id: string; name: string; name_local: string | null; branch_id: string | null; branch_name: string | null; branch_name_local: string | null; status: string; currency_code: string; gross: number; deductions: number; net: number; payment_method: string | null; bank_name: string | null; account_name: string | null; account_no: string | null }[]
+      }
       payroll_save_line: {
         Args: { p_payslip_id: string; p_line_id: string | null; p_pay_item_id: string; p_qty: number; p_unit_amount: number; p_note: string | null; p_source?: string }
         Returns: string

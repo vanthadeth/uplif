@@ -20,6 +20,7 @@ export interface TimeState {
   canSlips: boolean;
   canPrepare: boolean;
   canPost: boolean;
+  canExport: boolean;
   canRuns: boolean;
 }
 
@@ -48,6 +49,7 @@ export const getTimeState = cache(async (): Promise<TimeState | null> => {
     canSlips: company$("payroll.payslip.view") || company$("payroll.payslip.prepare"),
     canPrepare: company$("payroll.payslip.prepare"),
     canPost: company$("payroll.payslip.post"),
+    canExport: company$("payroll.report.export"),
     canRuns: company$("payroll.run.manage"),
   };
 });
