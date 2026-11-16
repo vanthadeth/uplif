@@ -7,6 +7,10 @@ import { useI18n } from "@/lib/i18n";
 import { fill, type MessageKey } from "@/lib/messages";
 import { languageOf } from "@/lib/languages";
 import { pick } from "@/lib/format";
+import Link from "next/link";
+import { useTime } from "@/components/time-context";
+
+interface Rev { id: string; name: string; name_local: string | null; run_name: string; message: string }
 
 interface Row {
   employee_id: string; name: string; name_local: string | null; position_name: string | null; position_name_local: string | null;
@@ -29,6 +33,9 @@ export function TodayView() {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
+  const { canSlips } = useTime();
+  const [revs, setRevs] = useState<Rev[]>([]);
+  useEffect(() => { if (canSlips) createClient().rpc("payroll_reviews", { p_only_open: true }).then(({ data }) => setRevs((data ?? []) as Rev[])); }, [canSlips]);
 
   const load = useCallback(async () => {
     const { data, error } = await createClient().rpc("time_today");
@@ -70,6 +77,13 @@ export function TodayView() {
         <StatTile loading={loading} tone="danger" icon={<UserX className="size-5" />} value={count("notIn")} label={t("tm.today.notIn")} hint={t("tm.today.notInHint")} pressed={filter === "notIn"} onClick={() => toggle("notIn")} />
         <StatTile loading={loading} tone="info" icon={<CalendarOff className="size-5" />} value={count("leave")} label={t("tm.today.leave")} hint={t("tm.today.leaveHint")} pressed={filter === "leave"} onClick={() => toggle("leave")} />
       </div>
+      {revs.length > 0 && (
+        <Link href="/payroll" className="flex flex-col gap-1 rounded-card border border-line bg-surface p-4">
+          <span className="flex items-center justify-between"><b>{t("tm.today.reviews")}</b><Badge tone="warning">{revs.length}</Badge></span>
+          {revs.slice(0, 3).map((r) => <span key={r.id} className="truncate text-sm text-muted">{pick(locale, r.name, r.name_local)} · {r.run_name}: {r.message}</span>)}
+          <span className="text-sm font-semibold text-primary">{t("tm.today.reviewsOpen")}</span>
+        </Link>
+      )}
       <h2 className="caps text-xs font-bold text-muted">{t("tm.today.people")}</h2>
       {failed ? (
         <ErrorState title={t("tm.today.error")} action={<Button onClick={load}><RefreshCw className="size-4" aria-hidden />{t("tm.retry")}</Button>} />

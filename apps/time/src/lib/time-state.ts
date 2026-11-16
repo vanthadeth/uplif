@@ -16,6 +16,12 @@ export interface TimeState {
   canViewPay: boolean;
   canManagePay: boolean;
   canPaySettings: boolean;
+  /** Payslips: see runs and drafts (view or prepare), prepare them, open runs. */
+  canSlips: boolean;
+  canPrepare: boolean;
+  canPost: boolean;
+  canExport: boolean;
+  canRuns: boolean;
 }
 
 /** The signed-in person's company, plan and attendance scope. Cached for one request so the layout and pages share it. */
@@ -40,5 +46,10 @@ export const getTimeState = cache(async (): Promise<TimeState | null> => {
     canViewPay: company$("payroll.terms.view"),
     canManagePay: company$("payroll.terms.manage"),
     canPaySettings: company$("payroll.settings.manage"),
+    canSlips: company$("payroll.payslip.view") || company$("payroll.payslip.prepare"),
+    canPrepare: company$("payroll.payslip.prepare"),
+    canPost: company$("payroll.payslip.post"),
+    canExport: company$("payroll.report.export"),
+    canRuns: company$("payroll.run.manage"),
   };
 });
