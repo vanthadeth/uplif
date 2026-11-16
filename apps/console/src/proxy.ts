@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { supabasePublishableKey, supabaseUrl } from "./lib/supabase/env";
+import { SESSION_COOKIE_OPTIONS, supabasePublishableKey, supabaseUrl } from "./lib/supabase/env";
 
 // Refreshes the Supabase auth session cookie on each request.
 export async function proxy(request: NextRequest) {
@@ -8,6 +8,7 @@ export async function proxy(request: NextRequest) {
   if (!supabaseUrl || !supabasePublishableKey) return response;
 
   const supabase = createServerClient(supabaseUrl, supabasePublishableKey, {
+    cookieOptions: SESSION_COOKIE_OPTIONS,
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll(list) {
