@@ -1,8 +1,8 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarDays, LogIn, LogOut, Pencil, WifiOff } from "lucide-react";
-import { Badge, Button, Card, CardBody, ProgressBar, useToast } from "@uplif/ui";
+import { Camera, CalendarDays, Clock, Eye, LogIn, LogOut, Pencil, ShieldCheck, Trash2, WifiOff } from "lucide-react";
+import { Badge, Button, Card, CardBody, ConsentDialog, ProgressBar, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
@@ -28,11 +28,18 @@ export function Today() {
   const [now, setNow] = useState<Date | null>(null);
   const [online, setOnline] = useState(true);
   const [privacyOk, setPrivacyOk] = useState(true);
+  const [consentOpen, setConsentOpen] = useState(false);
+  // Set when the notice was opened by tapping Clock in or out, so accepting carries on into that clock.
+  const [afterConsent, setAfterConsent] = useState<"in" | "out" | null>(null);
   const [events, setEvents] = useState<EventLite[]>([]);
   const [work, setWork] = useState<WorkDay | null>(null);
   const [flow, setFlow] = useState<"in" | "out" | null>(null);
 
-  useEffect(() => { setPrivacyOk(store.get("uplif.staff.privacy") === "1"); }, []);
+  useEffect(() => {
+    const ok = store.get("uplif.staff.privacy") === "1";
+    setPrivacyOk(ok);
+    if (!ok) setConsentOpen(true);
+  }, []);
   useEffect(() => {
     setNow(new Date());
     const id = setInterval(() => setNow(new Date()), 15000);
@@ -100,13 +107,26 @@ export function Today() {
         <p className="text-muted" suppressHydrationWarning>{now ? now.toLocaleDateString(tag, { weekday: "long", day: "numeric", month: "long" }) : " "}</p>
       </div>
 
-      {!privacyOk && (
-        <Card><CardBody className="flex flex-col gap-3">
-          <b>{t("st.privacy.title")}</b>
-          <p className="text-muted">{t("st.privacy.body")}</p>
-          <Button variant="primary" onClick={() => { store.set("uplif.staff.privacy", "1"); setPrivacyOk(true); }}>{t("st.privacy.ok")}</Button>
-        </CardBody></Card>
-      )}
+      <ConsentDialog
+        open={consentOpen}
+        icon={<ShieldCheck className="size-6" />}
+        title={t("st.privacy.title")}
+        points={[
+          { icon: <Camera className="size-4" />, text: t("st.privacy.p1") },
+          { icon: <Clock className="size-4" />, text: t("st.privacy.p2") },
+          { icon: <Eye className="size-4" />, text: t("st.privacy.p3") },
+          { icon: <Trash2 className="size-4" />, text: t("st.privacy.p4") },
+        ]}
+        acceptLabel={t("st.privacy.ok")}
+        dismissLabel={t("st.privacy.later")}
+        onAccept={() => {
+          store.set("uplif.staff.privacy", "1");
+          setPrivacyOk(true); setConsentOpen(false);
+          if (afterConsent) setFlow(afterConsent);
+          setAfterConsent(null);
+        }}
+        onDismiss={() => { setConsentOpen(false); setAfterConsent(null); }}
+      />
 
       {!online && (
         <p role="status" className="flex items-start gap-3 rounded-card bg-warning-soft p-3 text-warning-ink"><WifiOff className="mt-0.5 size-5 shrink-0" aria-hidden />{t("st.offline.ok")}</p>
@@ -136,8 +156,12 @@ export function Today() {
               <span className="text-sm text-muted">{fill(t("st.worked.of"), { worked: duration(worked), total: duration(totalMin) })}</span>
             </div>
           )}
-          <Button variant={clockedIn ? "secondary" : "primary"} disabled={!privacyOk}
-            className={`h-16 w-full text-lg ${clockedIn ? "border-primary! text-link!" : ""}`} onClick={() => setFlow(clockedIn ? "out" : "in")}>
+          <Button variant={clockedIn ? "secondary" : "primary"}
+            className={`h-16 w-full text-lg ${clockedIn ? "border-primary! text-link!" : ""}`} onClick={() => {
+              const kind = clockedIn ? "out" : "in";
+              // Clocking is never possible before the notice has been seen: tapping asks again.
+              if (!privacyOk) { setAfterConsent(kind); setConsentOpen(true); } else setFlow(kind);
+            }}>
             {clockedIn ? <LogOut className="size-6" aria-hidden /> : <LogIn className="size-6" aria-hidden />}
             {t(clockedIn ? "st.clockOut" : "st.clockIn")}
           </Button>
