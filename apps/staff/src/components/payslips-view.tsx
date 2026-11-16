@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import { Printer } from "lucide-react";
 import { Badge, BottomSheet, Button, Card, EmptyState, ErrorState, Input, Reveal, Skeleton, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
@@ -82,7 +83,7 @@ export function PayslipsView() {
       </Card>
       <BottomSheet open={!!open} onClose={() => setOpen(null)} title={d?.run_name ?? ""} closeLabel={t("st.account.close")}>
         {!d ? <Skeleton className="h-24" /> : (
-          <div className="flex flex-col gap-4">
+          <div className="print-area flex flex-col gap-4">
             <div className="flex items-center justify-between"><Badge tone={tone(d.status)}>{t(`st.pay.st.${d.status}` as MessageKey)}</Badge><b className="text-xl">{money(d.net, d.currency_code)}</b></div>
             {d.version > 1 && <p className="m-0 text-sm text-muted">{fill(t("st.pay.version"), { n: d.version })}</p>}
             {!d.is_current && <p className="m-0 text-sm text-muted">{t("st.pay.replaced")}</p>}
@@ -101,14 +102,15 @@ export function PayslipsView() {
                 <span className="text-muted">{r.answer ? fill(t("st.pay.answer"), { text: r.answer }) : t("st.pay.waiting")}</span>
               </div>
             ))}
+            <Button variant="quiet" className="no-print" onClick={() => window.print()}><Printer className="size-4" aria-hidden />{t("st.pay.print")}</Button>
             {d.status === "posted" && d.is_current && !asking && (
-              <div className="flex flex-col gap-2">
+              <div className="no-print flex flex-col gap-2">
                 <Button disabled={busy} onClick={confirm}>{t("st.pay.confirm")}</Button>
                 <Button variant="secondary" disabled={busy} onClick={() => setAsking(true)}>{t("st.pay.ask")}</Button>
               </div>
             )}
             {asking && (
-              <div className="flex flex-col gap-2">
+              <div className="no-print flex flex-col gap-2">
                 <Input label={t("st.pay.ask.label")} value={msg} maxLength={500} onChange={(e) => setMsg(e.target.value)} />
                 <div className="flex gap-2"><Button disabled={busy} onClick={ask}>{t("st.pay.ask.send")}</Button><Button variant="secondary" onClick={() => setAsking(false)}>{t("st.account.close")}</Button></div>
               </div>
