@@ -15,7 +15,7 @@ export const APP_MODULE: Record<AccessApp, string | null> = {
 export function appOfPermission(key: string): AccessApp | null {
   if (key === "org.branch.read") return null;
   if (/^(org|leave|learn|performance|career)\./.test(key)) return "admin";
-  if (key.startsWith("attendance.")) return "time";
+  if (/^(attendance|payroll)\./.test(key)) return "time";
   if (key.startsWith("sales.")) return "go";
   if (key.startsWith("orders.")) return "orders";
   if (key.startsWith("stock.")) return "stock";
@@ -41,10 +41,12 @@ export const GROUPS: readonly GroupDef[] = [
   { id: "growth", app: "admin", labelKey: "ra.group.growth", resources: ["request", "type", "policy", "test", "result", "playbook", "kpi", "review", "record"] },
   { id: "attendance", app: "time", labelKey: "ra.group.attendance", resources: ["clock", "record", "selfie", "amendment", "settings"] },
   { id: "schedules", app: "time", labelKey: "ra.group.schedules", resources: ["schedule", "holiday"] },
+  { id: "payroll", app: "time", labelKey: "ra.group.payroll", resources: ["terms", "run", "payslip", "report", "settings"] },
   { id: "customers", app: "go", labelKey: "ra.group.customers", resources: ["customer"] },
   { id: "visits", app: "go", labelKey: "ra.group.visits", resources: ["visit"] },
   { id: "orders", app: "orders", labelKey: "ra.group.orders", resources: ["order", "invoice", "payment"] },
-  { id: "items", app: "stock", labelKey: "ra.group.items", resources: ["item", "level"] },
+  { id: "items", app: "stock", labelKey: "ra.group.items", resources: ["item", "level", "catalog"] },
+  { id: "stockMoves", app: "stock", labelKey: "ra.group.stockMoves", resources: ["movement", "cost"] },
 ];
 
 /** The group a key belongs to inside its app, or null when it has none. */
