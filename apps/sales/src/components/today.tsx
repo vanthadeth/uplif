@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ExternalLink, LogIn, LogOut, MessageSquare, UserPlus } from "lucide-react";
+import { ExternalLink, LogIn, LogOut, MapPin, MessageSquare, UserPlus } from "lucide-react";
 import { Badge, Button, Card, CardBody, Reveal, Skeleton, APPS } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
@@ -35,6 +35,7 @@ export default function Today() {
   const [clock, setClock] = useState<Clock | null>(null);
   const [attention, setAttention] = useState<InboxRow[] | null>(null);
   const [now, setNow] = useState<Date | null>(null);
+  const [visit, setVisit] = useState<{ id: string; customer_id: string | null; checked_in_at: string; name: string | null; name_local: string | null } | null | undefined>(undefined);
 
   useEffect(() => { setNow(new Date()); const id = setInterval(() => setNow(new Date()), 30000); return () => clearInterval(id); }, []);
   useEffect(() => {
@@ -47,6 +48,7 @@ export default function Today() {
       const rows = ((data ?? []) as unknown as InboxRow[]).filter((r) => r.unread).slice(0, 3);
       setAttention(rows); void goCache.set(owner, "today", rows);
     });
+    supabase.rpc("sales_open_visit").then(({ data, error }) => { if (live && !error) setVisit((data as unknown as typeof visit) ?? null); });
     supabase.from("attendance_events").select("kind, occurred_at").eq("employee_id", owner)
       .gte("occurred_at", startOfDay().toISOString()).order("occurred_at", { ascending: true }).then(({ data, error }) => {
         if (!live || error) return;
@@ -87,10 +89,24 @@ export default function Today() {
               <div className="text-xs text-[#aebbd0]">{t("go.today.worked")}</div>
               <div className="text-4xl font-bold tabular-nums tracking-tight" suppressHydrationWarning>{dur}</div>
             </div>
-            <a href={meUrl} target="_blank" rel="noopener" className="inline-flex min-h-14 items-center justify-center gap-2 rounded-control bg-primary text-lg font-semibold text-white active:scale-[.99]">
-              {clockedIn ? <LogOut className="size-6" aria-hidden /> : <LogIn className="size-6" aria-hidden />}
-              {t(clockedIn ? "go.today.clockOut" : "go.today.clockIn")}<ExternalLink className="size-4 opacity-70" aria-hidden />
-            </a>
+            {clockedIn ? (
+              <>
+                {visit ? (
+                  <Link href={visit.customer_id ? `/customers/${visit.customer_id}` : "/check-in"} className="flex min-h-14 items-center justify-center gap-2 rounded-control bg-primary text-lg font-semibold text-white active:scale-[.99]">
+                    <MapPin className="size-6" aria-hidden />{fill(t("go.today.atVisit"), { name: visit.name ? shownName({ name: visit.name, name_local: visit.name_local }, locale) : t("go.checkin.none") })}
+                  </Link>
+                ) : (
+                  <Link href="/check-in" className="flex min-h-14 items-center justify-center gap-2 rounded-control bg-primary text-lg font-semibold text-white active:scale-[.99]">
+                    <MapPin className="size-6" aria-hidden />{t("go.today.checkIn")}
+                  </Link>
+                )}
+                <a href={meUrl} target="_blank" rel="noopener" className="flex min-h-11 items-center justify-center gap-1.5 text-sm font-semibold text-[#aebbd0]"><LogOut className="size-4" aria-hidden />{t("go.today.clockOut")}<ExternalLink className="size-3.5 opacity-70" aria-hidden /></a>
+              </>
+            ) : (
+              <a href={meUrl} target="_blank" rel="noopener" className="inline-flex min-h-14 items-center justify-center gap-2 rounded-control bg-primary text-lg font-semibold text-white active:scale-[.99]">
+                <LogIn className="size-6" aria-hidden />{t("go.today.clockIn")}<ExternalLink className="size-4 opacity-70" aria-hidden />
+              </a>
+            )}
             <p className="m-0 text-center text-xs text-[#aebbd0]">{t("go.today.clockNote")}</p>
           </>
         )}
