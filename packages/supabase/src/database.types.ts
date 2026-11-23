@@ -1783,6 +1783,26 @@ export type Database = {
         Args: { p_limit?: number }
         Returns: Json
       }
+      sales_check_in: {
+        Args: { p_id: string; p_customer_id: string | null; p_latitude: number | null; p_longitude: number | null; p_accuracy_m: number | null; p_at: string }
+        Returns: Json
+      }
+      sales_check_out: {
+        Args: { p_id: string; p_latitude: number | null; p_longitude: number | null; p_at: string; p_far_reason?: string | null }
+        Returns: Json
+      }
+      sales_nearby: {
+        Args: { p_latitude: number; p_longitude: number; p_limit?: number }
+        Returns: Json
+      }
+      sales_open_visit: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      sales_visit_reason: {
+        Args: { p_id: string; p_reason: string }
+        Returns: undefined
+      }
       sales_my_state: {
         Args: Record<string, never>
         Returns: Json
