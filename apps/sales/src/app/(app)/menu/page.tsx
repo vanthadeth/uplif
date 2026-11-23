@@ -1,5 +1,7 @@
 "use client";
-import { LogOut } from "lucide-react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { ChevronRight, LogOut, Users } from "lucide-react";
 import { Card, LanguageToggle } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
 import { useAppearance, type Appearance } from "@/lib/appearance";
@@ -18,6 +20,10 @@ const Group = ({ title, children }: { title: string; children: React.ReactNode }
 export default function MenuPage() {
   const { t } = useI18n();
   const { appearance, setAppearance } = useAppearance();
+  const [manager, setManager] = useState(false);
+  useEffect(() => {
+    void createClient().rpc("sales_team_feed", { p_limit: 1 }).then(({ data, error }) => { if (!error && (data as { allowed?: boolean } | null)?.allowed) setManager(true); });
+  }, []);
   async function signOut() {
     await forgetSavedCopies();
     await createClient().auth.signOut();
@@ -26,6 +32,11 @@ export default function MenuPage() {
   return (
     <div className="flex flex-col gap-5 p-4">
       <h1 className="pt-2 text-2xl font-bold tracking-tight">{t("go.menu.title")}</h1>
+      {manager && (
+        <Link href="/team" className="flex min-h-15 items-center gap-3 rounded-card border border-line bg-surface p-4 font-semibold">
+          <Users className="size-5 text-primary" aria-hidden /><span className="flex-1">{t("go.menu.team")}</span><ChevronRight className="size-5 text-muted" aria-hidden />
+        </Link>
+      )}
       <Group title={t("go.menu.preferences")}>
         <div className="flex min-h-15 items-center justify-between gap-3 p-4">
           <div><b>{t("go.language")}</b></div>

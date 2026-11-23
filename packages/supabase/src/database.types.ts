@@ -1835,6 +1835,10 @@ export type Database = {
         Args: { p_id: string; p_done: boolean }
         Returns: undefined
       }
+      sales_team_feed: {
+        Args: { p_day?: string | null; p_limit?: number }
+        Returns: Json
+      }
       sales_task_list: {
         Args: Record<string, never>
         Returns: Json
