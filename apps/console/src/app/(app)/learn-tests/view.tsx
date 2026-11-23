@@ -80,7 +80,7 @@ export function LearnTestsView({ canManage, canRead, tests, results }: { canMana
       {tab === "tests" && canManage && (
         <section className="flex flex-col gap-3" role="tabpanel" id="panel-tests" aria-labelledby="tab-tests">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <Toggle checked={showArchived} label={t("lt.showArchived")} onChange={setShowArchived} />
+            <Toggle inline checked={showArchived} label={t("lt.showArchived")} onChange={setShowArchived} />
             <Button variant="primary" onClick={() => edit("new")}><Plus className="size-[18px]" aria-hidden />{t("lt.add")}</Button>
           </div>
           {shown.length === 0 ? (
@@ -109,7 +109,7 @@ export function LearnTestsView({ canManage, canRead, tests, results }: { canMana
         <section className="flex flex-col gap-3" role="tabpanel" id="panel-results" aria-labelledby="tab-results">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="m-0 max-w-[66ch] text-sm text-muted">{t("lt.res.hint")}</p>
-            <Toggle checked={onlyFailed} label={t("lt.res.onlyFailed")} onChange={setOnlyFailed} />
+            <Toggle inline checked={onlyFailed} label={t("lt.res.onlyFailed")} onChange={setOnlyFailed} />
           </div>
           {resultRows.length === 0 ? (
             <div className="rounded-card border border-line bg-surface px-4 py-9 text-center">

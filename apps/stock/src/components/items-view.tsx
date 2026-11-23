@@ -1,0 +1,313 @@
+"use client";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { FileUp, History, ImagePlus, ListChecks, Info, Lock, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { ActionMenu, type ActionMenuItem, Badge, BarcodeScanner, Button, EmptyState, ErrorState, Input, Modal, ScanButton, Select, SidePanel, Textarea, Toggle, useToast } from "@uplif/ui";
+import { createClient } from "@/lib/supabase/client";
+import { useI18n } from "@/lib/i18n";
+import { fill } from "@/lib/messages";
+import { money, pick } from "@/lib/format";
+import { removePicture } from "@/lib/use-picture";
+import { ItemPictures, type ItemImage } from "@/components/item-pictures";
+import { ItemVariants, type Variant } from "@/components/item-variants";
+import { ItemProperties, type PropGroup } from "@/components/item-properties";
+import { ItemsImport } from "@/components/items-import";
+import { scanLabels } from "@/lib/scan-labels";
+import { PackEditor } from "@/components/pack-editor";
+import { PriceHistorySheet } from "@/components/price-history-sheet";
+import { packsToRows, rowsToPacks, type Pack, type PackRow } from "@/lib/packs";
+export type { Pack };
+
+export interface Item {
+  id: string; sku: string | null; name: string; name_local: string | null; description: string | null; description_local: string | null;
+  category_id: string | null; brand_id: string | null; base_uom: string; packs: Pack[]; properties: PropGroup[]; price: number; currency_code: string; reorder_level: number | null; is_active: boolean;
+}
+interface Cat { id: string; parent_id: string | null; name: string; name_local: string | null; is_active: boolean }
+interface Brand { id: string; name: string; name_local: string | null; is_active: boolean }
+
+const blank = { name: "", name_local: "", description: "", description_local: "", sku: "", category_id: "", brand_id: "", base_uom: "pcs", price: "0", cost: "", reorder: "" };
+type Errors = { reorder?: string; name?: string; uom?: string; price?: string; cost?: string; packs?: string; sku?: string };
+
+/** The item list: search, add, edit, hide and delete. Pictures, variants and options come in later pieces. */
+export function ItemsView({ items, images, variants, categories, brands, currency, failed, companyId, canManage, canViewCost, costs, variantCosts }: {
+  items: Item[]; images: ItemImage[]; variants: Variant[]; categories: Cat[]; brands: Brand[]; currency: string; failed: boolean; companyId: string; canManage: boolean; canViewCost: boolean; costs: Record<string, number>; variantCosts: Record<string, number>;
+}) {
+  const { t, locale } = useI18n();
+  const toast = useToast();
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+  const [editing, setEditing] = useState<Item | "new" | null>(null);
+  const [removing, setRemoving] = useState<Item | null>(null);
+  const [picturesOf, setPicturesOf] = useState<Item | null>(null);
+  const [variantsOf, setVariantsOf] = useState<Item | null>(null);
+  const [propsOf, setPropsOf] = useState<string | null>(null);
+  const [historyOf, setHistoryOf] = useState<Item | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [form, setForm] = useState(blank);
+  const [packs, setPacks] = useState<PackRow[]>([]);
+  const [active, setActive] = useState(true);
+  const [errors, setErrors] = useState<Errors>({});
+  const [busy, setBusy] = useState(false);
+  const set = (k: keyof typeof blank) => (e: { target: { value: string } }) => { setForm((f) => ({ ...f, [k]: e.target.value })); setErrors({}); };
+
+  const countByItem = useMemo(() => images.reduce((m, i) => m.set(i.item_id, (m.get(i.item_id) ?? 0) + 1), new Map<string, number>()), [images]);
+  const catById = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
+  const brandById = useMemo(() => new Map(brands.map((b) => [b.id, b])), [brands]);
+  const label = (n: { name: string; name_local: string | null }) => pick(locale, n.name, n.name_local);
+  const catPath = (id: string | null) => {
+    const c = id ? catById.get(id) : undefined;
+    if (!c) return "";
+    const parent = c.parent_id ? catById.get(c.parent_id) : undefined;
+    return parent ? `${label(parent)} › ${label(c)}` : label(c);
+  };
+
+  // Category choices: main categories with their sub-categories under them. A hidden one stays listed while the item uses it.
+  const categoryOptions = useMemo(() => {
+    const keep = (c: Cat) => c.is_active || c.id === form.category_id;
+    const out: { id: string; text: string }[] = [];
+    for (const top of categories.filter((c) => !c.parent_id && (keep(c) || categories.some((s) => s.parent_id === c.id && keep(s))))) {
+      out.push({ id: top.id, text: label(top) });
+      for (const sub of categories.filter((c) => c.parent_id === top.id && keep(c))) out.push({ id: sub.id, text: `${label(top)} › ${label(sub)}` });
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories, form.category_id, locale]);
+  const brandOptions = useMemo(() => brands.filter((b) => b.is_active || b.id === form.brand_id), [brands, form.brand_id]);
+
+  // Barcodes live on variants; searching an item by barcode looks at all of its variants.
+  const codesByItem = useMemo(() => variants.reduce((m, v) => (v.barcode ? m.set(v.item_id, `${m.get(v.item_id) ?? ""} ${v.barcode}`) : m), new Map<string, string>()), [variants]);
+  const shown = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return items.filter((i) => !q || [i.name, i.name_local, i.sku, codesByItem.get(i.id)].filter(Boolean).join(" ").toLowerCase().includes(q));
+  }, [items, query, codesByItem]);
+
+  const variantsByItem = useMemo(() => variants.filter((v) => !v.is_default).reduce((m, v) => m.set(v.item_id, [...(m.get(v.item_id) ?? []), v]), new Map<string, Variant[]>()), [variants]);
+  // Items grouped by category (a sub-category shows as "Main › Sub"); items without one come last.
+  const groups = useMemo(() => {
+    const by = new Map<string, { key: string; title: string; items: Item[] }>();
+    for (const i of shown) {
+      const key = i.category_id ?? "";
+      if (!by.has(key)) by.set(key, { key: key || "none", title: key ? catPath(key) : t("sk.item.noCategory"), items: [] });
+      by.get(key)!.items.push(i);
+    }
+    return [...by.values()].sort((a, b) => (a.key === "none" ? 1 : b.key === "none" ? -1 : a.title.localeCompare(b.title, locale)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shown, categories, locale]);
+
+  function open(i: Item | "new") {
+    setEditing(i);
+    setForm(i === "new" ? { ...blank } : {
+      name: i.name, name_local: i.name_local ?? "", description: i.description ?? "", description_local: i.description_local ?? "",
+      sku: i.sku ?? "", category_id: i.category_id ?? "", brand_id: i.brand_id ?? "", base_uom: i.base_uom, price: String(i.price), cost: costs[i.id] === undefined ? "" : String(costs[i.id]), reorder: i.reorder_level === null ? "" : String(i.reorder_level),
+    });
+    setPacks(i === "new" ? [] : packsToRows(i.packs));
+    setActive(i === "new" ? true : i.is_active);
+    setErrors({});
+  }
+
+  async function save() {
+    const price = form.price.trim() === "" ? 0 : Number(form.price);
+    if (!form.name.trim()) return setErrors({ name: t("sk.item.nameRequired") });
+    if (!form.base_uom.trim()) return setErrors({ uom: t("sk.item.uomRequired") });
+    if (!Number.isFinite(price) || price < 0) return setErrors({ price: t("sk.item.priceInvalid") });
+    const reorder = form.reorder.trim() === "" ? null : Number(form.reorder);
+    if (reorder !== null && (!Number.isFinite(reorder) || reorder < 0)) return setErrors({ reorder: t("sk.item.reorderInvalid") });
+    const cost = form.cost.trim() === "" ? null : Number(form.cost);
+    if (canViewCost && cost !== null && (!Number.isFinite(cost) || cost < 0)) return setErrors({ cost: t("sk.cost.invalid") });
+    const { packs: parsed, problem } = rowsToPacks(packs);
+    if (problem) return setErrors({ packs: t(problem === "pack" ? "sk.item.packInvalid" : problem === "weight" ? "sk.pack.netOver" : "sk.pack.measureInvalid") });
+    setBusy(true);
+    const values = {
+      sku: form.sku.trim() || null, name: form.name.trim(), name_local: form.name_local.trim() || null,
+      description: form.description.trim() || null, description_local: form.description_local.trim() || null,
+      category_id: form.category_id || null, brand_id: form.brand_id || null, base_uom: form.base_uom.trim(), packs: parsed, price, reorder_level: reorder,
+    };
+    const supabase = createClient();
+    const res = editing === "new"
+      ? await supabase.from("items").insert({ company_id: companyId, currency_code: currency, ...values }).select("id")
+      : await supabase.from("items").update({ ...values, is_active: active }).eq("id", (editing as Item).id).select("id");
+    setBusy(false);
+    if (res.error) {
+      if (res.error.code === "23505") return setErrors({ sku: t("sk.item.skuDup") });
+      return toast("error", res.error.code === "42501" ? t("sk.forbidden") : t("sk.saveError"));
+    }
+    if (!res.data?.length) return toast("error", t("sk.forbidden"));
+    if (canViewCost) {
+      const itemId = res.data[0].id;
+      const had = editing !== "new" && costs[(editing as Item).id] !== undefined;
+      const r = cost === null
+        ? (had ? await supabase.from("item_costs").delete().eq("item_id", itemId) : { error: null })
+        : await supabase.from("item_costs").upsert({ item_id: itemId, company_id: companyId, cost });
+      if (r.error) toast("error", t("sk.saveError"));
+    }
+    toast("success", editing === "new" ? t("sk.item.added") : t("sk.item.saved"));
+    setEditing(null);
+    router.refresh();
+  }
+
+  async function remove(i: Item) {
+    setBusy(true);
+    const { data, error } = await createClient().from("items").delete().eq("id", i.id).select("id");
+    setBusy(false);
+    if (error) return toast("error", error.code === "42501" ? t("sk.forbidden") : error.code === "23503" ? t("sk.inuse") : t("sk.saveError"));
+    if (!data?.length) return toast("error", t("sk.forbidden"));
+    // The picture rows went with the item; remove their files too.
+    await Promise.all(images.filter((x) => x.item_id === i.id).map((x) => removePicture(x.image_path)));
+    setRemoving(null);
+    toast("success", t("sk.item.deleted"));
+    router.refresh();
+  }
+
+  // Tapping a row shows its variants; every other action sits behind the "more" button.
+  function rowMenu(i: Item) {
+    const all: ActionMenuItem[] = [];
+    if (canManage) all.push({ key: "edit", label: t("sk.edit"), icon: Pencil, onClick: () => open(i) });
+    if (canManage || i.properties.length > 0) all.push({ key: "prop", label: fill(t("sk.prop.open"), { name: i.name }), icon: ListChecks, onClick: () => setPropsOf(i.id) });
+    if (canManage || countByItem.get(i.id)) all.push({ key: "pic", label: fill(t("sk.pics.open"), { name: i.name }), icon: ImagePlus, onClick: () => setPicturesOf(i) });
+    all.push({ key: "hist", label: t("sk.hist.open"), icon: History, onClick: () => setHistoryOf(i) });
+    if (canManage) all.push({ key: "del", label: t("sk.delete"), icon: Trash2, danger: true, onClick: () => setRemoving(i) });
+    return <ActionMenu items={all} title={pick(locale, i.name, i.name_local)} label={t("sk.more")} closeLabel={t("sk.close")} />;
+  }
+
+  const add = <Button variant="primary" className="w-full sm:w-auto" onClick={() => open("new")}><Plus className="size-[18px]" aria-hidden />{t("sk.item.add")}</Button>;
+  const costN = form.cost.trim() === "" ? null : Number(form.cost), priceN = Number(form.price);
+  const margin = canViewCost && costN !== null && Number.isFinite(costN) && Number.isFinite(priceN) && priceN > 0
+    ? { diff: priceN - costN, percent: Math.round(((priceN - costN) / priceN) * 100) } : null;
+  const editCurrency = editing && editing !== "new" ? editing.currency_code : currency;
+
+  return (
+    <main className="flex min-w-0 flex-col gap-4 overflow-x-hidden p-4">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">{t("sk.item.title")}</h1>
+        <p className="mt-1 text-muted">{t("sk.item.subtitle")}</p>
+      </div>
+
+      {canManage && !failed && items.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          <Button variant="primary" onClick={() => open("new")}><Plus className="size-[18px]" aria-hidden />{t("sk.item.add")}</Button>
+          <Button onClick={() => setImporting(true)}><FileUp className="size-[18px]" aria-hidden />{t("sk.imp.open")}</Button>
+        </div>
+      )}
+
+      {!canManage && (
+        <div role="note" className="flex items-start gap-3 rounded-card bg-primary-soft p-4 leading-normal text-primary-ink">
+          <Info className="mt-0.5 size-5 shrink-0" aria-hidden />
+          <div><b className="block">{t("sk.item.roTitle")}</b>{t("sk.item.roBody")}</div>
+        </div>
+      )}
+
+      {failed ? (
+        <ErrorState title={t("sk.item.loadError")} action={<Button onClick={() => router.refresh()}>{t("sk.retry")}</Button>} />
+      ) : items.length === 0 ? (
+        <EmptyState title={t("sk.item.empty")} body={t("sk.item.emptyBody")} action={canManage ? add : undefined} />
+      ) : (
+        <>
+          <div className="flex min-w-0 items-center gap-2">
+            <label className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-control border border-line-strong bg-surface px-3">
+              <Search className="size-[18px] shrink-0 text-muted" aria-hidden />
+              <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("sk.search")} aria-label={t("sk.search")}
+                className="min-w-0 flex-1 bg-transparent text-ink outline-none placeholder:text-muted" />
+            </label>
+            <ScanButton onClick={() => setScanning(true)} label={t("sk.scan.open")} />
+            {!canManage && <Badge tone="neutral"><Lock className="size-3" aria-hidden />{t("sk.brands.viewOnly")}</Badge>}
+          </div>
+          {shown.length === 0 ? (
+            <p className="py-8 text-center text-muted">{t("sk.item.noMatch")}</p>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {groups.map((g) => (
+                <section key={g.key} aria-label={g.title}>
+                  <h2 className="mb-2 flex items-baseline gap-2 px-1 text-sm font-semibold uppercase tracking-wide text-muted">
+                    <span className="min-w-0 break-words">{g.title}</span><span className="font-normal">{g.items.length}</span>
+                  </h2>
+                  <ul className="overflow-hidden rounded-card border border-line bg-surface">
+                    {g.items.map((i) => {
+                      const brand = i.brand_id ? brandById.get(i.brand_id) : undefined;
+                      const vs = variantsByItem.get(i.id) ?? [];
+                      return (
+                        <li key={i.id} className="flex min-w-0 items-stretch border-t border-line first:border-t-0">
+                          <button type="button" onClick={() => setVariantsOf(i)} aria-label={fill(t("sk.var.open"), { name: i.name })}
+                            className="flex min-h-16 min-w-0 flex-1 flex-col justify-center p-3 text-left leading-snug transition-colors hover:bg-primary-soft active:bg-primary-soft">
+                            <b className="block break-words">{pick(locale, i.name, i.name_local)}</b>
+                            {i.name_local && <small className="block break-words text-muted">{locale === "en" ? i.name_local : i.name}</small>}
+                            {brand && <small className="block break-words text-muted">{label(brand)}</small>}
+                            {vs.length > 0 && <small className="block break-words text-muted">{vs.map((v) => pick(locale, v.name, v.name_local)).join(" · ")}</small>}
+                            {!i.is_active && <span className="mt-1"><Badge tone="neutral">{t("sk.brands.inactive")}</Badge></span>}
+                          </button>
+                          <div className="flex shrink-0 items-center pr-1">{rowMenu(i)}</div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      <SidePanel sheet open={editing !== null} onClose={() => setEditing(null)} closeLabel={t("sk.close")} title={editing === "new" ? t("sk.item.add") : t("sk.item.edit")}
+        footer={<><Button onClick={() => setEditing(null)}>{t("sk.cancel")}</Button><Button variant="primary" loading={busy} onClick={save}>{t("sk.save")}</Button></>}>
+        <div className="flex flex-col gap-5">
+          <Input label={t("sk.item.name")} value={form.name} maxLength={160} onChange={set("name")} error={errors.name} />
+          <Input label={t("sk.brands.nameLocal")} hint={t("sk.brands.nameLocalHint")} value={form.name_local} maxLength={160} onChange={set("name_local")} />
+          <Select label={t("sk.item.category")} value={form.category_id} onChange={set("category_id")}>
+            <option value="">{t("sk.item.noCategory")}</option>
+            {categoryOptions.map((c) => <option key={c.id} value={c.id}>{c.text}</option>)}
+          </Select>
+          <Select label={t("sk.item.brand")} value={form.brand_id} onChange={set("brand_id")}>
+            <option value="">{t("sk.item.noBrand")}</option>
+            {brandOptions.map((b) => <option key={b.id} value={b.id}>{label(b)}</option>)}
+          </Select>
+          <Input label={t("sk.item.price")} hint={fill(t("sk.item.priceHint"), { currency: editCurrency })} type="number" inputMode="decimal" min={0} step="any"
+            value={form.price} onChange={set("price")} error={errors.price} />
+          {canViewCost && (
+            <div className="flex flex-col gap-2">
+              <Input label={t("sk.cost.label")} hint={fill(t("sk.cost.hint"), { currency: editCurrency })} type="number" inputMode="decimal" min={0} step="any"
+                value={form.cost} onChange={set("cost")} error={errors.cost} />
+              {margin && <p role="status" className={margin.diff < 0 ? "text-danger" : "text-muted"}>
+                {margin.diff < 0 ? fill(t("sk.cost.loss"), { amount: money(locale, -margin.diff, editCurrency) }) : fill(t("sk.cost.margin"), { amount: money(locale, margin.diff, editCurrency), percent: margin.percent })}
+              </p>}
+            </div>
+          )}
+          <Input label={t("sk.item.reorder")} hint={t("sk.item.reorderHint")} type="number" inputMode="decimal" min={0} step="any" value={form.reorder} onChange={set("reorder")} error={errors.reorder} />
+          <Input label={t("sk.item.uom")} hint={t("sk.item.uomHint")} value={form.base_uom} maxLength={30} onChange={set("base_uom")} error={errors.uom} />
+
+          <fieldset className="flex flex-col gap-3 rounded-card border border-line p-3">
+            <legend className="px-1 font-semibold">{t("sk.item.packs")}</legend>
+            <p className="text-muted">{t("sk.item.packsHint")}</p>
+            <PackEditor rows={packs} onChange={(r) => { setPacks(r); setErrors({}); }} error={errors.packs} />
+          </fieldset>
+
+          <Input label={t("sk.item.sku")} hint={t("sk.item.skuHint")} value={form.sku} maxLength={60} onChange={set("sku")} error={errors.sku} />
+          <Textarea label={t("sk.item.description")} value={form.description} maxLength={2000} rows={3} onChange={set("description")} />
+          <Textarea label={t("sk.item.descriptionLocal")} value={form.description_local} maxLength={2000} rows={3} onChange={set("description_local")} />
+          {editing !== "new" && (
+            <div className="flex items-center justify-between gap-3 rounded-card border border-line p-3">
+              <div className="min-w-0"><b className="block">{t("sk.brands.active")}</b><small className="block text-muted">{t("sk.item.activeHint")}</small></div>
+              <Toggle checked={active} onChange={setActive} label={t("sk.brands.active")} />
+            </div>
+          )}
+        </div>
+      </SidePanel>
+
+      <BarcodeScanner open={scanning} onClose={() => setScanning(false)} onScan={setQuery} labels={scanLabels(t)} />
+      <ItemsImport open={importing} onClose={() => setImporting(false)} companyId={companyId} currency={currency} categories={categories} brands={brands}
+        skus={items.map((i) => i.sku).filter((s): s is string => !!s)} barcodes={variants.map((v) => v.barcode).filter((s): s is string => !!s)} />
+
+      <ItemPictures item={picturesOf} images={images} companyId={companyId} canManage={canManage} onClose={() => setPicturesOf(null)} />
+
+      <ItemProperties item={items.find((x) => x.id === propsOf) ?? null} currency={items.find((x) => x.id === propsOf)?.currency_code ?? currency} canManage={canManage} onClose={() => setPropsOf(null)} />
+      <ItemVariants item={variantsOf} variants={variants} images={images} currency={variantsOf?.currency_code ?? currency} companyId={companyId} canManage={canManage} canViewCost={canViewCost}
+        itemCost={variantsOf ? costs[variantsOf.id] : undefined} itemPacks={variantsOf?.packs ?? []} variantCosts={variantCosts} onClose={() => setVariantsOf(null)} />
+
+      <PriceHistorySheet item={historyOf} canViewCost={canViewCost} onClose={() => setHistoryOf(null)} />
+
+      <Modal open={removing !== null} onClose={() => setRemoving(null)} closeLabel={t("sk.close")} title={t("sk.item.deleteTitle")}
+        footer={<><Button onClick={() => setRemoving(null)}>{t("sk.cancel")}</Button><Button variant="danger" loading={busy} onClick={() => removing && remove(removing)}>{t("sk.delete")}</Button></>}>
+        <p>{removing ? fill(t("sk.item.deleteBody"), { name: pick(locale, removing.name, removing.name_local) }) : ""}</p>
+      </Modal>
+    </main>
+  );
+}

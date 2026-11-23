@@ -1,10 +1,12 @@
 "use client";
-import { useState, type ReactNode } from "react";
+import { X } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
-  Avatar, Badge, Button, Card, CardBody, CardHeader, EmptyState, ErrorState, Input, Modal, ScopePill, Select,
+  AppSwitcher, Avatar, Badge, BottomSheet, Button, SheetActions, Card, CardBody, CardHeader, EmptyState, ErrorState, Input, Modal, ScopePill, Select,
   SidePanel, Skeleton, Spinner, TabPanel, Table, TBody, TD, TH, THead, Tabs, Toggle, TR, useToast,
 } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
+import type { SwitcherData } from "@uplif/ui";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -15,11 +17,34 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
+const cos = [
+  { id: "m1", name: "Sunrise Trading Co.", nameLocal: "ក្រុមហ៊ុន ព្រះអាទិត្យរះ", active: true },
+  { id: "m2", name: "Angkor Brew House", nameLocal: null, active: false },
+];
+const owner = ["org.company.update", "org.member.update", "sales.customer.read"];
+const switcherStates: { id: string; data: SwitcherData | null }[] = [
+  { id: "default", data: { modules: ["attendance", "field_sales"], permissions: owner, companies: cos } },
+  { id: "loading", data: null },
+  { id: "locked", data: { modules: ["attendance"], permissions: owner, companies: cos } },
+  { id: "single", data: { modules: [], permissions: [], companies: [cos[0]] } },
+  { id: "empty", data: { modules: [], permissions: [], companies: cos } },
+];
+
 export default function Gallery() {
   const { t, locale, setLocale } = useI18n();
   const toast = useToast();
   const [modal, setModal] = useState(false);
   const [panel, setPanel] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  // Demo of a sheet whose data loads first: it opens only once the (pretend) fetch is done.
+  const [slowOpen, setSlowOpen] = useState(false);
+  const [slowLoading, setSlowLoading] = useState(false);
+  const openSlowSheet = () => { setSlowLoading(true); setSlowOpen(true); };
+  useEffect(() => {
+    if (!slowOpen || !slowLoading) return;
+    const id = window.setTimeout(() => setSlowLoading(false), 1500);
+    return () => window.clearTimeout(id);
+  }, [slowOpen, slowLoading]);
   const [tab, setTab] = useState("general");
   const [approval, setApproval] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -138,6 +163,8 @@ export default function Gallery() {
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => setModal(true)}>{t("overlay.openModal")}</Button>
           <Button onClick={() => setPanel(true)}>{t("overlay.openPanel")}</Button>
+          <Button onClick={() => setSheetOpen(true)}>{t("overlay.openSheet")}</Button>
+          <Button onClick={openSlowSheet}>{t("overlay.openSlowSheet")}</Button>
         </div>
         <Modal
           open={modal}
@@ -148,7 +175,27 @@ export default function Gallery() {
         >
           <p>{t("overlay.confirmBody")}</p>
         </Modal>
-        <SidePanel open={panel} onClose={() => setPanel(false)} title={t("overlay.panelTitle")} closeLabel={t("overlay.close")}>
+        <BottomSheet
+          open={sheetOpen}
+          onClose={() => setSheetOpen(false)}
+          title={t("overlay.panelTitle")}
+          closeLabel={t("overlay.close")}
+          footer={<SheetActions primary={{ label: t("btn.primary"), onClick: () => setSheetOpen(false) }} secondary={[{ label: t("btn.secondary"), icon: <X className="size-5" aria-hidden="true" />, onClick: () => setSheetOpen(false) }]} />}
+        >
+          <p className="text-muted">{t("overlay.sheetBody")}</p>
+        </BottomSheet>
+        <BottomSheet
+          open={slowOpen}
+          loading={slowLoading}
+          loadingLabel={t("loading.page")}
+          onClose={() => setSlowOpen(false)}
+          title={t("overlay.panelTitle")}
+          closeLabel={t("overlay.close")}
+          footer={<SheetActions primary={{ label: t("btn.primary"), onClick: () => setSlowOpen(false) }} />}
+        >
+          <p className="text-muted">{t("overlay.slowSheetBody")}</p>
+        </BottomSheet>
+        <SidePanel sheet open={panel} onClose={() => setPanel(false)} title={t("overlay.panelTitle")} closeLabel={t("overlay.close")}>
           <p className="text-muted">{t("overlay.panelBody")}</p>
         </SidePanel>
       </Section>
@@ -167,6 +214,17 @@ export default function Gallery() {
             <Toggle checked={approval} onChange={setApproval} label={t("toggle.label")} />
           </TabPanel>
         ))}
+      </Section>
+
+      <Section title={t("section.switcher")}>
+        <div className="flex flex-wrap items-start gap-4">
+          {switcherStates.map((st) => (
+            <div key={st.id} className="flex w-72 flex-col gap-2">
+              <small className="text-muted">{st.id}</small>
+              <AppSwitcher current={st.id === "single" ? "me" : "admin"} data={st.data} locale={locale} />
+            </div>
+          ))}
+        </div>
       </Section>
 
       <Section title={t("section.states")}>

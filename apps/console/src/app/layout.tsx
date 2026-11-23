@@ -10,11 +10,11 @@ import { RegisterServiceWorker } from "@/components/register-sw";
 import { themeInitScript } from "@/lib/theme";
 
 export const metadata: Metadata = {
-  title: "UPLIF",
+  title: "UPLIF Admin",
   description: "Business management made simple",
-  applicationName: "UPLIF",
+  applicationName: "UPLIF Admin",
   icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
-  appleWebApp: { capable: true, title: "UPLIF", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "UPLIF Admin", statusBarStyle: "default" },
 };
 export const viewport: Viewport = {
   themeColor: [{ media: "(prefers-color-scheme: light)", color: "#1D5FD1" }, { media: "(prefers-color-scheme: dark)", color: "#111A2B" }],

@@ -3,9 +3,10 @@ import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, ChevronRight, ClipboardList, Info, Lock, Pencil, Plus } from "lucide-react";
-import { Badge, Button, Card, FloatingBar, Input, useToast } from "@uplif/ui";
+import { Badge, Button, Card, FloatingBar, Input, Toggle, useToast } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
+import { DeleteCompany } from "./delete-company";
 
 interface Props {
   company: { id: string; name: string; name_local: string | null; country_code: string } | null;
@@ -14,6 +15,7 @@ interface Props {
   canProfile: boolean;
   canSettings: boolean;
   canCurrency: boolean;
+  canDelete: boolean;
 }
 
 const RETENTION = [30, 60, 90, 180, 365];
@@ -33,17 +35,6 @@ function Section({ first, title, description, children }: { first?: boolean; tit
       </div>
       <Card className="flex flex-col gap-5 p-4 sm:p-5">{children}</Card>
     </section>
-  );
-}
-
-function Switch({ checked, onChange, label, disabled }: { checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) {
-  return (
-    <button type="button" role="switch" aria-checked={checked} aria-label={label} disabled={disabled} onClick={() => onChange(!checked)}
-      className="grid h-11 w-[52px] shrink-0 place-items-center rounded-control disabled:opacity-50">
-      <span className={`relative block h-[26px] w-11 rounded-full ${checked ? "bg-primary" : "bg-surface shadow-[inset_0_0_0_1.5px_var(--color-muted)]"}`}>
-        <span className={`absolute top-1 size-[18px] rounded-full transition-[inset-inline-start] motion-reduce:transition-none ${checked ? "start-[22px] bg-white" : "start-1 bg-muted"}`} />
-      </span>
-    </button>
   );
 }
 
@@ -67,7 +58,7 @@ function ReadRow({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-export function CompanyForm({ company, settings, currencies, canProfile, canSettings, canCurrency }: Props) {
+export function CompanyForm({ company, settings, currencies, canProfile, canSettings, canCurrency, canDelete }: Props) {
   const { t, locale } = useI18n();
   const toast = useToast();
   const router = useRouter();
@@ -210,10 +201,8 @@ export function CompanyForm({ company, settings, currencies, canProfile, canSett
               <span id="oc" className="mb-1.5 block text-[14px] font-semibold text-ink-2">{t("company.otherCurrencies")}</span>
               <div className="flex flex-col">
                 {currencyOptions.map((c, i) => (
-                  <div key={c} className={`flex min-h-14 items-center gap-3 ${i ? "border-t border-line" : ""}`}>
-                    <span className="w-12 shrink-0 font-bold tabular-nums">{c}</span>
-                    <span className="min-w-0 flex-1">{displayName("currency", c, locale)}</span>
-                    <Switch checked={v.others.includes(c)} onChange={(on) => toggleCurrency(c, on)} label={`${c} ${displayName("currency", c, locale)}`} />
+                  <div key={c} className={i ? "border-t border-line" : ""}>
+                    <Toggle checked={v.others.includes(c)} onChange={(on) => toggleCurrency(c, on)} label={`${c} · ${displayName("currency", c, locale)}`} />
                   </div>
                 ))}
               </div>
@@ -232,13 +221,7 @@ export function CompanyForm({ company, settings, currencies, canProfile, canSett
 
       <Section title={t("company.stockTitle")} description={t("company.stockDesc")}>
         {canSettings ? (
-          <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0 leading-snug">
-              <b className="block font-semibold">{t("company.stockVisibility")}</b>
-              <small className="block text-[14px] text-muted">{t("company.stockHint")}</small>
-            </div>
-            <Switch checked={v.stock} onChange={(x) => set("stock", x)} label={t("company.stockVisibility")} />
-          </div>
+          <Toggle checked={v.stock} onChange={(x) => set("stock", x)} label={t("company.stockVisibility")} description={t("company.stockHint")} />
         ) : (
           <ReadRow label={t("company.stockVisibility")}><Badge tone={v.stock ? "success" : "neutral"}>{v.stock ? t("company.yes") : t("company.no")}</Badge></ReadRow>
         )}
@@ -274,6 +257,8 @@ export function CompanyForm({ company, settings, currencies, canProfile, canSett
           {t("company.auditLink")}<ChevronRight className="size-3.5" aria-hidden />
         </Link>
       </div>
+
+      {canDelete && <DeleteCompany company={company} />}
 
       {!readOnly && (
         <FloatingBar>

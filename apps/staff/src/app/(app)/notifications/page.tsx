@@ -1,8 +1,8 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Award, CalendarDays, CircleCheck, FilePenLine, TrendingUp } from "lucide-react";
-import { Badge, Button, Card, EmptyState, ErrorState, Reveal, Skeleton, Toggle } from "@uplif/ui";
+import { Award, CalendarDays, CircleCheck, FilePenLine, PackageMinus, TrendingUp, Wallet } from "lucide-react";
+import { APPS, Badge, Button, Card, EmptyState, ErrorState, Reveal, Skeleton, Toggle } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill, type MessageKey } from "@/lib/messages";
@@ -20,7 +20,15 @@ const KINDS: Record<string, { key: MessageKey; href: string; icon: typeof Award 
   performance_review: { key: "st.notif.performance_review", href: "/record/performance", icon: TrendingUp },
   promotion: { key: "st.notif.promotion", href: "/record/job", icon: Award },
   transfer: { key: "st.notif.transfer", href: "/record/job", icon: Award },
+  payslip_posted: { key: "st.notif.payslip_posted", href: "/record/payslips", icon: Wallet },
+  payslip_review_answered: { key: "st.notif.payslip_review_answered", href: "/record/payslips", icon: Wallet },
+  low_stock: { key: "st.notif.low_stock", href: "", icon: PackageMinus },
 };
+
+/** Where a notification opens. Low stock opens the item in the Stock app, which lives at its own address. */
+const STOCK_URL = APPS.find((a) => a.key === "stock")?.url ?? "";
+const target = (n: { kind: string; data: Record<string, unknown> }, href: string) =>
+  n.kind === "low_stock" ? `${STOCK_URL}/stock/${String(n.data.item_id ?? "")}` : href;
 
 /** The person's inbox: what happened to them (decisions, reviews, promotions), with one switch for new updates. */
 export default function NotificationsPage() {
@@ -69,6 +77,9 @@ export default function NotificationsPage() {
       month: d.period ? day(d.period, { month: "long", year: "numeric" }) : "",
       percent: Number(d.percent ?? 0),
       position: String((locale !== "en" && d.to_local) || d.to || ""),
+      run: String(d.run ?? ""),
+      item: String((locale !== "en" && d.name_local) || d.name || ""),
+      qty: Number(d.qty ?? 0), level: Number(d.level ?? 0), unit: String(d.unit ?? ""),
     });
     return d.note ? `${base} ${fill(t("st.job.note"), { note: String(d.note) })}` : base;
   };
@@ -94,15 +105,13 @@ export default function NotificationsPage() {
         : (
           <Reveal className="flex flex-col gap-4">
             <Card className="flex flex-col gap-1 p-4">
-              <Toggle checked={on} onChange={(v) => void toggle(v)} label={t("st.notif.toggle")} />
-              <p className="m-0 text-sm text-muted">{t("st.notif.toggle.hint")}</p>
+              <Toggle checked={on} onChange={(v) => toggle(v)} label={t("st.notif.toggle")} description={t("st.notif.toggle.hint")} />
             </Card>
             {VAPID_PUBLIC_KEY && (
               <Card className="flex flex-col gap-1 p-4">
                 {pushNote === "unsupported" ? <p className="m-0 text-sm text-muted">{t("st.push.unsupported")}</p> : (
                   <>
-                    <Toggle checked={push === true} disabled={push === null || pushNote === "denied"} onChange={(v) => void togglePush(v)} label={t("st.push.toggle")} />
-                    <p className="m-0 text-sm text-muted">{t("st.push.hint")}</p>
+                    <Toggle checked={push === true} disabled={push === null || pushNote === "denied"} onChange={(v) => togglePush(v)} label={t("st.push.toggle")} description={t("st.push.hint")} />
                     {pushNote === "denied" && <p role="status" className="m-0 text-sm font-semibold text-warning-ink">{t("st.push.denied")}</p>}
                     {pushNote === "error" && <p role="alert" className="m-0 text-sm font-semibold text-danger">{t("st.push.error")}</p>}
                   </>
@@ -118,7 +127,7 @@ export default function NotificationsPage() {
                     if (!k) return null;
                     const Icon = k.icon;
                     return (
-                      <Link key={n.id} href={k.href} className={`flex items-start gap-3 p-4 hover:bg-ground ${n.read_at ? "" : "bg-primary-soft/40"}`}>
+                      <Link key={n.id} href={target(n, k.href)} className={`flex items-start gap-3 p-4 hover:bg-ground ${n.read_at ? "" : "bg-primary-soft/40"}`}>
                         <span className="grid size-9 shrink-0 place-items-center rounded-control bg-primary-soft text-primary-ink"><Icon className="size-4" aria-hidden /></span>
                         <span className="min-w-0 flex-1"><span className="block break-words">{text(n)}</span><span className="text-sm text-muted">{ago(n.created_at)}</span></span>
                         {!n.read_at && <Badge tone="info">•</Badge>}

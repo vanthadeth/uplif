@@ -7,9 +7,9 @@ import "./globals.css";
 import { ToastProvider, themeInitScript } from "@uplif/ui";
 
 export const metadata: Metadata = {
-  title: "UPLIF Super Admin",
+  title: "UPLIF Platform",
   description: "Platform administration for UPLIF",
-  applicationName: "UPLIF Super Admin",
+  applicationName: "UPLIF Platform",
   robots: { index: false, follow: false },
 };
 export const viewport: Viewport = {

@@ -10,5 +10,6 @@ export function nextStep(s: SessionState): "/login" | "/profile" | "/companies/n
   if (!s.signedIn) return "/login";
   if (!s.hasProfile) return "/profile";
   if (s.hasCompanyClaim) return "/dashboard";
-  return s.companyCount === 0 ? "/companies/new" : "/companies";
+  // The company list handles both cases: pick a company, or an empty state with a "create a new company" button.
+  return "/companies";
 }

@@ -15,7 +15,7 @@ export default function LoginPage() {
       <Card>
         <CardBody className="flex flex-col gap-4">
           <div>
-            <h1 className="text-xl font-semibold">UPLIF Super Admin</h1>
+            <h1 className="text-xl font-semibold">UPLIF Platform</h1>
             <p className="text-muted">For platform administrators only. Sign in with Google or Telegram.</p>
           </div>
           {failed && <p role="alert" className="text-danger-ink">Sign-in did not finish. Try again.</p>}

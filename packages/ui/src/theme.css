@@ -45,6 +45,8 @@
   --spacing-control: 2.5rem; /* 40px; 48px on touch, see below */
 }
 
+:root { --toggle-knob: #ffffff; --toggle-check: #1d5fd1; }
+
 :root { --control-h: 2.5rem; }
 @media (pointer: coarse) { :root { --control-h: 3rem; } }
 
@@ -63,9 +65,12 @@ html:lang(km) .caps { text-transform: none; letter-spacing: 0; }
 
 @keyframes uplif-spin { to { transform: rotate(360deg); } }
 @keyframes uplif-pulse { 50% { opacity: 0.5; } }
+@keyframes uplif-fade { from { opacity: 0; } }
 @keyframes uplif-in { from { opacity: 0; transform: translateY(8px); } }
 @keyframes uplif-slide { from { transform: translateX(100%); } }
 @keyframes uplif-slide-up { from { transform: translateY(100%); } }
+@keyframes uplif-slide-down { to { transform: translateY(100%); } }
+@keyframes uplif-fade-out { to { opacity: 0; } }
 @keyframes uplif-bar { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
 
 /* Sidebar tokens (light) */
@@ -79,6 +84,7 @@ html:lang(km) .caps { text-transform: none; letter-spacing: 0; }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
+    --toggle-knob: #e6ebf5; --toggle-check: #0b1220;
     --color-ink: #e6ebf5; --color-ink-2: #c3ccdd; --color-muted: #9aa6bc; --color-line: #243049; --color-line-strong: #33415c;
     --color-check: #6b7891; --color-ground: #0b1220; --color-surface: #141c2e; --color-neutral-soft: #1a2540;
     --color-primary-soft: #1e2d52; --color-primary-ink: #9dbdff; --color-link: #7fa9ff;
@@ -92,6 +98,7 @@ html:lang(km) .caps { text-transform: none; letter-spacing: 0; }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
+  --toggle-knob: #e6ebf5; --toggle-check: #0b1220;
   --color-ink: #e6ebf5; --color-ink-2: #c3ccdd; --color-muted: #9aa6bc; --color-line: #243049; --color-line-strong: #33415c;
   --color-check: #6b7891; --color-ground: #0b1220; --color-surface: #141c2e; --color-neutral-soft: #1a2540;
   --color-primary-soft: #1e2d52; --color-primary-ink: #9dbdff; --color-link: #7fa9ff;

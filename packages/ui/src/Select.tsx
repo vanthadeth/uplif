@@ -6,6 +6,8 @@ import {
 import { createPortal } from "react-dom";
 import { Check, ChevronDown } from "lucide-react";
 import { cn } from "./cn";
+import { BottomSheet } from "./BottomSheet";
+import { useSheetReady } from "./Sheet";
 import { FieldShell, control } from "./Field";
 
 interface Opt { value: string; text: string; disabled: boolean }
@@ -82,8 +84,11 @@ export function Select({ label, hint, error, id, name, className, disabled, requ
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const sheet = useIsSheet();
+  const slid = useSheetReady(open);
   const btn = useRef<HTMLButtonElement>(null);
-  const list = useRef<HTMLUListElement>(null);
+  const list = useRef<HTMLUListElement | null>(null);
+  const [listEl, setListEl] = useState<HTMLUListElement | null>(null);
+  const setList = useCallback((el: HTMLUListElement | null) => { list.current = el; setListEl(el); }, []);
   const typed = useRef({ s: "", t: 0 });
   const [host, setHost] = useState<Element | null>(null);
   const [pos, setPos] = useState<{ left: number; width: number; top?: number; bottom?: number; max: number } | null>(null);
@@ -145,7 +150,7 @@ export function Select({ label, hint, error, id, name, className, disabled, requ
     // Scroll the list itself only, so the page behind never moves.
     if (el.offsetTop < ul.scrollTop) ul.scrollTop = el.offsetTop;
     else if (el.offsetTop + el.offsetHeight > ul.scrollTop + ul.clientHeight) ul.scrollTop = el.offsetTop + el.offsetHeight - ul.clientHeight;
-  }, [open, active, pos]);
+  }, [open, active, pos, slid, listEl]);
 
   const move = (from: number, dir: 1 | -1) => {
     for (let i = from + dir; i >= 0 && i < options.length; i += dir) if (!options[i].disabled) return i;
@@ -206,14 +211,14 @@ export function Select({ label, hint, error, id, name, className, disabled, requ
 
   const ul = (
     <ul
-      ref={list}
+      ref={setList}
       id={listId}
       role="listbox"
       aria-label={label}
       className={cn(
         "overflow-y-auto py-1",
         sheet
-          ? "relative max-h-[60dvh]"
+          ? "relative max-h-[60dvh] overscroll-contain pb-[max(1rem,env(safe-area-inset-bottom))]"
           : "fixed z-[100] rounded-control border border-line bg-surface shadow-pop",
       )}
       style={sheet ? undefined : pos ? { left: pos.left, width: pos.width, top: pos.top, bottom: pos.bottom, maxHeight: pos.max } : { visibility: "hidden" }}
@@ -253,18 +258,11 @@ export function Select({ label, hint, error, id, name, className, disabled, requ
     </div>
   );
 
-  const layer = open && host ? createPortal(
-    sheet ? (
-      <div className="fixed inset-0 z-[100] flex items-end bg-navy/50" onPointerDown={(e) => { if (e.target === e.currentTarget) close(); }}>
-        <div className="w-full animate-[uplif-slide-up_0.18s_ease-out] rounded-t-card bg-surface pb-[env(safe-area-inset-bottom)] shadow-pop">
-          <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-line-strong" aria-hidden="true" />
-          <div className="px-4 pb-1 pt-3 text-[14px] font-semibold text-muted">{label}</div>
-          {ul}
-        </div>
-      </div>
-    ) : ul,
-    host,
-  ) : null;
+  const layer = sheet ? (
+    <BottomSheet open={open} onClose={close} title={label ?? ""} container={host} hideClose autoFocus={false}>
+      <div className="-mx-3 -mt-4">{ul}</div>
+    </BottomSheet>
+  ) : open && host ? createPortal(ul, host) : null;
 
   if (bare) return <>{body}{layer}</>;
   return <><FieldShell label={label} hint={hint} error={error} id={fid}>{body}</FieldShell>{layer}</>;
