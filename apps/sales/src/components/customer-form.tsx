@@ -9,6 +9,7 @@ import { fill, type MessageKey } from "@/lib/messages";
 import { createClient } from "@/lib/supabase/client";
 import { BUCKET, photoTypes, useSignedUrls, type CustomerDetail, type PhotoType } from "@/lib/customers";
 import { useMe } from "./me-context";
+import { useGoOutbox } from "./outbox-context";
 
 interface ContactDraft { key: string; name: string; phone: string; is_default: boolean }
 interface PhotoDraft { key: string; path: string; blob: Blob | null; preview: string | null; type: PhotoType; note: string; is_default: boolean }
@@ -21,6 +22,7 @@ export function CustomerForm({ initial }: { initial?: CustomerDetail }) {
   const toast = useToast();
   const router = useRouter();
   const me = useMe();
+  const ob = useGoOutbox();
   const [id] = useState(() => initial?.id ?? uid());
   const [name, setName] = useState(initial?.name ?? "");
   const [nameLocal, setNameLocal] = useState(initial?.name_local ?? "");
@@ -74,21 +76,22 @@ export function CustomerForm({ initial }: { initial?: CustomerDetail }) {
     const kept = contacts.filter((c) => c.name.trim() || c.phone.trim());
     if (kept.some((c) => !c.name.trim())) { setError("go.form.contactRequired"); return; }
     setBusy(true);
-    const supabase = createClient();
-    for (const p of photos) {
-      if (!p.blob) continue;
-      const up = await supabase.storage.from(BUCKET).upload(p.path, p.blob, { contentType: "image/jpeg", upsert: true });
-      if (up.error) { setBusy(false); setError("go.form.uploadFailed"); return; }
-    }
-    const { error: err } = await supabase.rpc("sales_save_customer", {
-      p_id: id, p_name: name, p_name_local: nameLocal || null, p_address: address || null,
-      p_latitude: geo?.lat ?? null, p_longitude: geo?.lon ?? null, p_notes: notes || null,
-      p_contacts: kept.map((c) => ({ name: c.name, phone: c.phone, is_default: c.is_default })),
-      p_photos: photos.map((p) => ({ path: p.path, type: p.type, note: p.note, is_default: p.is_default })),
+    // New pictures upload with the save. With no signal the whole save waits on the phone and goes out later.
+    const r = await ob.submit({
+      kind: "customer", customerId: id, opId: uid(), isNew: !initial, name,
+      photos: photos.filter((p) => p.blob).map((p) => ({ path: p.path, blob: p.blob as Blob })),
+      args: {
+        p_id: id, p_name: name, p_name_local: nameLocal || null, p_address: address || null,
+        p_latitude: geo?.lat ?? null, p_longitude: geo?.lon ?? null, p_notes: notes || null,
+        p_contacts: kept.map((c) => ({ name: c.name, phone: c.phone, is_default: c.is_default })),
+        p_photos: photos.map((p) => ({ path: p.path, type: p.type, note: p.note, is_default: p.is_default })),
+      },
     });
     setBusy(false);
-    if (err) { setError("go.form.saveFailed"); return; }
-    toast("success", t("go.form.saved"));
+    if (r.error) { setError("go.form.saveFailed"); return; }
+    toast("success", t(r.queued ? "go.form.savedOffline" : "go.form.saved"));
+    // Saved on the phone: load the list afresh (the offline shell answers it) rather than ask the server for a page.
+    if (r.queued) { location.assign("/customers"); return; }
     router.replace(initial ? `/customers/${id}/details` : `/customers/${id}`);
     router.refresh();
   }

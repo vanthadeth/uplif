@@ -10,6 +10,7 @@ import { initials, shownName, useSignedUrls, type CustomerRow } from "@/lib/cust
 import { goCache } from "@/lib/offline";
 import { useMe } from "./me-context";
 import { OfflineNotice } from "./offline-notice";
+import { useGoOutbox } from "./outbox-context";
 
 function RowSkeleton() {
   return (
@@ -24,6 +25,7 @@ function RowSkeleton() {
 export function CustomersList() {
   const { t, locale } = useI18n();
   const me = useMe();
+  const ob = useGoOutbox();
   const [q, setQ] = useState("");
   const [rows, setRows] = useState<CustomerRow[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -52,6 +54,11 @@ export function CustomersList() {
     }, q ? 250 : 0);
     return () => { live = false; clearTimeout(timer); };
   }, [q, tick, me.employee_id]);
+  // Customers saved on this phone that the server does not have yet.
+  const known = new Set((rows ?? []).map((r) => r.id));
+  const waiting = ob.items.flatMap((i) => (i.data.kind === "customer" && i.data.isNew && !known.has(i.data.customerId) ? [{ id: i.id, name: i.data.name, failed: i.status === "failed" }] : []))
+    .filter((w) => !q.trim() || w.name.toLowerCase().includes(q.trim().toLowerCase()));
+  useEffect(() => ob.onSynced(() => setTick((n) => n + 1)), [ob]);
   const urls = useSignedUrls((rows ?? []).map((r) => r.photo_path));
 
   return (
@@ -71,14 +78,23 @@ export function CustomersList() {
         <ErrorState title={t("go.cust.loadError")} body={t("go.cust.loadErrorBody")} action={<Button onClick={() => setTick(tick + 1)}>{t("go.retry")}</Button>} />
       ) : rows === null ? (
         <div role="status" aria-label={t("go.loading")} className="flex flex-col gap-2"><RowSkeleton /><RowSkeleton /><RowSkeleton /><RowSkeleton /></div>
-      ) : rows.length === 0 ? (
+      ) : rows.length === 0 && waiting.length === 0 ? (
         q ? <EmptyState title={t("go.cust.noMatch")} body={t("go.cust.noMatchBody")} />
           : <EmptyState title={t("go.cust.empty")} body={t("go.cust.emptyBody")}
               action={me.can_create ? <Link href="/customers/new"><Button variant="primary"><Plus className="size-4" aria-hidden />{t("go.cust.add")}</Button></Link> : undefined} />
       ) : (
         <>
-          <p className="px-1 text-sm text-muted">{fill(t("go.cust.count"), { n: rows.length })}</p>
+          <p className="px-1 text-sm text-muted">{fill(t("go.cust.count"), { n: rows.length + waiting.length })}</p>
           <ul className="flex flex-col gap-2">
+            {waiting.map((w) => (
+              <li key={w.id}>
+                <div className="flex items-center gap-3 rounded-card border border-dashed border-line-strong bg-surface p-3">
+                  <span aria-hidden className="grid size-12 shrink-0 place-items-center rounded-full bg-primary-soft font-bold text-primary-ink">{initials(w.name)}</span>
+                  <b className="min-w-0 flex-1 truncate">{w.name}</b>
+                  <Badge tone={w.failed ? "danger" : "warning"}>{t(w.failed ? "go.ob.notSent" : "go.ob.pending")}</Badge>
+                </div>
+              </li>
+            ))}
             {rows.map((c, i) => {
               const name = shownName(c, locale);
               const photo = c.photo_path ? urls[c.photo_path] : undefined;

@@ -10,7 +10,8 @@ export function OutboxBar() {
   const { t } = useI18n();
   const ob = useGoOutbox();
   const waiting = ob.items.filter((i) => i.status === "pending");
-  if (ob.online && waiting.length === 0) return null;
+  const refused = ob.items.filter((i) => i.status === "failed" && i.data.kind === "customer");
+  if (ob.online && waiting.length === 0 && refused.length === 0) return null;
   return (
     <div className="flex flex-col gap-2 px-4 pt-3">
       {!ob.online && <p role="status" className="flex items-start gap-3 rounded-card bg-warning-soft p-3 text-warning-ink"><WifiOff className="mt-0.5 size-5 shrink-0" aria-hidden />{t("go.ob.offline")}</p>}
@@ -21,6 +22,13 @@ export function OutboxBar() {
           {ob.online && <Button loading={ob.sending} onClick={() => void ob.flush()}>{t("go.ob.send")}</Button>}
         </div>
       )}
+      {refused.map((i) => (
+        <div key={i.id} role="alert" className="flex items-center gap-3 rounded-card bg-danger-soft p-3 text-danger-ink">
+          <span className="min-w-0 flex-1"><b className="block truncate">{i.data.kind === "customer" ? i.data.name : ""}</b>{t("go.ob.customerRefused")}</span>
+          <Button onClick={() => void ob.retry(i.id)}>{t("go.ob.retry")}</Button>
+          <Button variant="quiet" onClick={() => void ob.dismiss(i.id)}>{t("go.ob.remove")}</Button>
+        </div>
+      ))}
     </div>
   );
 }
