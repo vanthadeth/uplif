@@ -13,6 +13,8 @@ import { OutboxBar } from "./outbox-bar";
 import { CustomersList } from "./customers-list";
 import { Conversation } from "./conversation";
 import { CustomerView } from "./customer-view";
+import { CustomerForm } from "./customer-form";
+import { EditFromSaved } from "./edit-from-saved";
 
 const uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
@@ -26,7 +28,7 @@ export function OfflineShell() {
     const wanted = safeNext(new URLSearchParams(location.search).get("to")) ?? "/customers";
     setTo(wanted);
     // Back online: go to the real screen.
-    const online = () => location.replace(wanted);
+    const online = () => { if (navigator.onLine) location.replace(wanted); };
     addEventListener("online", online);
     // Opening another screen needs a fresh page load (the worker answers it with this shell), not an in-app jump.
     const tap = (e: MouseEvent) => {
@@ -54,6 +56,8 @@ export function OfflineShell() {
   let screen: React.ReactNode;
   let m: RegExpMatchArray | null;
   if (path === "/customers") screen = <CustomersList />;
+  else if (path === "/customers/new") screen = state.can_create ? <CustomerForm /> : <CustomersList />;
+  else if ((m = path.match(new RegExp(`^/customers/(${uuid})/edit$`)))) screen = state.can_update ? <EditFromSaved id={m[1]} /> : <CustomerView id={m[1]} />;
   else if ((m = path.match(new RegExp(`^/customers/(${uuid})$`)))) screen = <Conversation id={m[1]} />;
   else if ((m = path.match(new RegExp(`^/customers/(${uuid})/details$`)))) screen = <CustomerView id={m[1]} />;
   else screen = (

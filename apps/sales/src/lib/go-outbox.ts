@@ -16,7 +16,17 @@ export type NoteJob = {
   photos: { key: string; blob: Blob }[];
 };
 export type CommentJob = { kind: "comment"; customerId: string; opId: string; body: string };
-export type GoJob = NoteJob | CommentJob;
+/** A new or edited customer. `args` are the sales_save_customer arguments; `photos` are the new pictures still to upload. */
+export type CustomerJob = {
+  kind: "customer";
+  customerId: string;
+  opId: string;
+  isNew: boolean;
+  name: string;
+  args: Record<string, unknown>;
+  photos: { path: string; blob: Blob }[];
+};
+export type GoJob = NoteJob | CommentJob | CustomerJob;
 
 export const goOutbox = createOutbox<GoJob>("go");
 export type GoItem = OutboxItem<GoJob>;
@@ -27,6 +37,14 @@ type Failure = { message: string; code?: string } | null;
 export async function sendGoJob(supabase: SupabaseClient, job: GoJob): Promise<Failure> {
   if (job.kind === "comment") {
     const { error } = await supabase.rpc("sales_add_comment", { p_customer_id: job.customerId, p_client_op_id: job.opId, p_body: job.body });
+    return error;
+  }
+  if (job.kind === "customer") {
+    for (const p of job.photos) {
+      const up = await supabase.storage.from(BUCKET).upload(p.path, p.blob, { contentType: "image/jpeg", upsert: true });
+      if (up.error) return { message: up.error.message };
+    }
+    const { error } = await supabase.rpc("sales_save_customer", job.args as never);
     return error;
   }
   const paths: string[] = [];
