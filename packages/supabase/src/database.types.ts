@@ -588,6 +588,474 @@ export type Database = {
         Update: never
         Relationships: []
       }
+      brands: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          image_path: string | null
+          is_active: boolean
+          name: string
+          name_local: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          image_path?: string | null
+          is_active?: boolean
+          name: string
+          name_local?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          image_path?: string | null
+          is_active?: boolean
+          name?: string
+          name_local?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      categories: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          image_path: string | null
+          is_active: boolean
+          name: string
+          name_local: string | null
+          parent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          image_path?: string | null
+          is_active?: boolean
+          name: string
+          name_local?: string | null
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          image_path?: string | null
+          is_active?: boolean
+          name?: string
+          name_local?: string | null
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      stock_movements: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          location_id: string
+          note: string | null
+          reason: string | null
+          reference: string | null
+          request_id: string
+          supplier_id: string | null
+          transfer_id: string | null
+          transfer_step: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      stock_transfers: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          company_id: string
+          from_location_id: string
+          id: string
+          note: string | null
+          request_id: string
+          sent_at: string
+          sent_by: string | null
+          status: string
+          to_location_id: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      stock_transfer_lines: {
+        Row: {
+          company_id: string
+          qty_received: number | null
+          qty_sent: number
+          transfer_id: string
+          variant_id: string
+        }
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: "stock_transfer_lines_company_id_transfer_id_fkey"
+            columns: ["company_id", "transfer_id"]
+            isOneToOne: false
+            referencedRelation: "stock_transfers"
+            referencedColumns: ["company_id", "id"]
+          },
+        ]
+      }
+      stock_ledger: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          location_id: string
+          movement_id: string
+          qty_delta: number
+          variant_id: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      stock_balances: {
+        Row: {
+          company_id: string
+          location_id: string
+          qty: number
+          updated_at: string
+          variant_id: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      suppliers: {
+        Row: {
+          address: string | null
+          company_id: string
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          name: string
+          name_local: string | null
+          note: string | null
+          phone: string | null
+          phone2: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          company_id: string
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          name_local?: string | null
+          note?: string | null
+          phone?: string | null
+          phone2?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          company_id?: string
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_local?: string | null
+          note?: string | null
+          phone?: string | null
+          phone2?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      item_costs: {
+        Row: {
+          company_id: string
+          cost: number
+          item_id: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          cost: number
+          item_id: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          cost?: number
+          item_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      variant_costs: {
+        Row: {
+          company_id: string
+          cost: number
+          updated_at: string
+          variant_id: string
+        }
+        Insert: {
+          company_id: string
+          cost: number
+          updated_at?: string
+          variant_id: string
+        }
+        Update: {
+          company_id?: string
+          cost?: number
+          updated_at?: string
+          variant_id?: string
+        }
+        Relationships: []
+      }
+      price_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          changed_by_name: string | null
+          company_id: string
+          currency_code: string
+          id: string
+          item_id: string
+          new_price: number | null
+          old_price: number | null
+          variant_id: string | null
+          variant_name: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      cost_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          changed_by_name: string | null
+          company_id: string
+          currency_code: string
+          id: string
+          item_id: string
+          new_cost: number | null
+          old_cost: number | null
+          variant_id: string | null
+          variant_name: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      item_images: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          image_path: string
+          is_main: boolean
+          item_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          image_path: string
+          is_main?: boolean
+          item_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          image_path?: string
+          is_main?: boolean
+          item_id?: string
+        }
+        Relationships: []
+      }
+      item_variants: {
+        Row: {
+          barcode: string | null
+          company_id: string
+          created_at: string
+          id: string
+          image_id: string | null
+          is_active: boolean
+          is_default: boolean
+          item_id: string
+          name: string
+          name_local: string | null
+          packs: Json | null
+          price: number | null
+          sku: string | null
+          updated_at: string
+        }
+        Insert: {
+          barcode?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          image_id?: string | null
+          is_active?: boolean
+          is_default?: boolean
+          item_id: string
+          name: string
+          name_local?: string | null
+          packs?: Json | null
+          price?: number | null
+          sku?: string | null
+          updated_at?: string
+        }
+        Update: {
+          barcode?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          image_id?: string | null
+          is_active?: boolean
+          is_default?: boolean
+          item_id?: string
+          name?: string
+          name_local?: string | null
+          packs?: Json | null
+          price?: number | null
+          sku?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      locations: {
+        Row: {
+          address: string | null
+          branch_id: string | null
+          company_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          latitude: number | null
+          longitude: number | null
+          name: string
+          name_local: string | null
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          branch_id?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          name_local?: string | null
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          branch_id?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          name_local?: string | null
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      items: {
+        Row: {
+          base_uom: string
+          brand_id: string | null
+          category_id: string | null
+          company_id: string
+          created_at: string
+          currency_code: string
+          description: string | null
+          description_local: string | null
+          id: string
+          is_active: boolean
+          kind: string
+          name: string
+          name_local: string | null
+          packs: Json
+          properties: Json
+          price: number
+          reorder_level: number | null
+          sku: string | null
+          updated_at: string
+        }
+        Insert: {
+          base_uom?: string
+          brand_id?: string | null
+          category_id?: string | null
+          company_id: string
+          created_at?: string
+          currency_code: string
+          description?: string | null
+          description_local?: string | null
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name: string
+          name_local?: string | null
+          packs?: Json
+          properties?: Json
+          price?: number
+          reorder_level?: number | null
+          sku?: string | null
+          updated_at?: string
+        }
+        Update: {
+          base_uom?: string
+          brand_id?: string | null
+          category_id?: string | null
+          company_id?: string
+          created_at?: string
+          currency_code?: string
+          description?: string | null
+          description_local?: string | null
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name?: string
+          name_local?: string | null
+          packs?: Json
+          properties?: Json
+          price?: number
+          reorder_level?: number | null
+          sku?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       branches: {
         Row: {
           timezone: string | null
@@ -676,6 +1144,12 @@ export type Database = {
           company_id?: string
           is_home?: boolean
         }
+        Relationships: []
+      }
+      exchange_rates: {
+        Row: { company_id: string; created_at: string; created_by: string | null; currency_code: string; effective_date: string; id: string; rate_home: number }
+        Insert: { company_id: string; created_at?: string; created_by?: string | null; currency_code: string; effective_date: string; id?: string; rate_home: number }
+        Update: { company_id?: string; created_at?: string; created_by?: string | null; currency_code?: string; effective_date?: string; id?: string; rate_home?: number }
         Relationships: []
       }
       company_settings: {
@@ -1083,6 +1557,36 @@ export type Database = {
         Update: { archived?: boolean; kind?: "policy" | "conduct"; company_id?: string; created_at?: string; created_by?: string | null; id?: string; title?: string; title_local?: string | null; updated_at?: string }
         Relationships: []
       }
+      customer_events: {
+        Row: { author_employee_id: string | null; body: string; client_op_id: string; company_id: string; created_at: string; customer_id: string; id: string; kind: "note" | "comment"; occurred_at: string; photo_paths: string[] }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      customer_event_reads: {
+        Row: { company_id: string; customer_id: string; employee_id: string; last_read_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      customers: {
+        Row: { address: string | null; archived_at: string | null; branch_id: string | null; client_op_id: string | null; company_id: string; created_at: string; created_by_employee_id: string | null; credit_limit_cents: number | null; id: string; latitude: number | null; longitude: number | null; name: string; name_local: string | null; notes: string | null; owner_employee_id: string | null; updated_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      customer_contacts: {
+        Row: { company_id: string; created_at: string; customer_id: string; id: string; is_default: boolean; name: string; phone: string | null }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      customer_photos: {
+        Row: { company_id: string; created_at: string; created_by_employee_id: string | null; customer_id: string; id: string; is_default: boolean; note: string | null; photo_type: "storefront" | "display_shelf" | "damage_proof" | "competitor_product" | "other"; storage_path: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       playbook_guides: {
         Row: { archived: boolean; company_id: string; created_at: string; created_by: string | null; id: string; read_minutes: number | null; title: string; title_local: string | null; topic: string | null; updated_at: string }
         Insert: { archived?: boolean; company_id?: string; created_at?: string; created_by?: string | null; id?: string; read_minutes?: number | null; title?: string; title_local?: string | null; topic?: string | null; updated_at?: string }
@@ -1130,6 +1634,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      stock_writable_locations: { Args: Record<string, never>; Returns: string[] }
+      send_transfer: {
+        Args: { p_request_id: string; p_from: string; p_to: string; p_note: string | null; p_lines: Json }
+        Returns: string
+      }
+      receive_transfer: { Args: { p_transfer_id: string; p_lines?: Json | null }; Returns: string }
+      cancel_transfer: { Args: { p_transfer_id: string }; Returns: string }
+      adjust_stock: {
+        Args: { p_request_id: string; p_location_id: string; p_reason: string; p_note: string | null; p_lines: Json }
+        Returns: string
+      }
+      receive_stock: {
+        Args: { p_request_id: string; p_location_id: string; p_supplier_id: string | null; p_reference: string | null; p_note: string | null; p_lines: Json }
+        Returns: string
+      }
+      set_item_main_image: { Args: { p_image_id: string }; Returns: undefined }
       save_work_schedule: {
         Args: { p_schedule_id: string | null; p_name: string; p_name_local: string | null; p_effective_from: string | null; p_rules: Json; p_days: Json }
         Returns: string
@@ -1242,6 +1762,50 @@ export type Database = {
       save_policy: {
         Args: { p_id: string | null; p_title: string; p_title_local: string | null; p_body: string; p_body_local: string | null; p_kind?: "policy" | "conduct" }
         Returns: string
+      }
+      sales_add_note: {
+        Args: { p_customer_id: string; p_client_op_id: string; p_body: string | null; p_photo_paths: string[] | null; p_occurred_at: string | null }
+        Returns: string
+      }
+      sales_add_comment: {
+        Args: { p_customer_id: string; p_client_op_id: string; p_body: string }
+        Returns: string
+      }
+      sales_mark_read: {
+        Args: { p_customer_id: string }
+        Returns: undefined
+      }
+      sales_timeline: {
+        Args: { p_customer_id: string; p_limit?: number; p_before?: string | null }
+        Returns: Json
+      }
+      sales_inbox: {
+        Args: { p_limit?: number }
+        Returns: Json
+      }
+      sales_my_state: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      sales_save_customer: {
+        Args: { p_id: string | null; p_name: string; p_name_local: string | null; p_address: string | null; p_latitude: number | null; p_longitude: number | null; p_notes: string | null; p_contacts: Json | null; p_photos: Json | null }
+        Returns: string
+      }
+      sales_archive_customer: {
+        Args: { p_id: string; p_archived: boolean }
+        Returns: undefined
+      }
+      sales_assign_customer: {
+        Args: { p_id: string; p_employee_id: string }
+        Returns: undefined
+      }
+      sales_customer_list: {
+        Args: { p_search: string | null; p_limit?: number; p_include_archived?: boolean }
+        Returns: Json
+      }
+      sales_customer_detail: {
+        Args: { p_id: string }
+        Returns: Json
       }
       save_playbook: {
         Args: { p_id: string | null; p_title: string; p_title_local: string | null; p_topic: string | null; p_read_minutes: number | null; p_position_ids: string[] | null; p_steps: Json }
@@ -1381,6 +1945,150 @@ export type Database = {
       employee_attendance_days: {
         Args: { p_employee_id: string; p_from: string; p_days?: number }
         Returns: { day: string; status: string; first_in: string | null; last_out: string | null; late_min: number; early_min: number; worked_min: number; overtime_min: number; half_day: boolean; flagged: boolean }[]
+      }
+      time_attendance_report: {
+        Args: { p_from: string; p_days?: number; p_branch_id?: string }
+        Returns: { employee_id: string; name: string; name_local: string | null; branch_id: string | null; position_name: string | null; position_name_local: string | null; days: string[]; work_days: number; on_time: number; late: number; early_leave: number; absent: number; leave_days: number; incomplete: number; late_min: number; overtime_min: number; worked_min: number; flagged_days: number }[]
+      }
+      time_leave_balances: {
+        Args: { p_year?: number }
+        Returns: { employee_id: string; name: string; name_local: string | null; type_id: string; type_code: string; type_name: string; type_name_local: string | null; entitled: number; allowance: number; used: number; pending: number }[]
+      }
+      grant_leave_allowance: {
+        Args: { p_employee_id: string; p_type_id: string; p_year: number; p_days: number; p_reason: string }
+        Returns: string
+      }
+      payroll_rate_set: { Args: { p_currency: string; p_rate: number; p_date: string }; Returns: string }
+      payroll_rate_delete: { Args: { p_id: string }; Returns: undefined }
+      payroll_pay_items: {
+        Args: Record<string, never>
+        Returns: { id: string; code: string; name: string; name_local: string | null; kind: string; category: string; reference_only: boolean }[]
+      }
+      payroll_people: {
+        Args: Record<string, never>
+        Returns: { employee_id: string; name: string; name_local: string | null; branch_id: string | null; position_name: string | null; position_name_local: string | null; pay_currency: string | null; payment_method: string | null; fixed_amount: number | null; achievement_amount: number | null; commission_rate: number | null }[]
+      }
+      payroll_person: {
+        Args: { p_employee_id: string }
+        Returns: Json
+      }
+      payroll_save_terms: {
+        Args: { p_employee_id: string; p_pay_item_id: string; p_amount: number | null; p_rate_pct: number | null; p_currency: string; p_effective_from: string; p_note: string | null }
+        Returns: string
+      }
+      payroll_save_profile: {
+        Args: { p_employee_id: string; p_currency: string; p_method: string; p_account_name: string | null; p_account_no: string | null; p_bank_name: string | null; p_note: string | null }
+        Returns: undefined
+      }
+      payroll_get_settings: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      payroll_save_settings: {
+        Args: { p_rate_divisor: string; p_overtime_multiplier: number; p_require_second_approver: boolean; p_close_blocks_on_review: boolean }
+        Returns: undefined
+      }
+      payroll_plans: {
+        Args: Record<string, never>
+        Returns: { id: string; kind: string; name: string; name_local: string | null; open_day: number | null; covers: string; auto_open: boolean; active: boolean; rule_kind: string | null; rule_config: Json | null }[]
+      }
+      payroll_save_plan: {
+        Args: { p_plan_id: string; p_open_day: number | null; p_covers: string; p_auto_open: boolean; p_active: boolean }
+        Returns: undefined
+      }
+      payroll_save_rule: {
+        Args: { p_plan_id: string; p_kind: string; p_config: Json; p_from: string }
+        Returns: undefined
+      }
+      payroll_set_sales_volume: {
+        Args: { p_employee_id: string; p_month: string; p_amount: number; p_currency: string }
+        Returns: undefined
+      }
+      payroll_runs: {
+        Args: Record<string, never>
+        Returns: { id: string; plan_id: string; plan_kind: string; name: string; period_start: string; period_end: string; open_date: string; status: string; slips: number; drafts: number; currency_code: string | null; net: number }[]
+      }
+      payroll_open_run: {
+        Args: { p_plan_id: string; p_month: string; p_name?: string | null }
+        Returns: string
+      }
+      payroll_refresh_run: {
+        Args: { p_run_id: string }
+        Returns: undefined
+      }
+      payroll_run_slips: {
+        Args: { p_run_id: string }
+        Returns: { payslip_id: string; employee_id: string; name: string; name_local: string | null; status: string; currency_code: string; gross: number; deductions: number; net: number }[]
+      }
+      payroll_payslip: {
+        Args: { p_payslip_id: string }
+        Returns: Json
+      }
+      payroll_post: {
+        Args: { p_payslip_id: string }
+        Returns: undefined
+      }
+      payroll_post_run: {
+        Args: { p_run_id: string }
+        Returns: Json
+      }
+      payroll_reviews: {
+        Args: { p_only_open?: boolean }
+        Returns: { id: string; payslip_id: string; employee_id: string; name: string; name_local: string | null; run_name: string; version: number; message: string; status: string; answer: string | null; requested_at: string; run_status: string }[]
+      }
+      payroll_answer_review: {
+        Args: { p_review_id: string; p_answer: string }
+        Returns: undefined
+      }
+      payroll_revise_payslip: {
+        Args: { p_review_id: string; p_note?: string | null }
+        Returns: string
+      }
+      my_payslips: {
+        Args: Record<string, never>
+        Returns: { id: string; run_name: string; plan_kind: string; period_start: string; period_end: string; version: number; is_current: boolean; status: string; currency_code: string; net: number; posted_at: string; confirmed_at: string | null }[]
+      }
+      my_payslip: {
+        Args: { p_payslip_id: string }
+        Returns: Json
+      }
+      my_confirm_payslip: {
+        Args: { p_payslip_id: string }
+        Returns: undefined
+      }
+      my_request_payslip_review: {
+        Args: { p_payslip_id: string; p_message: string }
+        Returns: undefined
+      }
+      payroll_close: { Args: { p_run_id: string }; Returns: undefined }
+      payroll_reopen: { Args: { p_run_id: string; p_reason: string }; Returns: undefined }
+      payroll_mark_paid: { Args: { p_run_id: string; p_date: string }; Returns: undefined }
+      payroll_lock: { Args: { p_run_id: string }; Returns: undefined }
+      payroll_run_info: { Args: { p_run_id: string }; Returns: Json }
+      payroll_log_export: { Args: { p_run_id: string; p_kind: string; p_rows: number }; Returns: undefined }
+      payroll_report: {
+        Args: { p_run_id: string }
+        Returns: { payslip_id: string; employee_id: string; name: string; name_local: string | null; branch_id: string | null; branch_name: string | null; branch_name_local: string | null; status: string; currency_code: string; gross: number; deductions: number; net: number; payment_method: string | null; bank_name: string | null; account_name: string | null; account_no: string | null }[]
+      }
+      payroll_save_line: {
+        Args: { p_payslip_id: string; p_line_id: string | null; p_pay_item_id: string; p_qty: number; p_unit_amount: number; p_note: string | null; p_source?: string }
+        Returns: string
+      }
+      payroll_delete_line: {
+        Args: { p_line_id: string }
+        Returns: undefined
+      }
+      payroll_suggestions: {
+        Args: { p_payslip_id: string }
+        Returns: { code: string; pay_item_id: string; label: string; qty: number; unit_amount: number; amount: number; note: string }[]
+      }
+      payroll_add_bonus: {
+        Args: { p_run_id: string; p_employee_id: string; p_amount: number; p_currency: string; p_note: string | null }
+        Returns: string
+      }
+      time_today: {
+        Args: { p_branch_id?: string }
+        Returns: { employee_id: string; name: string; name_local: string | null; branch_id: string | null; position_name: string | null; position_name_local: string | null; status: string; first_in: string | null; late_min: number; overtime_min: number; flagged: boolean }[]
       }
       my_achievements: {
         Args: Record<string, never>
@@ -1664,6 +2372,8 @@ export type Database = {
       career_event_kind: "promotion" | "transfer"
       geofence_mode: "off" | "flag" | "block"
       attendance_kind: "in" | "out"
+      customer_event_kind: "note" | "comment"
+      customer_photo_type: "storefront" | "display_shelf" | "damage_proof" | "competitor_product" | "other"
       data_scope: "own" | "team" | "branch" | "company"
       employee_status: "active" | "on_leave" | "left"
       override_effect: "grant" | "deny"

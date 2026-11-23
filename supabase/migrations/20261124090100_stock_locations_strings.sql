@@ -1,0 +1,56 @@
+-- Strings for the Stock app: locations. Khmer entries are machine drafts for the Khmer reviewer at /i18n.
+insert into public.i18n_strings (key, source_text, position) values
+  ('sk.home.loc', 'Locations', 2700),
+  ('sk.home.locBody', 'Warehouses, shops and other places where you keep stock.', 2701),
+  ('sk.loc.title', 'Locations', 2702),
+  ('sk.loc.subtitle', 'The warehouses, shops and other places where you keep stock.', 2703),
+  ('sk.loc.add', 'Add location', 2704),
+  ('sk.loc.edit', 'Edit location', 2705),
+  ('sk.loc.empty', 'No locations yet', 2706),
+  ('sk.loc.emptyBody', 'Add the places where you keep stock, such as Main warehouse or Shop floor. Each item''s quantity is counted per location.', 2707),
+  ('sk.loc.noMatch', 'No location matches your search', 2708),
+  ('sk.loc.name', 'Location name', 2709),
+  ('sk.loc.nameRequired', 'Type the location name.', 2710),
+  ('sk.loc.address', 'Address', 2711),
+  ('sk.loc.note', 'Notes', 2712),
+  ('sk.loc.noteHint', 'Optional. For example opening hours or who holds the key.', 2713),
+  ('sk.loc.activeHint', 'Turn off to hide the location from new stock moves. Old records keep it.', 2714),
+  ('sk.loc.added', 'Location added.', 2715),
+  ('sk.loc.saved', 'Location saved.', 2716),
+  ('sk.loc.deleted', 'Location deleted.', 2717),
+  ('sk.loc.dup', 'You already have a location with this name.', 2718),
+  ('sk.loc.deleteTitle', 'Delete this location?', 2719),
+  ('sk.loc.deleteBody', '{name} will be removed.', 2720),
+  ('sk.loc.roTitle', 'You can look but not change', 2721),
+  ('sk.loc.roBody', 'Ask an owner or admin if a location needs to be added or corrected.', 2722),
+  ('sk.loc.loadError', 'Locations could not be loaded.', 2723)
+on conflict (key) do nothing;
+
+insert into public.i18n_suggestions (language_code, string_key, text, origin)
+select 'km', v.key, v.text, 'machine' from (values
+  ('sk.home.loc', 'ទីតាំង'),
+  ('sk.home.locBody', 'ឃ្លាំង ហាង និងកន្លែងផ្សេងទៀតដែលអ្នកទុកស្តុក។'),
+  ('sk.loc.title', 'ទីតាំង'),
+  ('sk.loc.subtitle', 'ឃ្លាំង ហាង និងកន្លែងផ្សេងទៀតដែលអ្នកទុកស្តុក។'),
+  ('sk.loc.add', 'បន្ថែមទីតាំង'),
+  ('sk.loc.edit', 'កែប្រែទីតាំង'),
+  ('sk.loc.empty', 'មិនទាន់មានទីតាំងទេ'),
+  ('sk.loc.emptyBody', 'បន្ថែមកន្លែងដែលអ្នកទុកស្តុក ដូចជា ឃ្លាំងធំ ឬ ហាង។ បរិមាណទំនិញនីមួយៗត្រូវបានរាប់តាមទីតាំង។'),
+  ('sk.loc.noMatch', 'គ្មានទីតាំងត្រូវនឹងការស្វែងរកទេ'),
+  ('sk.loc.name', 'ឈ្មោះទីតាំង'),
+  ('sk.loc.nameRequired', 'សូមវាយឈ្មោះទីតាំង។'),
+  ('sk.loc.address', 'អាសយដ្ឋាន'),
+  ('sk.loc.note', 'កំណត់ចំណាំ'),
+  ('sk.loc.noteHint', 'ជម្រើស។ ឧទាហរណ៍ ម៉ោងបើក ឬអ្នកកាន់សោ។'),
+  ('sk.loc.activeHint', 'បិទដើម្បីលាក់ទីតាំងពីការផ្លាស់ទីស្តុកថ្មី។ កំណត់ត្រាចាស់នៅតែមាន។'),
+  ('sk.loc.added', 'បានបន្ថែមទីតាំង។'),
+  ('sk.loc.saved', 'បានរក្សាទុកទីតាំង។'),
+  ('sk.loc.deleted', 'បានលុបទីតាំង។'),
+  ('sk.loc.dup', 'អ្នកមានទីតាំងឈ្មោះនេះរួចហើយ។'),
+  ('sk.loc.deleteTitle', 'លុបទីតាំងនេះ?'),
+  ('sk.loc.deleteBody', '{name} នឹងត្រូវបានលុប។'),
+  ('sk.loc.roTitle', 'អ្នកអាចមើលបាន ប៉ុន្តែមិនអាចកែបានទេ'),
+  ('sk.loc.roBody', 'សូមសួរម្ចាស់ ឬអ្នកគ្រប់គ្រង ប្រសិនបើត្រូវបន្ថែម ឬកែទីតាំង។'),
+  ('sk.loc.loadError', 'មិនអាចផ្ទុកទីតាំងបានទេ។')
+) as v(key, text)
+where not exists (select 1 from public.i18n_suggestions s where s.language_code = 'km' and s.string_key = v.key);

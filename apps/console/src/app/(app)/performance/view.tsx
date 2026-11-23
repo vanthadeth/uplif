@@ -28,7 +28,7 @@ export function PerformanceView({ canReview, canManage, kpis, positions }: { can
   const months = Array.from({ length: 12 }, (_, i) => { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i); return firstOfMonth(d); });
   const [month, setMonth] = useState(months[0]);
   const [people, setPeople] = useState<Person[] | null>(null);
-  const [scoring, setScoring] = useState<{ person: Person; rows: FormRow[] } | null>(null);
+  const [scoring, setScoring] = useState<{ person: Person; rows: FormRow[] | null } | null>(null);
   const [vals, setVals] = useState<Record<string, string>>({});
   const [comment, setComment] = useState("");
   const [error, setError] = useState<string>();
@@ -45,15 +45,17 @@ export function PerformanceView({ canReview, canManage, kpis, positions }: { can
 
   async function openScore(p: Person) {
     setError(undefined);
+    // Open straight away: the sheet shows a waiting indicator and slides up once the form has loaded.
+    setScoring({ person: p, rows: null });
     const { data, error: err } = await createClient().rpc("performance_review_form", { p_employee_id: p.employee_id, p_period: month });
-    if (err) { toast("error", t("common.saveError")); return; }
+    if (err) { setScoring(null); toast("error", t("common.saveError")); return; }
     const rows = (data ?? []) as FormRow[];
     setVals(Object.fromEntries(rows.map((r) => [r.kpi_id, r.score == null ? "" : String(r.score)])));
     setComment(rows[0]?.comment ?? "");
     setScoring({ person: p, rows });
   }
   async function saveScore() {
-    if (!scoring) return;
+    if (!scoring?.rows) return;
     const scores: Record<string, number> = {};
     for (const r of scoring.rows) {
       const raw = (vals[r.kpi_id] ?? "").trim();
@@ -155,10 +157,10 @@ export function PerformanceView({ canReview, canManage, kpis, positions }: { can
         </section>
       )}
 
-      <SidePanel open={scoring !== null} onClose={() => setScoring(null)} closeLabel={t("common.close")}
+      <SidePanel open={scoring !== null} loading={scoring?.rows == null} loadingLabel={t("loading.page")} onClose={() => setScoring(null)} closeLabel={t("common.close")}
         title={scoring ? f("pf.rev.title", { name: pick(locale, scoring.person.name, scoring.person.name_local) }) : ""}
         footer={<><Button onClick={() => setScoring(null)}>{t("common.cancel")}</Button><Button variant="primary" loading={busy} onClick={saveScore}>{t("pf.rev.save")}</Button></>}>
-        {scoring && (
+        {scoring?.rows && (
           <div className="flex flex-col gap-4">
             <p className="m-0 text-sm text-muted">{monthName(month)}. {t("pf.rev.hint")}</p>
             {scoring.rows.map((r) => (

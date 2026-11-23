@@ -1,0 +1,23 @@
+-- The HR system role: seeded for new companies with the day-to-day people and pay permissions, nothing more.
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+select no_plan();
+insert into auth.users (id, aud, role, email) values ('fe000000-0000-0000-0000-000000000001', 'authenticated', 'authenticated', 'hr-owner@test.local');
+insert into public.profiles (user_id, full_name) values ('fe000000-0000-0000-0000-000000000001', 'Owner');
+select set_config('request.jwt.claims', json_build_object('sub', 'fe000000-0000-0000-0000-000000000001', 'role', 'authenticated', 'app_metadata', json_build_object())::text, true);
+set local role authenticated;
+select public.create_company('Hr Co', null, 'PS', 'KHR', 'Main');
+reset role;
+create temp table c as select id from public.companies where name = 'Hr Co';
+select is((select count(*)::int from public.roles where company_id = (select id from c) and name = 'HR' and is_system), 1, 'a new company gets one HR role');
+select is((select name_local from public.roles where company_id = (select id from c) and name = 'HR'), 'ធនធានមនុស្ស', 'with its Khmer name');
+create temp table hr as select rp.permission_key k, rp.data_scope s from public.role_permissions rp join public.roles ro on ro.id = rp.role_id where ro.company_id = (select id from c) and ro.name = 'HR';
+select ok(exists (select 1 from hr where k = 'payroll.payslip.post' and s = 'company'), 'HR can post payslips');
+select ok(exists (select 1 from hr where k = 'payroll.terms.manage'), 'and set pay terms');
+select ok(exists (select 1 from hr where k = 'leave.allowance.manage'), 'and give leave allowances');
+select ok(not exists (select 1 from hr where k in ('payroll.settings.manage', 'payroll.run.manage', 'attendance.selfie.view', 'org.role.manage')), 'but not settings, closing runs, selfies or roles');
+select ok(not exists (select 1 from hr where k like 'payroll.%' and s <> 'company'), 'pay permissions are company scope only');
+select is((select count(*)::int from public.roles where company_id = (select id from c) and name = 'Owner'), 1, 'the Owner role is still created once');
+select * from finish();
+rollback;

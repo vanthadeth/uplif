@@ -1,5 +1,5 @@
 "use client";
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { cn } from "./cn";
 
 /** How long a bottom sheet takes to slide in. Keep the CSS duration in step with this. */
@@ -42,4 +42,17 @@ export function SheetSkeleton({ rows = 4, className }: { rows?: number; classNam
       ))}
     </div>
   );
+}
+
+/** True on phone-width screens, where panels are bottom sheets. False on the server and until mounted. */
+export function useIsPhone(phoneMaxWidth = 639): boolean {
+  const [phone, setPhone] = useState(false);
+  useEffect(() => {
+    const m = window.matchMedia(`(max-width: ${phoneMaxWidth}px)`);
+    const on = () => setPhone(m.matches);
+    on();
+    m.addEventListener("change", on);
+    return () => m.removeEventListener("change", on);
+  }, [phoneMaxWidth]);
+  return phone;
 }
