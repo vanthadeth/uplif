@@ -37,6 +37,7 @@ export * from "./TitleBar";
 export * from "./NavProgress";
 export { useTheme, themeInitScript, type Theme } from "./theme";
 export * from "./outbox";
+export * from "./kv-cache";
 export * from "./apps";
 export * from "./AppList";
 export * from "./app-icons";

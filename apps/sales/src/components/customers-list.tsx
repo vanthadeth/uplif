@@ -2,12 +2,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus, Search } from "lucide-react";
-import { Badge, Button, EmptyState, ErrorState, Reveal, Skeleton } from "@uplif/ui";
+import { Badge, Button, EmptyState, ErrorState, Reveal, Skeleton, isNetworkError } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
 import { createClient } from "@/lib/supabase/client";
 import { initials, shownName, useSignedUrls, type CustomerRow } from "@/lib/customers";
+import { goCache } from "@/lib/offline";
 import { useMe } from "./me-context";
+import { OfflineNotice } from "./offline-notice";
 
 function RowSkeleton() {
   return (
@@ -25,18 +27,31 @@ export function CustomersList() {
   const [q, setQ] = useState("");
   const [rows, setRows] = useState<CustomerRow[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
   const [tick, setTick] = useState(0);
   useEffect(() => {
     let live = true;
     const timer = setTimeout(() => {
-      createClient().rpc("sales_customer_list", { p_search: q.trim() || null, p_limit: 100 }).then(({ data, error }) => {
+      createClient().rpc("sales_customer_list", { p_search: q.trim() || null, p_limit: 100 }).then(async ({ data, error }) => {
         if (!live) return;
-        if (error) { setFailed(true); setRows(null); return; }
-        setFailed(false); setRows((data ?? []) as unknown as CustomerRow[]);
+        const owner = me.employee_id ?? "";
+        if (error) {
+          // No signal: show the copy saved on this phone, narrowed by the search text.
+          const saved = isNetworkError(error) ? await goCache.get<CustomerRow[]>(owner, "customers") : undefined;
+          if (!live) return;
+          if (!saved) { setFailed(true); setRows(null); return; }
+          const needle = q.trim().toLowerCase();
+          const hit = (c: CustomerRow) => [c.name, c.name_local, c.contact_name, c.contact_phone, c.address].some((v) => v?.toLowerCase().includes(needle));
+          setFailed(false); setSavedAt(saved.savedAt); setRows(needle ? saved.value.filter(hit) : saved.value);
+          return;
+        }
+        const list = (data ?? []) as unknown as CustomerRow[];
+        setFailed(false); setSavedAt(null); setRows(list);
+        if (!q.trim()) void goCache.set(owner, "customers", list);
       });
     }, q ? 250 : 0);
     return () => { live = false; clearTimeout(timer); };
-  }, [q, tick]);
+  }, [q, tick, me.employee_id]);
   const urls = useSignedUrls((rows ?? []).map((r) => r.photo_path));
 
   return (
@@ -51,6 +66,7 @@ export function CustomersList() {
         <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("go.cust.search")}
           className="h-12 w-full rounded-control border border-line-strong bg-surface ps-10 pe-3 placeholder:text-muted" />
       </label>
+      {savedAt !== null && <OfflineNotice savedAt={savedAt} />}
       {failed ? (
         <ErrorState title={t("go.cust.loadError")} body={t("go.cust.loadErrorBody")} action={<Button onClick={() => setTick(tick + 1)}>{t("go.retry")}</Button>} />
       ) : rows === null ? (

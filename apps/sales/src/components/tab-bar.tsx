@@ -14,9 +14,10 @@ const tabs = [
 ] as const;
 
 /** Bottom navigation: Inbox, Customers, Today in the raised centre, Tasks, Menu. Slides away while scrolling down. */
-export function TabBar() {
+export function TabBar({ path: shown }: { path?: string } = {}) {
   const { t } = useI18n();
-  const path = usePathname();
+  const real = usePathname();
+  const path = shown ?? real; // the offline shell draws other screens at /offline, so it says which one
   // The conversation has its own message bar at the bottom.
   if (/^\/customers\/[0-9a-f-]{36}$/.test(path)) return null;
   const active = (href: string) => (href === "/" ? path === "/" : path === href || path.startsWith(`${href}/`));

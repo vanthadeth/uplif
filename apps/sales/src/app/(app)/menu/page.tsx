@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { useAppearance, type Appearance } from "@/lib/appearance";
 import { createClient } from "@/lib/supabase/client";
 import { LanguageBar } from "@/components/language-bar";
+import { forgetSavedCopies } from "@/lib/offline";
 
 const Group = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="flex flex-col gap-2">
@@ -18,6 +19,7 @@ export default function MenuPage() {
   const { t } = useI18n();
   const { appearance, setAppearance } = useAppearance();
   async function signOut() {
+    await forgetSavedCopies();
     await createClient().auth.signOut();
     location.href = "/login";
   }

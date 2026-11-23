@@ -2,13 +2,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Camera, ChevronLeft, Phone, Send, X } from "lucide-react";
-import { Button, EmptyState, ErrorState, Reveal, Skeleton, resizeImage } from "@uplif/ui";
+import { Button, EmptyState, ErrorState, Reveal, Skeleton, isNetworkError, resizeImage } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
 import { createClient } from "@/lib/supabase/client";
 import { BUCKET, initials, shownName, useSignedUrls, type CustomerDetail, type TimelineEvent } from "@/lib/customers";
 import { languageOf } from "@/lib/languages";
+import { goCache } from "@/lib/offline";
 import { useMe } from "./me-context";
+import { OfflineNotice } from "./offline-notice";
 
 const uid = () => crypto.randomUUID();
 const dayKey = (iso: string) => new Date(iso).toDateString();
@@ -23,6 +25,7 @@ export function Conversation({ id }: { id: string }) {
   const [customer, setCustomer] = useState<CustomerDetail | null | undefined>(undefined);
   const [events, setEvents] = useState<TimelineEvent[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
   const [more, setMore] = useState(false);
   const [text, setText] = useState("");
   const [drafts, setDrafts] = useState<Draft[]>([]);
@@ -40,13 +43,25 @@ export function Conversation({ id }: { id: string }) {
       supabase.rpc("sales_customer_detail", { p_id: id }),
       supabase.rpc("sales_timeline", { p_customer_id: id, p_limit: LIMIT }),
     ]);
-    if (c.error || tl.error) { setFailed(true); return; }
-    setFailed(false);
-    setCustomer((c.data as unknown as CustomerDetail | null) ?? null);
+    const owner = me.employee_id ?? "";
+    const err = c.error ?? tl.error;
+    if (err) {
+      // No signal: show the copy saved on this phone, if this customer was opened before.
+      const saved = isNetworkError(err) ? await goCache.get<CustomerDetail>(owner, `detail:${id}`) : undefined;
+      if (!saved) { setFailed(true); return; }
+      const tl2 = await goCache.get<TimelineEvent[]>(owner, `timeline:${id}`);
+      setFailed(false); setSavedAt(saved.savedAt);
+      setCustomer(saved.value); setEvents(tl2?.value ?? []); setMore(false);
+      return;
+    }
+    setFailed(false); setSavedAt(null);
+    const detail = (c.data as unknown as CustomerDetail | null) ?? null;
+    setCustomer(detail);
     const list = (tl.data ?? []) as unknown as TimelineEvent[];
     setEvents(list); setMore(list.length === LIMIT);
+    if (detail) { void goCache.set(owner, `detail:${id}`, detail); void goCache.set(owner, `timeline:${id}`, list); }
     void supabase.rpc("sales_mark_read", { p_customer_id: id });
-  }, [id]);
+  }, [id, me.employee_id]);
   useEffect(() => { void load(); }, [load]);
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [events?.length]);
 
@@ -123,6 +138,7 @@ export function Conversation({ id }: { id: string }) {
       </header>
 
       <div className="flex flex-1 flex-col justify-end gap-2.5 px-4 pb-40 pt-3">
+        {savedAt !== null && <OfflineNotice savedAt={savedAt} />}
         {events === null ? (
           <div role="status" aria-label={t("go.loading")} className="flex flex-col gap-3"><Skeleton className="h-20 w-4/5 rounded-card" /><Skeleton className="ms-auto h-16 w-3/4 rounded-card" /><Skeleton className="h-24 w-4/5 rounded-card" /></div>
         ) : events.length === 0 ? (

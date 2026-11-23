@@ -134,6 +134,14 @@ export const en = {
   "go.inbox.photo": "Photo",
   "go.inbox.youPrefix": "You: ",
   "go.inbox.managerPrefix": "{name}: ",
+  "go.off.saved": "No signal. Showing what this phone saved at {time}. Changes cannot be made yet.",
+  "go.off.nothingTitle": "Nothing saved on this phone yet",
+  "go.off.nothingBody": "Open this screen once with a signal. It will be here next time, even without one.",
+  "go.off.needSignalTitle": "This screen needs a signal",
+  "go.off.needSignalBody": "Customers you opened before are still available. Come back online for everything else.",
+  "go.off.toCustomers": "Go to customers",
+  "go.off.notReadyTitle": "Open UPLIF Go with a signal first",
+  "go.off.notReadyBody": "The app saves your customers on this phone the first time you open it online.",
 } as const;
 
 export type MessageKey = keyof typeof en;
@@ -224,6 +232,14 @@ export const km: Partial<Record<MessageKey, string>> = {
   "go.inbox.unread": "ថ្មី",
   "go.inbox.photo": "រូបថត",
   "go.inbox.youPrefix": "អ្នក៖ ",
+  "go.off.saved": "គ្មានអ៊ីនធឺណិត។ កំពុងបង្ហាញអ្វីដែលទូរសព្ទនេះបានរក្សាទុកនៅម៉ោង {time}។ មិនទាន់អាចកែប្រែបានទេ។",
+  "go.off.nothingTitle": "មិនទាន់មានអ្វីរក្សាទុកក្នុងទូរសព្ទនេះទេ",
+  "go.off.nothingBody": "សូមបើកអេក្រង់នេះម្តងពេលមានអ៊ីនធឺណិត។ លើកក្រោយវានឹងនៅទីនេះ ទោះគ្មានអ៊ីនធឺណិតក៏ដោយ។",
+  "go.off.needSignalTitle": "អេក្រង់នេះត្រូវការអ៊ីនធឺណិត",
+  "go.off.needSignalBody": "អតិថិជនដែលអ្នកបានបើកពីមុននៅតែអាចមើលបាន។ សូមត្រឡប់មកវិញពេលមានអ៊ីនធឺណិតសម្រាប់ផ្នែកផ្សេងទៀត។",
+  "go.off.toCustomers": "ទៅអតិថិជន",
+  "go.off.notReadyTitle": "សូមបើក UPLIF Go ពេលមានអ៊ីនធឺណិតជាមុនសិន",
+  "go.off.notReadyBody": "កម្មវិធីរក្សាទុកអតិថិជនរបស់អ្នកក្នុងទូរសព្ទនេះ នៅពេលអ្នកបើកវាលើកដំបូងពេលមានអ៊ីនធឺណិត។",
 };
 
 export const dictionaries: Partial<Record<string, Partial<Record<MessageKey, string>>>> = { km };
