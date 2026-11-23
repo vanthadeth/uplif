@@ -8,6 +8,7 @@ import { useTime } from "@/components/time-context";
 import { languageOf } from "@/lib/languages";
 import { money, pick } from "@/lib/format";
 import { fill, type MessageKey } from "@/lib/messages";
+import { PlansForm, RunsView } from "@/components/runs-view";
 
 type T = (k: MessageKey) => string;
 interface Person {
@@ -25,9 +26,9 @@ interface Settings { rate_divisor: string; overtime_multiplier: number; require_
 /** Payroll, slice T3: who is paid what for reference, how they are paid, and the company's payroll settings. Salary is shown only at company scope. */
 export function PayrollView() {
   const { t, locale } = useI18n();
-  const { canViewPay, canPaySettings } = useTime();
-  const [tab, setTab] = useState<"people" | "settings">("people");
-  if (!canViewPay && !canPaySettings) {
+  const { canViewPay, canPaySettings, canSlips } = useTime();
+  const [tab, setTab] = useState<"people" | "runs" | "settings">(canViewPay ? "people" : canSlips ? "runs" : "settings");
+  if (!canViewPay && !canPaySettings && !canSlips) {
     return (
       <main className="flex flex-col gap-4 p-4">
         <h1 className="text-2xl font-bold tracking-tight">{t("tm.payroll.title")}</h1>
@@ -35,13 +36,17 @@ export function PayrollView() {
       </main>
     );
   }
-  const tabs = [...(canViewPay ? [{ id: "people", label: t("tm.pr.people") }] : []), ...(canPaySettings ? [{ id: "settings", label: t("tm.pr.settings") }] : [])];
-  const active = canViewPay ? tab : "settings";
+  const tabs = [
+    ...(canViewPay ? [{ id: "people", label: t("tm.pr.people") }] : []),
+    ...(canSlips ? [{ id: "runs", label: t("tm.pr.tab.runs") }] : []),
+    ...(canPaySettings ? [{ id: "settings", label: t("tm.pr.settings") }] : []),
+  ];
+  const active = tabs.some((x) => x.id === tab) ? tab : tabs[0].id;
   return (
     <main className="flex flex-col gap-4 p-4">
       <h1 className="text-2xl font-bold tracking-tight">{t("tm.payroll.title")}</h1>
-      {tabs.length > 1 && <Tabs label={t("tm.payroll.title")} value={active} onChange={(v) => setTab(v as "people" | "settings")} items={tabs} />}
-      {active === "people" ? <People t={t} locale={locale} /> : <SettingsForm t={t} />}
+      {tabs.length > 1 && <Tabs label={t("tm.payroll.title")} value={active} onChange={(v) => setTab(v as "people" | "runs" | "settings")} items={tabs} />}
+      {active === "people" ? <People t={t} locale={locale} /> : active === "runs" ? <RunsView t={t} locale={locale} /> : <><SettingsForm t={t} /><RatesForm t={t} /><PlansForm t={t} locale={locale} /></>}
     </main>
   );
 }
@@ -102,8 +107,10 @@ function People({ t, locale }: { t: T; locale: string }) {
 const today = () => new Date().toISOString().slice(0, 10);
 
 function PersonSheet({ t, locale, person, onClose, onSaved }: { t: T; locale: string; person: Person | null; onClose: () => void; onSaved: () => void }) {
-  const { canManagePay } = useTime();
+  const { canManagePay, canPrepare } = useTime();
   const toast = useToast();
+  const [salesMonth, setSalesMonth] = useState(() => { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`; });
+  const [salesAmt, setSalesAmt] = useState("");
   const tag = languageOf(locale).dateTag;
   const [items, setItems] = useState<Item[]>([]);
   const [currencies, setCurrencies] = useState<string[]>([]);
@@ -168,6 +175,17 @@ function PersonSheet({ t, locale, person, onClose, onSaved }: { t: T; locale: st
     await load(person.employee_id); onSaved();
   }
 
+  async function saveSales() {
+    if (!person) return;
+    const n = Number(salesAmt);
+    if (!salesAmt.trim() || !Number.isFinite(n) || n < 0) { toast("error", t("tm.pr.err.line")); return; }
+    setSaving(true);
+    const { error } = await createClient().rpc("payroll_set_sales_volume", { p_employee_id: person.employee_id, p_month: salesMonth, p_amount: n, p_currency: cur });
+    setSaving(false);
+    if (error) { toast("error", t("tm.pr.err.generic")); return; }
+    toast("success", t("tm.pr.saved")); setSalesAmt("");
+  }
+
   const methods = ["cash", "bank", "wing", "aba", "other"] as const;
   return (
     <BottomSheet open={!!person} onClose={onClose} title={person ? pick(locale, person.name, person.name_local) : ""} closeLabel={t("tm.day.close")}>
@@ -188,6 +206,15 @@ function PersonSheet({ t, locale, person, onClose, onSaved }: { t: T; locale: st
               </ul>
             )}
           </section>
+          {canPrepare && (
+            <section className="flex flex-col gap-3">
+              <b>{t("tm.pr.sales.title")}</b>
+              <p className="text-sm text-muted">{t("tm.pr.sales.hint")}</p>
+              <Input label={t("tm.pr.sales.month")} type="month" value={salesMonth.slice(0, 7)} onChange={(e) => e.target.value && setSalesMonth(`${e.target.value}-01`)} />
+              <Input label={t("tm.pr.amount")} inputMode="decimal" value={salesAmt} onChange={(e) => setSalesAmt(e.target.value)} />
+              <Button variant="secondary" disabled={saving} onClick={saveSales}>{t("tm.pr.save")}</Button>
+            </section>
+          )}
           {canManagePay && (
             <>
               <section className="flex flex-col gap-3">
@@ -273,5 +300,63 @@ function OvertimeField({ t, value, disabled, onCommit }: { t: T; value: number; 
   return (
     <Input label={t("tm.pr.set.ot")} inputMode="decimal" value={v} disabled={disabled} onChange={(e) => setV(e.target.value)}
       onBlur={() => { const n = Number(v); if (Number.isFinite(n) && n >= 1 && n <= 5 && n !== value) onCommit(n); else setV(String(value)); }} />
+  );
+}
+
+interface Rate { id: string; currency_code: string; rate_home: number; effective_date: string }
+function RatesForm({ t }: { t: T }) {
+  const toast = useToast();
+  const [rows, setRows] = useState<Rate[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [code, setCode] = useState("");
+  const [rate, setRate] = useState("");
+  const [from, setFrom] = useState(new Date().toISOString().slice(0, 10));
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    setFailed(false);
+    const { data, error } = await createClient().from("exchange_rates").select("id, currency_code, rate_home, effective_date").order("effective_date", { ascending: false }).limit(100);
+    if (error) { setFailed(true); return; }
+    setRows(data as Rate[]);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  async function add() {
+    const n = Number(rate);
+    if (!/^[A-Za-z]{3}$/.test(code) || !(n > 0) || !from) { toast("error", t("tm.pr.rates.bad")); return; }
+    setBusy(true);
+    const { error } = await createClient().rpc("payroll_rate_set", { p_currency: code, p_rate: n, p_date: from });
+    setBusy(false);
+    if (error) { toast("error", t("tm.pr.rates.bad")); return; }
+    setCode(""); setRate(""); toast("success", t("tm.pr.saved")); load();
+  }
+  async function remove(id: string) {
+    const { error } = await createClient().rpc("payroll_rate_delete", { p_id: id });
+    if (error) { toast("error", t("tm.pr.err.generic")); return; }
+    load();
+  }
+
+  if (failed) return <ErrorState title={t("tm.pr.error")} action={<Button onClick={load}><RefreshCw className="size-4" aria-hidden />{t("tm.retry")}</Button>} />;
+  return (
+    <section className="mt-6 flex flex-col gap-3" aria-labelledby="rates-h">
+      <h2 id="rates-h" className="text-lg font-semibold">{t("tm.pr.rates")}</h2>
+      <p className="text-sm text-muted">{t("tm.pr.rates.hint")}</p>
+      <div className="grid grid-cols-3 gap-2">
+        <Input label={t("tm.pr.rates.currency")} value={code} maxLength={3} onChange={(e) => setCode(e.target.value.toUpperCase())} />
+        <Input label={t("tm.pr.rates.rate")} inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value)} />
+        <Input label={t("tm.pr.rates.from")} type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+      </div>
+      <Button onClick={add} disabled={busy}>{t("tm.pr.rates.add")}</Button>
+      {!rows ? <Skeleton className="h-12 w-full rounded-card" /> : rows.length === 0 ? <p className="text-sm text-muted">{t("tm.pr.rates.empty")}</p> : (
+        <ul className="flex flex-col divide-y divide-border rounded-card border border-border">
+          {rows.map((r) => (
+            <li key={r.id} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
+              <span><b>{r.currency_code}</b> {r.rate_home} · {r.effective_date}</span>
+              <button type="button" className="text-danger" onClick={() => remove(r.id)}>{t("tm.pr.rates.remove")}</button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }

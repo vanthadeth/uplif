@@ -1146,6 +1146,12 @@ export type Database = {
         }
         Relationships: []
       }
+      exchange_rates: {
+        Row: { company_id: string; created_at: string; created_by: string | null; currency_code: string; effective_date: string; id: string; rate_home: number }
+        Insert: { company_id: string; created_at?: string; created_by?: string | null; currency_code: string; effective_date: string; id?: string; rate_home: number }
+        Update: { company_id?: string; created_at?: string; created_by?: string | null; currency_code?: string; effective_date?: string; id?: string; rate_home?: number }
+        Relationships: []
+      }
       company_settings: {
         Row: {
           timezone: string
@@ -1368,6 +1374,27 @@ export type Database = {
         }
         Relationships: []
       }
+      role_apps: {
+        Row: {
+          allowed: boolean
+          app_key: string
+          company_id: string
+          role_id: string
+        }
+        Insert: {
+          allowed: boolean
+          app_key: string
+          company_id: string
+          role_id: string
+        }
+        Update: {
+          allowed?: boolean
+          app_key?: string
+          company_id?: string
+          role_id?: string
+        }
+        Relationships: []
+      }
       roles: {
         Row: {
           company_id: string
@@ -1528,6 +1555,36 @@ export type Database = {
         Row: { archived: boolean; kind: "policy" | "conduct"; company_id: string; created_at: string; created_by: string | null; id: string; title: string; title_local: string | null; updated_at: string }
         Insert: { archived?: boolean; kind?: "policy" | "conduct"; company_id?: string; created_at?: string; created_by?: string | null; id?: string; title?: string; title_local?: string | null; updated_at?: string }
         Update: { archived?: boolean; kind?: "policy" | "conduct"; company_id?: string; created_at?: string; created_by?: string | null; id?: string; title?: string; title_local?: string | null; updated_at?: string }
+        Relationships: []
+      }
+      customer_events: {
+        Row: { author_employee_id: string | null; body: string; client_op_id: string; company_id: string; created_at: string; customer_id: string; id: string; kind: "note" | "comment"; occurred_at: string; photo_paths: string[] }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      customer_event_reads: {
+        Row: { company_id: string; customer_id: string; employee_id: string; last_read_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      customers: {
+        Row: { address: string | null; archived_at: string | null; branch_id: string | null; client_op_id: string | null; company_id: string; created_at: string; created_by_employee_id: string | null; credit_limit_cents: number | null; id: string; latitude: number | null; longitude: number | null; name: string; name_local: string | null; notes: string | null; owner_employee_id: string | null; updated_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      customer_contacts: {
+        Row: { company_id: string; created_at: string; customer_id: string; id: string; is_default: boolean; name: string; phone: string | null }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      customer_photos: {
+        Row: { company_id: string; created_at: string; created_by_employee_id: string | null; customer_id: string; id: string; is_default: boolean; note: string | null; photo_type: "storefront" | "display_shelf" | "damage_proof" | "competitor_product" | "other"; storage_path: string }
+        Insert: never
+        Update: never
         Relationships: []
       }
       playbook_guides: {
@@ -1698,9 +1755,57 @@ export type Database = {
         Args: Record<string, never>
         Returns: { year: number; holiday_count: number; provisional: boolean }[]
       }
+      save_role_access: {
+        Args: { p_role_id: string; p_apps: Json; p_perms: Json }
+        Returns: undefined
+      }
       save_policy: {
         Args: { p_id: string | null; p_title: string; p_title_local: string | null; p_body: string; p_body_local: string | null; p_kind?: "policy" | "conduct" }
         Returns: string
+      }
+      sales_add_note: {
+        Args: { p_customer_id: string; p_client_op_id: string; p_body: string | null; p_photo_paths: string[] | null; p_occurred_at: string | null }
+        Returns: string
+      }
+      sales_add_comment: {
+        Args: { p_customer_id: string; p_client_op_id: string; p_body: string }
+        Returns: string
+      }
+      sales_mark_read: {
+        Args: { p_customer_id: string }
+        Returns: undefined
+      }
+      sales_timeline: {
+        Args: { p_customer_id: string; p_limit?: number; p_before?: string | null }
+        Returns: Json
+      }
+      sales_inbox: {
+        Args: { p_limit?: number }
+        Returns: Json
+      }
+      sales_my_state: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      sales_save_customer: {
+        Args: { p_id: string | null; p_name: string; p_name_local: string | null; p_address: string | null; p_latitude: number | null; p_longitude: number | null; p_notes: string | null; p_contacts: Json | null; p_photos: Json | null }
+        Returns: string
+      }
+      sales_archive_customer: {
+        Args: { p_id: string; p_archived: boolean }
+        Returns: undefined
+      }
+      sales_assign_customer: {
+        Args: { p_id: string; p_employee_id: string }
+        Returns: undefined
+      }
+      sales_customer_list: {
+        Args: { p_search: string | null; p_limit?: number; p_include_archived?: boolean }
+        Returns: Json
+      }
+      sales_customer_detail: {
+        Args: { p_id: string }
+        Returns: Json
       }
       save_playbook: {
         Args: { p_id: string | null; p_title: string; p_title_local: string | null; p_topic: string | null; p_read_minutes: number | null; p_position_ids: string[] | null; p_steps: Json }
@@ -1853,6 +1958,8 @@ export type Database = {
         Args: { p_employee_id: string; p_type_id: string; p_year: number; p_days: number; p_reason: string }
         Returns: string
       }
+      payroll_rate_set: { Args: { p_currency: string; p_rate: number; p_date: string }; Returns: string }
+      payroll_rate_delete: { Args: { p_id: string }; Returns: undefined }
       payroll_pay_items: {
         Args: Record<string, never>
         Returns: { id: string; code: string; name: string; name_local: string | null; kind: string; category: string; reference_only: boolean }[]
@@ -1880,6 +1987,104 @@ export type Database = {
       payroll_save_settings: {
         Args: { p_rate_divisor: string; p_overtime_multiplier: number; p_require_second_approver: boolean; p_close_blocks_on_review: boolean }
         Returns: undefined
+      }
+      payroll_plans: {
+        Args: Record<string, never>
+        Returns: { id: string; kind: string; name: string; name_local: string | null; open_day: number | null; covers: string; auto_open: boolean; active: boolean; rule_kind: string | null; rule_config: Json | null }[]
+      }
+      payroll_save_plan: {
+        Args: { p_plan_id: string; p_open_day: number | null; p_covers: string; p_auto_open: boolean; p_active: boolean }
+        Returns: undefined
+      }
+      payroll_save_rule: {
+        Args: { p_plan_id: string; p_kind: string; p_config: Json; p_from: string }
+        Returns: undefined
+      }
+      payroll_set_sales_volume: {
+        Args: { p_employee_id: string; p_month: string; p_amount: number; p_currency: string }
+        Returns: undefined
+      }
+      payroll_runs: {
+        Args: Record<string, never>
+        Returns: { id: string; plan_id: string; plan_kind: string; name: string; period_start: string; period_end: string; open_date: string; status: string; slips: number; drafts: number; currency_code: string | null; net: number }[]
+      }
+      payroll_open_run: {
+        Args: { p_plan_id: string; p_month: string; p_name?: string | null }
+        Returns: string
+      }
+      payroll_refresh_run: {
+        Args: { p_run_id: string }
+        Returns: undefined
+      }
+      payroll_run_slips: {
+        Args: { p_run_id: string }
+        Returns: { payslip_id: string; employee_id: string; name: string; name_local: string | null; status: string; currency_code: string; gross: number; deductions: number; net: number }[]
+      }
+      payroll_payslip: {
+        Args: { p_payslip_id: string }
+        Returns: Json
+      }
+      payroll_post: {
+        Args: { p_payslip_id: string }
+        Returns: undefined
+      }
+      payroll_post_run: {
+        Args: { p_run_id: string }
+        Returns: Json
+      }
+      payroll_reviews: {
+        Args: { p_only_open?: boolean }
+        Returns: { id: string; payslip_id: string; employee_id: string; name: string; name_local: string | null; run_name: string; version: number; message: string; status: string; answer: string | null; requested_at: string; run_status: string }[]
+      }
+      payroll_answer_review: {
+        Args: { p_review_id: string; p_answer: string }
+        Returns: undefined
+      }
+      payroll_revise_payslip: {
+        Args: { p_review_id: string; p_note?: string | null }
+        Returns: string
+      }
+      my_payslips: {
+        Args: Record<string, never>
+        Returns: { id: string; run_name: string; plan_kind: string; period_start: string; period_end: string; version: number; is_current: boolean; status: string; currency_code: string; net: number; posted_at: string; confirmed_at: string | null }[]
+      }
+      my_payslip: {
+        Args: { p_payslip_id: string }
+        Returns: Json
+      }
+      my_confirm_payslip: {
+        Args: { p_payslip_id: string }
+        Returns: undefined
+      }
+      my_request_payslip_review: {
+        Args: { p_payslip_id: string; p_message: string }
+        Returns: undefined
+      }
+      payroll_close: { Args: { p_run_id: string }; Returns: undefined }
+      payroll_reopen: { Args: { p_run_id: string; p_reason: string }; Returns: undefined }
+      payroll_mark_paid: { Args: { p_run_id: string; p_date: string }; Returns: undefined }
+      payroll_lock: { Args: { p_run_id: string }; Returns: undefined }
+      payroll_run_info: { Args: { p_run_id: string }; Returns: Json }
+      payroll_log_export: { Args: { p_run_id: string; p_kind: string; p_rows: number }; Returns: undefined }
+      payroll_report: {
+        Args: { p_run_id: string }
+        Returns: { payslip_id: string; employee_id: string; name: string; name_local: string | null; branch_id: string | null; branch_name: string | null; branch_name_local: string | null; status: string; currency_code: string; gross: number; deductions: number; net: number; payment_method: string | null; bank_name: string | null; account_name: string | null; account_no: string | null }[]
+      }
+      payroll_save_line: {
+        Args: { p_payslip_id: string; p_line_id: string | null; p_pay_item_id: string; p_qty: number; p_unit_amount: number; p_note: string | null; p_source?: string }
+        Returns: string
+      }
+      payroll_delete_line: {
+        Args: { p_line_id: string }
+        Returns: undefined
+      }
+      payroll_suggestions: {
+        Args: { p_payslip_id: string }
+        Returns: { code: string; pay_item_id: string; label: string; qty: number; unit_amount: number; amount: number; note: string }[]
+      }
+      payroll_add_bonus: {
+        Args: { p_run_id: string; p_employee_id: string; p_amount: number; p_currency: string; p_note: string | null }
+        Returns: string
       }
       time_today: {
         Args: { p_branch_id?: string }
@@ -2167,6 +2372,8 @@ export type Database = {
       career_event_kind: "promotion" | "transfer"
       geofence_mode: "off" | "flag" | "block"
       attendance_kind: "in" | "out"
+      customer_event_kind: "note" | "comment"
+      customer_photo_type: "storefront" | "display_shelf" | "damage_proof" | "competitor_product" | "other"
       data_scope: "own" | "team" | "branch" | "company"
       employee_status: "active" | "on_leave" | "left"
       override_effect: "grant" | "deny"

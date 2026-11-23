@@ -1,5 +1,5 @@
 "use client";
-import { BriefcaseBusiness, CalendarDays, ChevronRight, TrendingUp, TriangleAlert } from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, ChevronRight, TrendingUp, TriangleAlert, Wallet } from "lucide-react";
 import Link from "next/link";
 import { Badge, Card } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
@@ -27,6 +27,11 @@ export default function RecordPage() {
         <Link href="/record/performance" className="flex min-h-15 items-center gap-3 p-4 hover:bg-ground">
           <span className="grid size-9 shrink-0 place-items-center rounded-control bg-primary-soft text-primary-ink"><TrendingUp className="size-4" aria-hidden /></span>
           <span className="min-w-0 flex-1"><b className="block">{t("st.perf.title")}</b><span className="text-sm text-muted">{t("st.record.perf.sub")}</span></span>
+          <ChevronRight className="size-5 text-muted rtl:rotate-180" aria-hidden />
+        </Link>
+        <Link href="/record/payslips" className="flex min-h-15 items-center gap-3 p-4 hover:bg-ground">
+          <span className="grid size-9 shrink-0 place-items-center rounded-control bg-primary-soft text-primary-ink"><Wallet className="size-4" aria-hidden /></span>
+          <span className="min-w-0 flex-1"><b className="block">{t("st.pay.title")}</b><span className="text-sm text-muted">{t("st.record.pay.sub")}</span></span>
           <ChevronRight className="size-5 text-muted rtl:rotate-180" aria-hidden />
         </Link>
         <Link href="/record/job" className="flex min-h-15 items-center gap-3 p-4 hover:bg-ground">

@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Award, CalendarDays, CircleCheck, FilePenLine, PackageMinus, TrendingUp } from "lucide-react";
+import { Award, CalendarDays, CircleCheck, FilePenLine, PackageMinus, TrendingUp, Wallet } from "lucide-react";
 import { APPS, Badge, Button, Card, EmptyState, ErrorState, Reveal, Skeleton, Toggle } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
@@ -20,6 +20,8 @@ const KINDS: Record<string, { key: MessageKey; href: string; icon: typeof Award 
   performance_review: { key: "st.notif.performance_review", href: "/record/performance", icon: TrendingUp },
   promotion: { key: "st.notif.promotion", href: "/record/job", icon: Award },
   transfer: { key: "st.notif.transfer", href: "/record/job", icon: Award },
+  payslip_posted: { key: "st.notif.payslip_posted", href: "/record/payslips", icon: Wallet },
+  payslip_review_answered: { key: "st.notif.payslip_review_answered", href: "/record/payslips", icon: Wallet },
   low_stock: { key: "st.notif.low_stock", href: "", icon: PackageMinus },
 };
 
@@ -75,6 +77,7 @@ export default function NotificationsPage() {
       month: d.period ? day(d.period, { month: "long", year: "numeric" }) : "",
       percent: Number(d.percent ?? 0),
       position: String((locale !== "en" && d.to_local) || d.to || ""),
+      run: String(d.run ?? ""),
       item: String((locale !== "en" && d.name_local) || d.name || ""),
       qty: Number(d.qty ?? 0), level: Number(d.level ?? 0), unit: String(d.unit ?? ""),
     });

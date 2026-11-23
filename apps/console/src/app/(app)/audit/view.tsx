@@ -22,7 +22,7 @@ interface Props {
 }
 type Obj = { [k: string]: Json | undefined };
 
-const types = ["company", "companies", "company_settings", "branches", "memberships", "invitation", "roles", "role_permissions", "membership_roles", "support_grant"];
+const types = ["company", "companies", "company_settings", "branches", "memberships", "invitation", "roles", "role_permissions", "role_apps", "membership_roles", "support_grant"];
 const isObject = (v: Json | undefined): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const dayKey = (iso: string) => { const d = new Date(iso); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
@@ -49,6 +49,7 @@ export function AuditView({ canView, rows, hasMore, count, pageSize, members, na
       key = status === "suspended" ? "memberships.suspended" : status === "active" ? "memberships.active" : r.action;
     }
     if (r.action.startsWith("role_permissions.")) key = "role_permissions";
+    if (r.action.startsWith("role_apps.")) key = "role_apps";
     const k = `audit.act.${key}` as MessageKey;
     try { const s = t(k); if (s) return s; } catch { /* fall through */ }
     return r.action;
@@ -58,7 +59,7 @@ export function AuditView({ canView, rows, hasMore, count, pageSize, members, na
     const d = isObject(r.details) ? r.details : {};
     const row = isObject(d.row) ? d.row : {};
     if (r.entity_type === "branches" || r.entity_type === "roles" || r.entity_type === "memberships") return nameOf(r.entity_id) ?? (typeof row.name === "string" ? row.name : null);
-    if (r.entity_type === "role_permissions") return nameOf(typeof row.role_id === "string" ? row.role_id : null);
+    if (r.entity_type === "role_permissions" || r.entity_type === "role_apps") return nameOf(typeof row.role_id === "string" ? row.role_id : null);
     if (r.entity_type === "membership_roles") return nameOf(typeof row.membership_id === "string" ? row.membership_id : null);
     return null;
   };

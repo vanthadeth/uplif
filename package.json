@@ -16,6 +16,8 @@
     "dev:time": "pnpm --filter time dev",
     "build:time": "pnpm --filter time build",
     "dev:landing": "pnpm --filter landing dev",
-    "build:landing": "pnpm --filter landing build"
+    "build:landing": "pnpm --filter landing build",
+    "dev:sales": "pnpm --filter sales dev",
+    "build:sales": "pnpm --filter sales build"
   }
 }
