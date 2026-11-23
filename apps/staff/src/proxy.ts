@@ -1,12 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { supabasePublishableKey, supabaseUrl } from "@uplif/supabase/env";
+import { SESSION_COOKIE_OPTIONS, supabasePublishableKey, supabaseUrl } from "@uplif/supabase/env";
 
 // Refreshes the Supabase session cookie and keeps signed-out visitors on the sign-in page.
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
   if (!supabaseUrl || !supabasePublishableKey) return response;
   const supabase = createServerClient(supabaseUrl, supabasePublishableKey, {
+    cookieOptions: SESSION_COOKIE_OPTIONS,
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll(list) {
