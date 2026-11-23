@@ -57,7 +57,7 @@ export function InboxList() {
                       <span className="flex items-baseline justify-between gap-2"><b className="truncate">{name}</b><span className="shrink-0 text-xs text-muted">{shortWhen(r.last_at, tag)}</span></span>
                       <span className={`flex items-center gap-1 truncate text-sm ${r.unread ? "font-semibold text-ink" : "text-muted"}`}>
                         {r.has_photos && <Camera className="size-3.5 shrink-0" aria-label={t("go.inbox.photo")} />}
-                        <span className="truncate">{prefix}{r.body || t("go.inbox.photo")}</span>
+                        <span className="truncate">{prefix}{r.body || (r.kind === "visit" ? t("go.inbox.visit") : r.kind === "call" ? t("go.inbox.call") : t("go.inbox.photo"))}</span>
                       </span>
                     </span>
                     {r.unread && <Badge tone="info">{t("go.inbox.unread")}</Badge>}

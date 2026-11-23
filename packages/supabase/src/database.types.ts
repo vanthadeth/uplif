@@ -1803,6 +1803,14 @@ export type Database = {
         Args: { p_id: string; p_reason: string }
         Returns: undefined
       }
+      sales_log_call: {
+        Args: { p_customer_id: string; p_client_op_id: string; p_reason: string; p_status: string; p_order: string; p_collection: string; p_next: string | null; p_notes: string; p_photo_paths: string[]; p_started_at: string; p_duration_s: number }
+        Returns: string
+      }
+      sales_log_visit: {
+        Args: { p_visit_id: string; p_client_op_id: string; p_reason: string; p_status: string; p_order: string; p_collection: string; p_next: string | null; p_notes: string; p_photo_paths: string[]; p_latitude: number | null; p_longitude: number | null; p_at: string }
+        Returns: Json
+      }
       sales_my_state: {
         Args: Record<string, never>
         Returns: Json

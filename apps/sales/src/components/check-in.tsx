@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
 import { initials, shownName } from "@/lib/customers";
+import { useGoOutbox } from "./outbox-context";
 
 interface Near { customer_id: string; name: string; name_local: string | null; address: string | null; distance_m: number | null; in_range: boolean }
 type Fix = { lat: number; lon: number; acc: number };
@@ -19,6 +20,7 @@ const metres = (m: number) => (m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${m}
 export default function CheckIn() {
   const { t, locale } = useI18n();
   const router = useRouter();
+  const ob = useGoOutbox();
   const [fix, setFix] = useState<Fix | null>(null);
   const [gpsError, setGpsError] = useState(false);
   const [rows, setRows] = useState<Near[] | null>(null);
@@ -63,14 +65,15 @@ export default function CheckIn() {
   async function go() {
     if (!picked) return;
     setSaving(true); setError("");
-    const { data, error: e } = await createClient().rpc("sales_check_in", {
-      p_id: idRef.current, p_customer_id: picked === "none" ? null : picked, p_latitude: fix?.lat ?? null, p_longitude: fix?.lon ?? null,
-      p_accuracy_m: fix?.acc ?? null, p_at: new Date().toISOString(),
-    });
+    const r = await ob.submit({ kind: "checkin", customerId: picked === "none" ? "" : picked, name: target ? shownName(target, locale) : "", opId: idRef.current, lat: fix?.lat ?? null, lon: fix?.lon ?? null, acc: fix?.acc ?? null, at: new Date().toISOString() });
     setSaving(false);
-    if (e || !data) { setError(t("go.checkin.failed")); return; }
-    const res = data as unknown as { already_open?: boolean; customer_id?: string | null; checked_in_at?: string };
-    if (res.already_open) { setOpen({ name: res.customer_id ?? "", since: res.checked_in_at ?? "" }); return; }
+    if (r.error) { setError(t("go.checkin.failed")); return; }
+    if (!r.queued) {
+      // The server says if another visit is already open instead of creating a second one.
+      const { data } = await createClient().rpc("sales_open_visit");
+      const cur = data as unknown as { id: string; customer_id: string | null; checked_in_at: string } | null;
+      if (cur && cur.id !== idRef.current) { setOpen({ name: cur.customer_id ?? "", since: cur.checked_in_at }); return; }
+    }
     router.replace(picked === "none" ? "/" : `/customers/${picked}`);
   }
 

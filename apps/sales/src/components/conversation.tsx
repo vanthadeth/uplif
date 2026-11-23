@@ -11,7 +11,8 @@ import { languageOf } from "@/lib/languages";
 import { goCache } from "@/lib/offline";
 import { useMe } from "./me-context";
 import { useGoOutbox } from "./outbox-context";
-import type { CommentJob, GoItem, NoteJob } from "@/lib/go-outbox";
+import type { CommentJob, GoItem, LogJob, NoteJob } from "@/lib/go-outbox";
+import type { MessageKey } from "@/lib/messages";
 import { OfflineNotice } from "./offline-notice";
 
 const uid = () => crypto.randomUUID();
@@ -101,7 +102,7 @@ export function Conversation({ id }: { id: string }) {
 
   // Notes saved on this phone that the server does not have yet, shown at the bottom of the conversation.
   useEffect(() => ob.onSynced(() => void load()), [ob, load]);
-  const mine = ob.items.filter((i) => i.data.kind !== "customer" && i.data.customerId === id);
+  const mine = ob.items.filter((i) => i.data.kind !== "customer" && i.data.kind !== "checkin" && i.data.customerId === id);
 
   const urls = useSignedUrls((events ?? []).flatMap((e) => e.photo_paths));
   const heroUrls = useSignedUrls((customer?.photos ?? []).filter((p) => p.is_default).map((p) => p.path));
@@ -134,6 +135,7 @@ export function Conversation({ id }: { id: string }) {
         <nav className="flex h-10 items-end gap-5 text-[13px]">
           <span className="border-b-2 border-primary pb-2 font-semibold text-link">{t("go.conv.tabConversation")}</span>
           <Link href={`/customers/${id}/details`} className="pb-2 text-muted">{t("go.conv.tabDetails")}</Link>
+          <Link href={`/customers/${id}/call`} className="ms-auto pb-2 font-semibold text-link">{t("go.conv.logCall")}</Link>
         </nav>
       </header>
 
@@ -156,8 +158,9 @@ export function Conversation({ id }: { id: string }) {
                     <div className={comment ? "ms-auto max-w-[290px] rounded-card border border-primary-soft bg-primary-soft px-3 py-2.5" : "max-w-[300px] rounded-card border border-line bg-surface p-3"}>
                       <p className={`text-xs font-semibold ${comment ? "text-primary-ink" : "text-link"}`}>
                         {comment ? fill(t("go.conv.managerFrom"), { name: e.mine ? t("go.conv.you") : authorName(e) })
-                          : fill(t("go.conv.noteFrom"), { name: e.mine ? t("go.conv.you") : authorName(e) })} · {new Date(e.created_at).toLocaleTimeString(tag, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+                          : fill(t(e.kind === "visit" ? "go.log.tlVisit" : e.kind === "call" ? "go.log.tlCall" : "go.conv.noteFrom"), { name: e.mine ? t("go.conv.you") : authorName(e) })} · {new Date(e.created_at).toLocaleTimeString(tag, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
                       </p>
+                      {(e.kind === "visit" || e.kind === "call") && e.detail && <LogSummary kind={e.kind} d={e.detail} />}
                       {e.body && <p className="mt-1 whitespace-pre-wrap">{e.body}</p>}
                       {e.photo_paths.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1.5">
@@ -220,15 +223,15 @@ export function Conversation({ id }: { id: string }) {
 
 /** A note kept on this phone: waiting for signal, or refused by the server with a way to try again or remove it. */
 function PendingBubble({ item }: { item: GoItem }) {
-  return item.data.kind === "customer" ? null : <PendingNote item={item} />;
+  return item.data.kind === "customer" || item.data.kind === "checkin" ? null : <PendingNote item={item} />;
 }
 
 function PendingNote({ item }: { item: GoItem }) {
   const { t, locale } = useI18n();
   const ob = useGoOutbox();
   const tag = languageOf(locale).dateTag;
-  const job = item.data as NoteJob | CommentJob;
-  const blobs = job.kind === "note" ? job.photos : [];
+  const job = item.data as NoteJob | CommentJob | LogJob;
+  const blobs = job.kind === "note" || job.kind === "log" ? job.photos : [];
   const previews = useMemo(() => blobs.map((p) => ({ key: p.key, url: URL.createObjectURL(p.blob) })), [item.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => previews.forEach((p) => URL.revokeObjectURL(p.url)), [previews]);
   const failed = item.status === "failed";
@@ -255,5 +258,19 @@ function PendingNote({ item }: { item: GoItem }) {
         )}
       </div>
     </Reveal>
+  );
+}
+
+/** The answers of a visit or call as small labels: reason, status, order and collection, with the length. */
+function LogSummary({ kind, d }: { kind: "visit" | "call"; d: NonNullable<TimelineEvent["detail"]> }) {
+  const { t } = useI18n();
+  const label = (group: string, v?: string) => (v ? t(`go.log.${group}.${v}` as MessageKey) : null);
+  const parts = [label(`${kind}.reason`, d.reason), label(`${kind}.status`, d.status), label("order", d.order), label("collection", d.collection)].filter(Boolean) as string[];
+  const mins = kind === "visit" ? d.minutes : d.seconds != null ? Math.max(1, Math.round(d.seconds / 60)) : undefined;
+  if (mins) parts.push(fill(t("go.log.minutes"), { n: mins }));
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-1.5">
+      {parts.map((p, i) => <span key={i} className="rounded-full bg-neutral-soft px-2 py-0.5 text-xs font-semibold text-ink-2">{p}</span>)}
+    </div>
   );
 }

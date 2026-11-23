@@ -10,6 +10,7 @@ import { languageOf } from "@/lib/languages";
 import { goCache } from "@/lib/offline";
 import { shownName, type InboxRow } from "@/lib/customers";
 import { useMe } from "./me-context";
+import { useGoOutbox } from "./outbox-context";
 import { LanguageBar } from "./language-bar";
 
 interface Clock { kind: "in" | "out" | null; at: string | null; minutes: number }
@@ -31,6 +32,7 @@ function worked(events: { kind: string; occurred_at: string }[], now: number): n
 export default function Today() {
   const { t, locale } = useI18n();
   const me = useMe();
+  const ob = useGoOutbox();
   const tag = languageOf(locale).dateTag;
   const [clock, setClock] = useState<Clock | null>(null);
   const [attention, setAttention] = useState<InboxRow[] | null>(null);
@@ -60,7 +62,11 @@ export default function Today() {
   }, [me.employee_id]);
 
   const name = (locale !== "en" && me.employee_name_local) || me.employee_name || "";
-  const clockedIn = clock?.kind === "in";
+  // A check-in still waiting on the phone counts as an open visit until the server has it.
+  const waitingIn = ob.items.find((i) => i.data.kind === "checkin" && i.status === "pending");
+  const shownVisit = visit ?? (waitingIn && waitingIn.data.kind === "checkin"
+    ? { id: waitingIn.data.opId, customer_id: waitingIn.data.customerId || null, checked_in_at: waitingIn.data.at, name: waitingIn.data.name || null, name_local: null } : null);
+  const clockedIn = clock?.kind === "in" || !!shownVisit;
   const mins = clock && clockedIn && now ? worked([{ kind: "in", occurred_at: new Date(now.getTime() - clock.minutes * 60000).toISOString() }], now.getTime()) : clock?.minutes ?? 0;
   const hhmm = (iso: string) => new Date(iso).toLocaleTimeString(tag, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
   const dur = `${Math.floor(mins / 60)}h ${String(mins % 60).padStart(2, "0")}m`;
@@ -91,9 +97,9 @@ export default function Today() {
             </div>
             {clockedIn ? (
               <>
-                {visit ? (
-                  <Link href={visit.customer_id ? `/customers/${visit.customer_id}` : "/check-in"} className="flex min-h-14 items-center justify-center gap-2 rounded-control bg-primary text-lg font-semibold text-white active:scale-[.99]">
-                    <MapPin className="size-6" aria-hidden />{fill(t("go.today.atVisit"), { name: visit.name ? shownName({ name: visit.name, name_local: visit.name_local }, locale) : t("go.checkin.none") })}
+                {shownVisit ? (
+                  <Link href="/visit" className="flex min-h-14 items-center justify-center gap-2 rounded-control bg-primary text-lg font-semibold text-white active:scale-[.99]">
+                    <MapPin className="size-6" aria-hidden />{fill(t("go.today.atVisit"), { name: shownVisit.name ? shownName({ name: shownVisit.name, name_local: shownVisit.name_local }, locale) : t("go.checkin.none") })}
                   </Link>
                 ) : (
                   <Link href="/check-in" className="flex min-h-14 items-center justify-center gap-2 rounded-control bg-primary text-lg font-semibold text-white active:scale-[.99]">

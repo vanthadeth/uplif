@@ -26,7 +26,45 @@ export type CustomerJob = {
   args: Record<string, unknown>;
   photos: { path: string; blob: Blob }[];
 };
-export type GoJob = NoteJob | CommentJob | CustomerJob;
+/** A check-in made without signal. `opId` is also the visit id, so sending it twice stores one visit. */
+export type CheckInJob = {
+  kind: "checkin";
+  customerId: string;
+  name: string;
+  opId: string;
+  lat: number | null;
+  lon: number | null;
+  acc: number | null;
+  at: string;
+};
+export const LOG_REASONS = {
+  visit: ["regular", "appointment", "sale_follow_up", "delivery", "collection_follow_up", "resolve_conflict"],
+  call: ["customer_care", "sale_follow_up", "delivery_confirm", "collection_notify", "collection_follow_up", "resolve_conflict"],
+} as const;
+export const LOG_STATUS = { visit: ["met_owner", "met_staff", "nobody", "closed"], call: ["spoke_owner", "spoke_staff", "no_answer"] } as const;
+export const LOG_ORDER = ["ordered", "will_order", "no_order"] as const;
+export const LOG_COLLECTION = ["fully_paid", "partially_paid", "delay_payment", "not_yet_due", "nothing_to_collect"] as const;
+/** The answers after a visit (which also checks out) or a call. `visitId` is set for a visit; `customerId` is empty for a visit with no customer. */
+export type LogJob = {
+  kind: "log";
+  type: "visit" | "call";
+  customerId: string;
+  companyId: string;
+  visitId: string | null;
+  opId: string;
+  reason: string;
+  status: string;
+  order: string;
+  collection: string;
+  next: string | null;
+  body: string;
+  at: string;
+  lat: number | null;
+  lon: number | null;
+  seconds: number;
+  photos: { key: string; blob: Blob }[];
+};
+export type GoJob = NoteJob | CommentJob | CustomerJob | CheckInJob | LogJob;
 
 export const goOutbox = createOutbox<GoJob>("go");
 export type GoItem = OutboxItem<GoJob>;
@@ -47,12 +85,22 @@ export async function sendGoJob(supabase: SupabaseClient, job: GoJob): Promise<F
     const { error } = await supabase.rpc("sales_save_customer", job.args as never);
     return error;
   }
+  if (job.kind === "checkin") {
+    const { error } = await supabase.rpc("sales_check_in", { p_id: job.opId, p_customer_id: job.customerId || null, p_latitude: job.lat, p_longitude: job.lon, p_accuracy_m: job.acc, p_at: job.at });
+    return error;
+  }
   const paths: string[] = [];
   for (const p of job.photos) {
     const path = `${job.companyId}/${job.customerId}/${p.key}.jpg`;
     const up = await supabase.storage.from(BUCKET).upload(path, p.blob, { contentType: "image/jpeg", upsert: true });
     if (up.error) return { message: up.error.message };
     paths.push(path);
+  }
+  if (job.kind === "log") {
+    const { error } = job.type === "visit"
+      ? await supabase.rpc("sales_log_visit", { p_visit_id: job.visitId ?? "", p_client_op_id: job.opId, p_reason: job.reason, p_status: job.status, p_order: job.order, p_collection: job.collection, p_next: job.next, p_notes: job.body, p_photo_paths: paths, p_latitude: job.lat, p_longitude: job.lon, p_at: job.at })
+      : await supabase.rpc("sales_log_call", { p_customer_id: job.customerId, p_client_op_id: job.opId, p_reason: job.reason, p_status: job.status, p_order: job.order, p_collection: job.collection, p_next: job.next, p_notes: job.body, p_photo_paths: paths, p_started_at: job.at, p_duration_s: job.seconds });
+    return error;
   }
   const { error } = await supabase.rpc("sales_add_note", { p_customer_id: job.customerId, p_client_op_id: job.opId, p_body: job.body, p_photo_paths: paths, p_occurred_at: job.occurredAt });
   return error;

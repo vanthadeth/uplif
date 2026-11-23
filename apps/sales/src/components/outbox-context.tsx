@@ -71,6 +71,8 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
       return { error: null, queued: true };
     };
     if (typeof navigator !== "undefined" && !navigator.onLine) return save();
+    // A check-in or log must not overtake something already waiting, or the server could see the log before its visit.
+    if ((job.kind === "checkin" || job.kind === "log") && (await goOutbox.list(owner)).some((i) => i.status === "pending")) return save();
     const error = await sendGoJob(createClient(), job);
     if (error && isNetworkError(error)) return save();
     return { error, queued: false };
