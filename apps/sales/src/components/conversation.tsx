@@ -1,15 +1,17 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Camera, ChevronLeft, Phone, Send, X } from "lucide-react";
+import { Camera, ChevronLeft, Clock, Phone, Send, TriangleAlert, X } from "lucide-react";
 import { Button, EmptyState, ErrorState, Reveal, Skeleton, isNetworkError, resizeImage } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
 import { createClient } from "@/lib/supabase/client";
-import { BUCKET, initials, shownName, useSignedUrls, type CustomerDetail, type TimelineEvent } from "@/lib/customers";
+import { initials, shownName, useSignedUrls, type CustomerDetail, type TimelineEvent } from "@/lib/customers";
 import { languageOf } from "@/lib/languages";
 import { goCache } from "@/lib/offline";
 import { useMe } from "./me-context";
+import { useGoOutbox } from "./outbox-context";
+import type { GoItem } from "@/lib/go-outbox";
 import { OfflineNotice } from "./offline-notice";
 
 const uid = () => crypto.randomUUID();
@@ -21,6 +23,7 @@ interface Draft { key: string; blob: Blob; preview: string }
 export function Conversation({ id }: { id: string }) {
   const { t, locale } = useI18n();
   const me = useMe();
+  const ob = useGoOutbox();
   const tag = languageOf(locale).dateTag;
   const [customer, setCustomer] = useState<CustomerDetail | null | undefined>(undefined);
   const [events, setEvents] = useState<TimelineEvent[] | null>(null);
@@ -63,7 +66,7 @@ export function Conversation({ id }: { id: string }) {
     void supabase.rpc("sales_mark_read", { p_customer_id: id });
   }, [id, me.employee_id]);
   useEffect(() => { void load(); }, [load]);
-  useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [events?.length]);
+  useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [events?.length, ob.items.length]);
 
   async function older() {
     if (!events?.length) return;
@@ -86,22 +89,19 @@ export function Conversation({ id }: { id: string }) {
   async function send() {
     if (busy || (!text.trim() && drafts.length === 0)) return;
     setBusy(true); setError(false);
-    const supabase = createClient();
-    const paths: string[] = [];
-    for (const d of drafts) {
-      const path = `${me.company_id}/${id}/${d.key}.jpg`;
-      const up = await supabase.storage.from(BUCKET).upload(path, d.blob, { contentType: "image/jpeg", upsert: true });
-      if (up.error) { setBusy(false); setError(true); return; }
-      paths.push(path);
-    }
-    const { error: err } = asComment && me.can_comment && paths.length === 0
-      ? await supabase.rpc("sales_add_comment", { p_customer_id: id, p_client_op_id: op.current, p_body: text })
-      : await supabase.rpc("sales_add_note", { p_customer_id: id, p_client_op_id: op.current, p_body: text, p_photo_paths: paths, p_occurred_at: new Date().toISOString() });
+    const comment = asComment && me.can_comment && drafts.length === 0;
+    const r = await ob.submit(comment
+      ? { kind: "comment", customerId: id, opId: op.current, body: text }
+      : { kind: "note", customerId: id, companyId: me.company_id ?? "", opId: op.current, body: text, occurredAt: new Date().toISOString(), photos: drafts.map((d) => ({ key: d.key, blob: d.blob })) });
     setBusy(false);
-    if (err) { setError(true); return; }
+    if (r.error) { setError(true); return; }
     op.current = uid(); setText(""); setDrafts([]);
-    await load();
+    if (!r.queued) await load();
   }
+
+  // Notes saved on this phone that the server does not have yet, shown at the bottom of the conversation.
+  useEffect(() => ob.onSynced(() => void load()), [ob, load]);
+  const mine = ob.items.filter((i) => i.data.customerId === id);
 
   const urls = useSignedUrls((events ?? []).flatMap((e) => e.photo_paths));
   const heroUrls = useSignedUrls((customer?.photos ?? []).filter((p) => p.is_default).map((p) => p.path));
@@ -174,6 +174,7 @@ export function Conversation({ id }: { id: string }) {
             })}
           </>
         )}
+        {mine.map((i) => <PendingBubble key={i.id} item={i} />)}
         <div ref={end} />
       </div>
 
@@ -214,5 +215,41 @@ export function Conversation({ id }: { id: string }) {
         </div>
       </div>
     </div>
+  );
+}
+
+/** A note kept on this phone: waiting for signal, or refused by the server with a way to try again or remove it. */
+function PendingBubble({ item }: { item: GoItem }) {
+  const { t, locale } = useI18n();
+  const ob = useGoOutbox();
+  const tag = languageOf(locale).dateTag;
+  const job = item.data;
+  const blobs = job.kind === "note" ? job.photos : [];
+  const previews = useMemo(() => blobs.map((p) => ({ key: p.key, url: URL.createObjectURL(p.blob) })), [item.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => previews.forEach((p) => URL.revokeObjectURL(p.url)), [previews]);
+  const failed = item.status === "failed";
+  return (
+    <Reveal>
+      <div className={`${job.kind === "comment" ? "ms-auto max-w-[290px]" : "max-w-[300px]"} rounded-card border border-dashed ${failed ? "border-danger-ink bg-danger-soft" : "border-line-strong bg-surface"} p-3`}>
+        <p className={`flex items-center gap-1.5 text-xs font-semibold ${failed ? "text-danger-ink" : "text-muted"}`}>
+          {failed ? <TriangleAlert className="size-3.5" aria-hidden /> : <Clock className="size-3.5" aria-hidden />}
+          {t(failed ? "go.ob.notSent" : "go.ob.pending")} · {new Date(item.createdAt).toLocaleTimeString(tag, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+        </p>
+        {job.body && <p className="mt-1 whitespace-pre-wrap">{job.body}</p>}
+        {previews.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {previews.map((p) => <img key={p.key} src={p.url} alt="" className="size-20 rounded-control object-cover" />)}
+          </div>
+        )}
+        {failed && (
+          <div className="mt-2 flex gap-2">
+            {item.error && <span className="sr-only">{item.error}</span>}
+            <Button onClick={() => void ob.retry(item.id)}>{t("go.ob.retry")}</Button>
+            <Button variant="quiet" onClick={() => void ob.dismiss(item.id)}>{t("go.ob.remove")}</Button>
+          </div>
+        )}
+      </div>
+    </Reveal>
   );
 }

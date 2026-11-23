@@ -8,6 +8,8 @@ import { safeNext } from "@/lib/safe-next";
 import type { SalesState } from "@/lib/my-state";
 import { MeProvider } from "./me-context";
 import { TabBar } from "./tab-bar";
+import { OutboxProvider } from "./outbox-context";
+import { OutboxBar } from "./outbox-bar";
 import { CustomersList } from "./customers-list";
 import { Conversation } from "./conversation";
 import { CustomerView } from "./customer-view";
@@ -61,8 +63,10 @@ export function OfflineShell() {
   );
   return (
     <MeProvider state={state}>
-      <div className="mx-auto min-h-dvh max-w-md pb-[calc(5rem+env(safe-area-inset-bottom))]">{screen}</div>
-      <TabBar path={path} />
+      <OutboxProvider>
+        <div className="mx-auto min-h-dvh max-w-md pb-[calc(5rem+env(safe-area-inset-bottom))]"><OutboxBar />{screen}</div>
+        <TabBar path={path} />
+      </OutboxProvider>
     </MeProvider>
   );
 }

@@ -95,3 +95,37 @@ export function isNetworkError(e: { message?: string; code?: string } | null | u
   if (typeof navigator !== "undefined" && navigator.onLine === false) return true;
   return !e.code && /fetch|network|load failed|timed? ?out|offline/i.test(e.message ?? "");
 }
+
+export type FlushResult = { sent: number; failed: number; stalled: boolean };
+const flights = new WeakMap<object, Promise<FlushResult>>();
+
+/**
+ * Sends one owner's waiting items, oldest first, through `send` (which returns the server's error, or null when it
+ * has the item). A connection problem stops the run so the rest is tried later; any other error marks that item
+ * "failed" and goes on. Only one run per outbox at a time: a second call joins the first.
+ */
+export function flushOutbox<T>(
+  outbox: Outbox<T>,
+  owner: string,
+  send: (item: OutboxItem<T>) => Promise<{ message: string; code?: string } | null>,
+): Promise<FlushResult> {
+  const running = flights.get(outbox);
+  if (running) return running;
+  const run = (async () => {
+    const res: FlushResult = { sent: 0, failed: 0, stalled: false };
+    for (const it of (await outbox.list(owner)).filter((i) => i.status === "pending")) {
+      let error: { message: string; code?: string } | null;
+      try { error = await send(it); } catch (e) { error = { message: e instanceof Error ? e.message : "failed" }; }
+      if (error) {
+        if (isNetworkError(error)) { res.stalled = true; break; }
+        await outbox.update(it.id, { status: "failed", error: error.message }); res.failed++;
+        continue;
+      }
+      await outbox.remove(it.id);
+      res.sent++;
+    }
+    return res;
+  })().finally(() => { flights.delete(outbox); });
+  flights.set(outbox, run);
+  return run;
+}
