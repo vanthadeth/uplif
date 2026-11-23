@@ -6,12 +6,15 @@ import { startGoogleSignIn, startTelegramSignIn } from "@uplif/auth";
 import { safeNext } from "@/lib/safe-next";
 import { useI18n } from "@/lib/i18n";
 import { LanguageBar } from "@/components/language-bar";
+import { forgetSavedCopies } from "@/lib/offline";
 
 const telegramEnabled = process.env.NEXT_PUBLIC_TELEGRAM_LOGIN === "true";
 
 export default function LoginPage() {
   const { t } = useI18n();
   const [failed, setFailed] = useState(false);
+  // Reaching sign-in means nobody is signed in, so no one's saved copy may stay on this phone.
+  useEffect(() => { void forgetSavedCopies(); }, []);
   useEffect(() => { setFailed(new URLSearchParams(location.search).has("error")); }, []);
   const nextPath = () => safeNext(new URLSearchParams(location.search).get("next")) ?? "/";
   return (

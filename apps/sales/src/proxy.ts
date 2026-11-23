@@ -18,7 +18,7 @@ export async function proxy(request: NextRequest) {
   });
   const { data } = await supabase.auth.getClaims();
   const { pathname } = request.nextUrl;
-  const open = ["/login", "/auth"].some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  const open = ["/login", "/auth", "/offline"].some((p) => pathname === p || pathname.startsWith(`${p}/`));
   if (!data?.claims && !open) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
@@ -29,5 +29,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|webp)$).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|offline.html|.*\\.(?:svg|png|jpg|jpeg|webp)$).*)"],
 };

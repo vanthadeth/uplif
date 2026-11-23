@@ -3,12 +3,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Archive, ChevronLeft, MapPin, Pencil, Phone, RotateCcw } from "lucide-react";
-import { Badge, Button, Card, EmptyState, ErrorState, Reveal, Skeleton, useToast } from "@uplif/ui";
+import { Badge, Button, Card, EmptyState, ErrorState, Reveal, Skeleton, isNetworkError, useToast } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
 import { fill, type MessageKey } from "@/lib/messages";
 import { createClient } from "@/lib/supabase/client";
 import { initials, shownName, useSignedUrls, type CustomerDetail } from "@/lib/customers";
+import { goCache } from "@/lib/offline";
 import { useMe } from "./me-context";
+import { OfflineNotice } from "./offline-notice";
 
 /** Customer details: contacts with tap-to-call, typed photos, notes and location. Visits and calls join this page in later releases. */
 export function CustomerView({ id }: { id: string }) {
@@ -18,16 +20,27 @@ export function CustomerView({ id }: { id: string }) {
   const router = useRouter();
   const [c, setC] = useState<CustomerDetail | null | undefined>(undefined);
   const [failed, setFailed] = useState(false);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
   const [tick, setTick] = useState(0);
   useEffect(() => {
     let live = true;
-    createClient().rpc("sales_customer_detail", { p_id: id }).then(({ data, error }) => {
+    createClient().rpc("sales_customer_detail", { p_id: id }).then(async ({ data, error }) => {
       if (!live) return;
-      if (error) { setFailed(true); return; }
-      setFailed(false); setC((data as unknown as CustomerDetail | null) ?? null);
+      const owner = me.employee_id ?? "";
+      if (error) {
+        // No signal: show the copy saved on this phone, if this customer was opened before.
+        const saved = isNetworkError(error) ? await goCache.get<CustomerDetail>(owner, `detail:${id}`) : undefined;
+        if (!live) return;
+        if (!saved) { setFailed(true); return; }
+        setFailed(false); setSavedAt(saved.savedAt); setC(saved.value);
+        return;
+      }
+      const detail = (data as unknown as CustomerDetail | null) ?? null;
+      setFailed(false); setSavedAt(null); setC(detail);
+      if (detail) void goCache.set(owner, `detail:${id}`, detail);
     });
     return () => { live = false; };
-  }, [id, tick]);
+  }, [id, tick, me.employee_id]);
   const urls = useSignedUrls((c?.photos ?? []).map((p) => p.path));
   const back = (
     <Link href={`/customers/${id}`} aria-label={t("go.det.back")} className="grid size-11 place-items-center rounded-full text-muted active:bg-neutral-soft"><ChevronLeft className="size-6" aria-hidden /></Link>
@@ -70,6 +83,7 @@ export function CustomerView({ id }: { id: string }) {
           </div>
         </div>
       </Reveal>
+      {savedAt !== null && <OfflineNotice savedAt={savedAt} />}
       {c.archived_at && <p className="flex items-center gap-2 rounded-control bg-warning-soft p-3 text-warning-ink"><Badge tone="warning">{t("go.cust.archived")}</Badge>{t("go.det.archivedNote")}</p>}
 
       {(c.address || (c.latitude != null && c.longitude != null)) && (

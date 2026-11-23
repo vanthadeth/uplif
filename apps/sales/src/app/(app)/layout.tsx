@@ -2,6 +2,8 @@ import { getSalesState } from "@/lib/my-state";
 import { MeProvider } from "@/components/me-context";
 import { NoAccess } from "@/components/no-access";
 import { TabBar } from "@/components/tab-bar";
+import { OutboxProvider } from "@/components/outbox-context";
+import { OutboxBar } from "@/components/outbox-bar";
 
 export const dynamic = "force-dynamic";
 
@@ -12,8 +14,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!state.module) return <NoAccess kind="module" />;
   return (
     <MeProvider state={state}>
-      <div className="mx-auto min-h-dvh max-w-md pb-[calc(5rem+env(safe-area-inset-bottom))]">{children}</div>
-      <TabBar />
+      <OutboxProvider>
+        <div className="mx-auto min-h-dvh max-w-md pb-[calc(5rem+env(safe-area-inset-bottom))]"><OutboxBar />{children}</div>
+        <TabBar />
+      </OutboxProvider>
     </MeProvider>
   );
 }
