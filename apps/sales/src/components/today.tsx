@@ -1,0 +1,123 @@
+"use client";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { ExternalLink, LogIn, LogOut, MessageSquare, UserPlus } from "lucide-react";
+import { Badge, Button, Card, CardBody, Reveal, Skeleton, APPS } from "@uplif/ui";
+import { createClient } from "@/lib/supabase/client";
+import { useI18n } from "@/lib/i18n";
+import { fill } from "@/lib/messages";
+import { languageOf } from "@/lib/languages";
+import { goCache } from "@/lib/offline";
+import { shownName, type InboxRow } from "@/lib/customers";
+import { useMe } from "./me-context";
+import { LanguageBar } from "./language-bar";
+
+interface Clock { kind: "in" | "out" | null; at: string | null; minutes: number }
+const startOfDay = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+
+/** Minutes worked today from clock events: each "in" runs until the next "out", or until now. */
+function worked(events: { kind: string; occurred_at: string }[], now: number): number {
+  let total = 0, open: number | null = null;
+  for (const e of events) {
+    const at = new Date(e.occurred_at).getTime();
+    if (e.kind === "in" && open === null) open = at;
+    if (e.kind === "out" && open !== null) { total += at - open; open = null; }
+  }
+  if (open !== null) total += now - open;
+  return Math.max(0, Math.round(total / 60000));
+}
+
+/** Today: greeting, clock card and what needs attention. Visits, orders and the plan arrive with the next slices. */
+export default function Today() {
+  const { t, locale } = useI18n();
+  const me = useMe();
+  const tag = languageOf(locale).dateTag;
+  const [clock, setClock] = useState<Clock | null>(null);
+  const [attention, setAttention] = useState<InboxRow[] | null>(null);
+  const [now, setNow] = useState<Date | null>(null);
+
+  useEffect(() => { setNow(new Date()); const id = setInterval(() => setNow(new Date()), 30000); return () => clearInterval(id); }, []);
+  useEffect(() => {
+    let live = true;
+    const owner = me.employee_id ?? "";
+    const supabase = createClient();
+    void goCache.get<InboxRow[]>(owner, "today").then((c) => { if (live && c) setAttention((p) => p ?? c.value); });
+    supabase.rpc("sales_inbox", { p_limit: 30 }).then(({ data, error }) => {
+      if (!live || error) return;
+      const rows = ((data ?? []) as unknown as InboxRow[]).filter((r) => r.unread).slice(0, 3);
+      setAttention(rows); void goCache.set(owner, "today", rows);
+    });
+    supabase.from("attendance_events").select("kind, occurred_at").eq("employee_id", owner)
+      .gte("occurred_at", startOfDay().toISOString()).order("occurred_at", { ascending: true }).then(({ data, error }) => {
+        if (!live || error) return;
+        const ev = data ?? [];
+        const last = ev[ev.length - 1];
+        setClock({ kind: (last?.kind as "in" | "out") ?? null, at: last?.occurred_at ?? null, minutes: worked(ev, Date.now()) });
+      });
+    return () => { live = false; };
+  }, [me.employee_id]);
+
+  const name = (locale !== "en" && me.employee_name_local) || me.employee_name || "";
+  const clockedIn = clock?.kind === "in";
+  const mins = clock && clockedIn && now ? worked([{ kind: "in", occurred_at: new Date(now.getTime() - clock.minutes * 60000).toISOString() }], now.getTime()) : clock?.minutes ?? 0;
+  const hhmm = (iso: string) => new Date(iso).toLocaleTimeString(tag, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const dur = `${Math.floor(mins / 60)}h ${String(mins % 60).padStart(2, "0")}m`;
+  const meUrl = APPS.find((a) => a.key === "me")?.url ?? "https://uplif-me.vercel.app";
+
+  return (
+    <div className="flex flex-col gap-4 p-4">
+      <header className="flex items-center justify-between gap-3">
+        <span className="inline-flex min-w-0 items-center rounded-full border border-line bg-surface px-3 py-1.5 text-sm font-semibold"><span className="truncate">{me.company_name}</span></span>
+        <LanguageBar />
+      </header>
+      <div>
+        <h1 className="truncate text-2xl font-bold tracking-tight">{fill(t("go.today.hello"), { name })}</h1>
+        <p className="text-muted" suppressHydrationWarning>{now ? now.toLocaleDateString(tag, { weekday: "long", day: "numeric", month: "long" }) : " "}</p>
+      </div>
+
+      <section aria-label={t("go.today.clock")} className="flex flex-col gap-3 rounded-2xl bg-navy p-4 text-white shadow-pop">
+        {clock === null ? <Skeleton className="h-24 w-full bg-white/10" /> : (
+          <>
+            <div className="flex items-center justify-between gap-2">
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${clockedIn ? "bg-[#1b5e3d] text-[#d7f2e2]" : "bg-[#2a3550] text-[#d6e0f2]"}`}>
+                {clock.at ? fill(t(clockedIn ? "go.today.in" : "go.today.out"), { time: hhmm(clock.at) }) : t("go.today.notYet")}
+              </span>
+            </div>
+            <div>
+              <div className="text-xs text-[#aebbd0]">{t("go.today.worked")}</div>
+              <div className="text-4xl font-bold tabular-nums tracking-tight" suppressHydrationWarning>{dur}</div>
+            </div>
+            <a href={meUrl} target="_blank" rel="noopener" className="inline-flex min-h-14 items-center justify-center gap-2 rounded-control bg-primary text-lg font-semibold text-white active:scale-[.99]">
+              {clockedIn ? <LogOut className="size-6" aria-hidden /> : <LogIn className="size-6" aria-hidden />}
+              {t(clockedIn ? "go.today.clockOut" : "go.today.clockIn")}<ExternalLink className="size-4 opacity-70" aria-hidden />
+            </a>
+            <p className="m-0 text-center text-xs text-[#aebbd0]">{t("go.today.clockNote")}</p>
+          </>
+        )}
+      </section>
+
+      <Card>
+        <CardBody className="flex flex-col gap-0 p-4">
+          <div className="flex items-center gap-2 pb-2"><b className="flex-1">{t("go.today.attention")}</b>{attention && attention.length > 0 && <Badge tone="danger">{attention.length}</Badge>}</div>
+          {attention === null ? (
+            <div className="flex flex-col gap-2 border-t border-line pt-3"><Skeleton className="h-9 w-full" /><Skeleton className="h-9 w-full" /></div>
+          ) : attention.length === 0 ? (
+            <p className="m-0 border-t border-line pt-3 text-muted">{t("go.today.attention.none")}</p>
+          ) : attention.map((r, i) => (
+            <Reveal key={r.customer_id} delay={i * 30}>
+              <Link href={`/customers/${r.customer_id}`} className="flex items-center gap-3 border-t border-line py-2.5">
+                <span className="grid size-9 shrink-0 place-items-center rounded-control bg-primary-soft text-primary-ink"><MessageSquare className="size-[18px]" aria-hidden /></span>
+                <span className="min-w-0 flex-1"><b className="block truncate">{fill(t("go.today.replied"), { name: shownName(r, locale) })}</b><span className="block truncate text-xs text-muted">{r.body || t("go.inbox.photo")}</span></span>
+                <span className="text-sm font-semibold text-link">{t("go.today.open")}</span>
+              </Link>
+            </Reveal>
+          ))}
+        </CardBody>
+      </Card>
+
+      {me.can_create && (
+        <Link href="/customers/new"><Button className="w-full"><UserPlus className="size-4" aria-hidden />{t("go.today.newCustomer")}</Button></Link>
+      )}
+    </div>
+  );
+}
