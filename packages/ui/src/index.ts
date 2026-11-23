@@ -27,6 +27,7 @@ export * from "./Toast";
 export * from "./States";
 export * from "./Sheet";
 export * from "./BottomSheet";
+export * from "./ConsentDialog";
 export * from "./Motion";
 export * from "./Switcher";
 export * from "./LanguageToggle";
