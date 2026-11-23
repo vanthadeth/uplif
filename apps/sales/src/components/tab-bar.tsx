@@ -19,7 +19,7 @@ export function TabBar({ path: shown }: { path?: string } = {}) {
   const real = usePathname();
   const path = shown ?? real; // the offline shell draws other screens at /offline, so it says which one
   // The conversation has its own message bar at the bottom.
-  if (/^\/customers\/[0-9a-f-]{36}$/.test(path) || path === "/check-in") return null;
+  if (/^\/customers\/[0-9a-f-]{36}$/.test(path) || /^\/(check-in|visit|plan\/add)$/.test(path) || /^\/customers\/[0-9a-f-]{36}\/call$/.test(path)) return null;
   const active = (href: string) => (href === "/" ? path === "/" : path === href || path.startsWith(`${href}/`));
   return (
     <BottomNav label={t("go.tab.label")} overhang="2.25rem">

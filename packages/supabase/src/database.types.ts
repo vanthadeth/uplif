@@ -1815,6 +1815,30 @@ export type Database = {
         Args: Record<string, never>
         Returns: Json
       }
+      sales_plan_add: {
+        Args: { p_id: string; p_customer_id: string; p_day: string; p_time: string | null; p_kind: string; p_note: string | null }
+        Returns: string
+      }
+      sales_plan_cancel: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      sales_plan_day: {
+        Args: { p_day: string }
+        Returns: Json
+      }
+      sales_task_add: {
+        Args: { p_id: string; p_title: string; p_customer_id: string | null; p_due: string }
+        Returns: string
+      }
+      sales_task_done: {
+        Args: { p_id: string; p_done: boolean }
+        Returns: undefined
+      }
+      sales_task_list: {
+        Args: Record<string, never>
+        Returns: Json
+      }
       sales_save_customer: {
         Args: { p_id: string | null; p_name: string; p_name_local: string | null; p_address: string | null; p_latitude: number | null; p_longitude: number | null; p_notes: string | null; p_contacts: Json | null; p_photos: Json | null }
         Returns: string
