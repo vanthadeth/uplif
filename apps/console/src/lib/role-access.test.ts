@@ -5,6 +5,8 @@ describe("appOfPermission", () => {
   it("maps keys to the app whose screens use them", () => {
     expect(appOfPermission("org.member.update")).toBe("admin");
     expect(appOfPermission("leave.request.review")).toBe("admin");
+    expect(appOfPermission("payroll.run.manage")).toBe("time");
+    expect(appOfPermission("stock.cost.view")).toBe("stock");
     expect(appOfPermission("attendance.clock.self")).toBe("time");
     expect(appOfPermission("sales.customer.read")).toBe("go");
     expect(appOfPermission("stock.item.read")).toBe("stock");
