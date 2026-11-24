@@ -1783,7 +1783,63 @@ export type Database = {
         Args: { p_limit?: number }
         Returns: Json
       }
+      sales_check_in: {
+        Args: { p_id: string; p_customer_id: string | null; p_latitude: number | null; p_longitude: number | null; p_accuracy_m: number | null; p_at: string }
+        Returns: Json
+      }
+      sales_check_out: {
+        Args: { p_id: string; p_latitude: number | null; p_longitude: number | null; p_at: string; p_far_reason?: string | null }
+        Returns: Json
+      }
+      sales_nearby: {
+        Args: { p_latitude: number; p_longitude: number; p_limit?: number }
+        Returns: Json
+      }
+      sales_open_visit: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      sales_visit_reason: {
+        Args: { p_id: string; p_reason: string }
+        Returns: undefined
+      }
+      sales_log_call: {
+        Args: { p_customer_id: string; p_client_op_id: string; p_reason: string; p_status: string; p_order: string; p_collection: string; p_next: string | null; p_notes: string; p_photo_paths: string[]; p_started_at: string; p_duration_s: number }
+        Returns: string
+      }
+      sales_log_visit: {
+        Args: { p_visit_id: string; p_client_op_id: string; p_reason: string; p_status: string; p_order: string; p_collection: string; p_next: string | null; p_notes: string; p_photo_paths: string[]; p_latitude: number | null; p_longitude: number | null; p_at: string }
+        Returns: Json
+      }
       sales_my_state: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      sales_plan_add: {
+        Args: { p_id: string; p_customer_id: string; p_day: string; p_time: string | null; p_kind: string; p_note: string | null }
+        Returns: string
+      }
+      sales_plan_cancel: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      sales_plan_day: {
+        Args: { p_day: string }
+        Returns: Json
+      }
+      sales_task_add: {
+        Args: { p_id: string; p_title: string; p_customer_id: string | null; p_due: string }
+        Returns: string
+      }
+      sales_task_done: {
+        Args: { p_id: string; p_done: boolean }
+        Returns: undefined
+      }
+      sales_team_feed: {
+        Args: { p_day?: string | null; p_limit?: number }
+        Returns: Json
+      }
+      sales_task_list: {
         Args: Record<string, never>
         Returns: Json
       }

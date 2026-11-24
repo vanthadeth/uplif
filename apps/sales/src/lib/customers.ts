@@ -49,11 +49,13 @@ export function useSignedUrls(paths: (string | null | undefined)[]): Record<stri
 export const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
 
 export interface TimelineEvent {
-  id: string; kind: "note" | "comment"; body: string; photo_paths: string[]; occurred_at: string; created_at: string;
+  id: string; kind: "note" | "comment" | "visit" | "call"; body: string; photo_paths: string[]; occurred_at: string; created_at: string;
+  /** Answers saved with a visit or call: reason, status, order, collection, next date, minutes or seconds. */
+  detail?: { reason?: string; status?: string; order?: string; collection?: string; next?: string | null; minutes?: number; seconds?: number; outside_range?: boolean } | null;
   author_employee_id: string | null; mine: boolean; author_name: string | null; author_name_local: string | null;
 }
 export interface InboxRow {
-  customer_id: string; name: string; name_local: string | null; kind: "note" | "comment"; body: string; last_at: string;
+  customer_id: string; name: string; name_local: string | null; kind: "note" | "comment" | "visit" | "call"; body: string; last_at: string;
   has_photos: boolean; author_name: string | null; author_name_local: string | null; mine: boolean; unread: boolean; photo_path: string | null;
 }
 

@@ -18,6 +18,8 @@ interface OutboxState {
   retry: (id: string) => Promise<void>;
   /** Sends the job now. With no signal it is saved on the phone instead, and `queued` is true. */
   submit: (job: GoJob) => Promise<Result>;
+  /** Keeps the job on the phone to be sent later, without trying to send it now. */
+  save: (job: GoJob) => Promise<void>;
   /** Called after waiting jobs reached the server, so screens can reload. */
   onSynced: (fn: () => void) => () => void;
 }
@@ -71,14 +73,17 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
       return { error: null, queued: true };
     };
     if (typeof navigator !== "undefined" && !navigator.onLine) return save();
+    // A check-in or log must not overtake something already waiting, or the server could see the log before its visit.
+    if ((job.kind === "checkin" || job.kind === "log" || job.kind === "clock") && (await goOutbox.list(owner)).some((i) => i.status === "pending")) return save();
     const error = await sendGoJob(createClient(), job);
     if (error && isNetworkError(error)) return save();
     return { error, queued: false };
   }, [owner]);
 
+  const save = useCallback(async (job: GoJob) => { await goOutbox.add({ id: job.opId, owner, data: job }); }, [owner]);
   const retry = useCallback(async (id: string) => { await goOutbox.update(id, { status: "pending", error: undefined }); await flush(); }, [flush]);
   const onSynced = useCallback((fn: () => void) => { listeners.current.add(fn); return () => { listeners.current.delete(fn); }; }, []);
-  const value = useMemo<OutboxState>(() => ({ items, sending, online, flush, dismiss: (id) => goOutbox.remove(id), retry, submit, onSynced }), [items, sending, online, flush, retry, submit, onSynced]);
+  const value = useMemo<OutboxState>(() => ({ items, sending, online, flush, dismiss: (id) => goOutbox.remove(id), retry, submit, save, onSynced }), [items, sending, online, flush, retry, submit, save, onSynced]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
