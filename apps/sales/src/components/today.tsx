@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Clock, ExternalLink, LogIn, LogOut, MapPin, MessageSquare, UserPlus } from "lucide-react";
-import { Badge, Button, Card, CardBody, Reveal, Skeleton, APPS } from "@uplif/ui";
+import { Clock, LogIn, LogOut, MapPin, MessageSquare, UserPlus } from "lucide-react";
+import { Badge, Button, Card, CardBody, ClockFlow, Reveal, Skeleton, type ClockSupabase } from "@uplif/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
@@ -14,6 +14,7 @@ import type { MessageKey } from "@/lib/messages";
 import { useMe } from "./me-context";
 import { useGoOutbox } from "./outbox-context";
 import { LanguageBar } from "./language-bar";
+import { deviceId } from "@/lib/store";
 
 interface Clock { kind: "in" | "out" | null; at: string | null; minutes: number }
 const startOfDay = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
@@ -39,6 +40,8 @@ export default function Today() {
   const [clock, setClock] = useState<Clock | null>(null);
   const [attention, setAttention] = useState<InboxRow[] | null>(null);
   const [now, setNow] = useState<Date | null>(null);
+  const [tick, setTick] = useState(0);
+  const [flow, setFlow] = useState<"in" | "out" | null>(null);
   const [plan, setPlan] = useState<PlanStop[] | null>(null);
   const [late, setLate] = useState<TaskRow[]>([]);
   const [visit, setVisit] = useState<{ id: string; customer_id: string | null; checked_in_at: string; name: string | null; name_local: string | null } | null | undefined>(undefined);
@@ -73,18 +76,20 @@ export default function Today() {
         setClock({ kind: (last?.kind as "in" | "out") ?? null, at: last?.occurred_at ?? null, minutes: worked(ev, Date.now()) });
       });
     return () => { live = false; };
-  }, [me.employee_id]);
+  }, [me.employee_id, tick]);
 
   const name = (locale !== "en" && me.employee_name_local) || me.employee_name || "";
   // A check-in still waiting on the phone counts as an open visit until the server has it.
   const waitingIn = ob.items.find((i) => i.data.kind === "checkin" && i.status === "pending");
   const shownVisit = visit ?? (waitingIn && waitingIn.data.kind === "checkin"
     ? { id: waitingIn.data.opId, customer_id: waitingIn.data.customerId || null, checked_in_at: waitingIn.data.at, name: waitingIn.data.name || null, name_local: null } : null);
-  const clockedIn = clock?.kind === "in" || !!shownVisit;
+  // A clock tapped without signal counts until the server has it.
+  const waitingClock = [...ob.items].reverse().find((i) => i.data.kind === "clock" && i.status === "pending");
+  const clockKind = waitingClock && waitingClock.data.kind === "clock" ? waitingClock.data.job.kind : clock?.kind ?? null;
+  const clockedIn = clockKind === "in" || !!shownVisit;
   const mins = clock && clockedIn && now ? worked([{ kind: "in", occurred_at: new Date(now.getTime() - clock.minutes * 60000).toISOString() }], now.getTime()) : clock?.minutes ?? 0;
   const hhmm = (iso: string) => new Date(iso).toLocaleTimeString(tag, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
   const dur = `${Math.floor(mins / 60)}h ${String(mins % 60).padStart(2, "0")}m`;
-  const meUrl = APPS.find((a) => a.key === "me")?.url ?? "https://uplif-me.vercel.app";
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -109,20 +114,25 @@ export default function Today() {
               <div className="text-xs text-[#aebbd0]">{t("go.today.worked")}</div>
               <div className="text-4xl font-bold tabular-nums tracking-tight" suppressHydrationWarning>{dur}</div>
             </div>
+            {clockKind !== "in" && (
+              <button type="button" onClick={() => setFlow("in")} className="inline-flex min-h-14 items-center justify-center gap-2 rounded-control bg-primary text-lg font-semibold text-white active:scale-[.99]">
+                <LogIn className="size-6" aria-hidden />{t("go.today.clockIn")}
+              </button>
+            )}
             {shownVisit ? (
               <Link href="/visit" className="flex min-h-14 items-center justify-center gap-2 rounded-control bg-primary text-lg font-semibold text-white active:scale-[.99]">
                 <MapPin className="size-6" aria-hidden />{fill(t("go.today.atVisit"), { name: shownVisit.name ? shownName({ name: shownVisit.name, name_local: shownVisit.name_local }, locale) : t("go.checkin.none") })}
               </Link>
             ) : (
-              <Link href="/check-in" className="flex min-h-14 items-center justify-center gap-2 rounded-control bg-primary text-lg font-semibold text-white active:scale-[.99]">
+              <Link href="/check-in" className={clockKind === "in" ? "flex min-h-14 items-center justify-center gap-2 rounded-control bg-primary text-lg font-semibold text-white active:scale-[.99]" : "flex min-h-12 items-center justify-center gap-2 rounded-control border border-white/30 font-semibold"}>
                 <MapPin className="size-6" aria-hidden />{t("go.today.checkIn")}
               </Link>
             )}
-            <a href={meUrl} target="_blank" rel="noopener" className={clock.kind === "in" ? "flex min-h-11 items-center justify-center gap-1.5 text-sm font-semibold text-[#aebbd0]" : "flex min-h-12 items-center justify-center gap-2 rounded-control border border-white/30 font-semibold"}>
-              {clock.kind === "in" ? <LogOut className="size-4" aria-hidden /> : <LogIn className="size-5" aria-hidden />}
-              {t(clock.kind === "in" ? "go.today.clockOut" : "go.today.clockIn")}<ExternalLink className="size-3.5 opacity-70" aria-hidden />
-            </a>
-            <p className="m-0 text-center text-xs text-[#aebbd0]">{t("go.today.clockNote")}</p>
+            {clockKind === "in" && (
+              <button type="button" onClick={() => setFlow("out")} className="flex min-h-11 items-center justify-center gap-1.5 text-sm font-semibold text-[#aebbd0]">
+                <LogOut className="size-4" aria-hidden />{t("go.today.clockOut")}
+              </button>
+            )}
           </>
         )}
       </section>
@@ -175,6 +185,16 @@ export default function Today() {
 
       {me.can_create && (
         <Link href="/customers/new"><Button className="w-full"><UserPlus className="size-4" aria-hidden />{t("go.today.newCustomer")}</Button></Link>
+      )}
+      {flow && (
+        <ClockFlow
+          kind={flow} onClose={() => { setFlow(null); setTick((n) => n + 1); }} onSaved={() => setTick((n) => n + 1)}
+          t={t} supabase={createClient() as unknown as ClockSupabase}
+          companyId={me.company_id ?? ""} employeeId={me.employee_id ?? ""} deviceId={deviceId()}
+          formatTime={(v) => new Date(v).toLocaleTimeString(tag, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+          saveOffline={(job) => ob.save({ kind: "clock", opId: job.eventId, job })}
+          hasPending={ob.items.some((i) => i.status === "pending")}
+        />
       )}
     </div>
   );

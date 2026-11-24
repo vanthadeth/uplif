@@ -1,4 +1,4 @@
-import { createOutbox, flushOutbox, type FlushResult, type OutboxItem } from "@uplif/ui";
+import { createOutbox, flushOutbox, sendClockJob, type ClockJob, type ClockSupabase, type FlushResult, type OutboxItem } from "@uplif/ui";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { BUCKET } from "./customers";
 
@@ -64,7 +64,9 @@ export type LogJob = {
   seconds: number;
   photos: { key: string; blob: Blob }[];
 };
-export type GoJob = NoteJob | CommentJob | CustomerJob | CheckInJob | LogJob;
+/** A clock-in or clock-out made without signal, with its selfie. Sent as UPLIF Me sends it. */
+export type ClockOutJob = { kind: "clock"; opId: string; job: ClockJob };
+export type GoJob = NoteJob | CommentJob | CustomerJob | CheckInJob | LogJob | ClockOutJob;
 
 export const goOutbox = createOutbox<GoJob>("go");
 export type GoItem = OutboxItem<GoJob>;
@@ -84,6 +86,10 @@ export async function sendGoJob(supabase: SupabaseClient, job: GoJob): Promise<F
     }
     const { error } = await supabase.rpc("sales_save_customer", job.args as never);
     return error;
+  }
+  if (job.kind === "clock") {
+    const res = await sendClockJob(supabase as unknown as ClockSupabase, job.job, true);
+    return res.error;
   }
   if (job.kind === "checkin") {
     const { error } = await supabase.rpc("sales_check_in", { p_id: job.opId, p_customer_id: job.customerId || null, p_latitude: job.lat, p_longitude: job.lon, p_accuracy_m: job.acc, p_at: job.at });

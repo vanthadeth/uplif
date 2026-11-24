@@ -102,7 +102,7 @@ export function Conversation({ id }: { id: string }) {
 
   // Notes saved on this phone that the server does not have yet, shown at the bottom of the conversation.
   useEffect(() => ob.onSynced(() => void load()), [ob, load]);
-  const mine = ob.items.filter((i) => i.data.kind !== "customer" && i.data.kind !== "checkin" && i.data.customerId === id);
+  const mine = ob.items.filter((i) => i.data.kind !== "customer" && i.data.kind !== "checkin" && i.data.kind !== "clock" && i.data.customerId === id);
 
   const urls = useSignedUrls((events ?? []).flatMap((e) => e.photo_paths));
   const heroUrls = useSignedUrls((customer?.photos ?? []).filter((p) => p.is_default).map((p) => p.path));
@@ -223,7 +223,7 @@ export function Conversation({ id }: { id: string }) {
 
 /** A note kept on this phone: waiting for signal, or refused by the server with a way to try again or remove it. */
 function PendingBubble({ item }: { item: GoItem }) {
-  return item.data.kind === "customer" || item.data.kind === "checkin" ? null : <PendingNote item={item} />;
+  return item.data.kind === "customer" || item.data.kind === "checkin" || item.data.kind === "clock" ? null : <PendingNote item={item} />;
 }
 
 function PendingNote({ item }: { item: GoItem }) {
