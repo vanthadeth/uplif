@@ -109,24 +109,19 @@ export default function Today() {
               <div className="text-xs text-[#aebbd0]">{t("go.today.worked")}</div>
               <div className="text-4xl font-bold tabular-nums tracking-tight" suppressHydrationWarning>{dur}</div>
             </div>
-            {clockedIn ? (
-              <>
-                {shownVisit ? (
-                  <Link href="/visit" className="flex min-h-14 items-center justify-center gap-2 rounded-control bg-primary text-lg font-semibold text-white active:scale-[.99]">
-                    <MapPin className="size-6" aria-hidden />{fill(t("go.today.atVisit"), { name: shownVisit.name ? shownName({ name: shownVisit.name, name_local: shownVisit.name_local }, locale) : t("go.checkin.none") })}
-                  </Link>
-                ) : (
-                  <Link href="/check-in" className="flex min-h-14 items-center justify-center gap-2 rounded-control bg-primary text-lg font-semibold text-white active:scale-[.99]">
-                    <MapPin className="size-6" aria-hidden />{t("go.today.checkIn")}
-                  </Link>
-                )}
-                <a href={meUrl} target="_blank" rel="noopener" className="flex min-h-11 items-center justify-center gap-1.5 text-sm font-semibold text-[#aebbd0]"><LogOut className="size-4" aria-hidden />{t("go.today.clockOut")}<ExternalLink className="size-3.5 opacity-70" aria-hidden /></a>
-              </>
+            {shownVisit ? (
+              <Link href="/visit" className="flex min-h-14 items-center justify-center gap-2 rounded-control bg-primary text-lg font-semibold text-white active:scale-[.99]">
+                <MapPin className="size-6" aria-hidden />{fill(t("go.today.atVisit"), { name: shownVisit.name ? shownName({ name: shownVisit.name, name_local: shownVisit.name_local }, locale) : t("go.checkin.none") })}
+              </Link>
             ) : (
-              <a href={meUrl} target="_blank" rel="noopener" className="inline-flex min-h-14 items-center justify-center gap-2 rounded-control bg-primary text-lg font-semibold text-white active:scale-[.99]">
-                <LogIn className="size-6" aria-hidden />{t("go.today.clockIn")}<ExternalLink className="size-4 opacity-70" aria-hidden />
-              </a>
+              <Link href="/check-in" className="flex min-h-14 items-center justify-center gap-2 rounded-control bg-primary text-lg font-semibold text-white active:scale-[.99]">
+                <MapPin className="size-6" aria-hidden />{t("go.today.checkIn")}
+              </Link>
             )}
+            <a href={meUrl} target="_blank" rel="noopener" className={clock.kind === "in" ? "flex min-h-11 items-center justify-center gap-1.5 text-sm font-semibold text-[#aebbd0]" : "flex min-h-12 items-center justify-center gap-2 rounded-control border border-white/30 font-semibold"}>
+              {clock.kind === "in" ? <LogOut className="size-4" aria-hidden /> : <LogIn className="size-5" aria-hidden />}
+              {t(clock.kind === "in" ? "go.today.clockOut" : "go.today.clockIn")}<ExternalLink className="size-3.5 opacity-70" aria-hidden />
+            </a>
             <p className="m-0 text-center text-xs text-[#aebbd0]">{t("go.today.clockNote")}</p>
           </>
         )}
