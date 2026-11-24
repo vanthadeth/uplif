@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Camera, Users } from "lucide-react";
+import { Camera, Search, Users } from "lucide-react";
 import { Badge, Button, EmptyState, ErrorState, Reveal, Skeleton } from "@uplif/ui";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/messages";
@@ -16,6 +16,8 @@ export function InboxList() {
   const [rows, setRows] = useState<InboxRow[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [tick, setTick] = useState(0);
+  const [q, setQ] = useState("");
+  const [filter, setFilter] = useState<"all" | "comment" | "visit" | "call">("all");
   useEffect(() => {
     let live = true;
     createClient().rpc("sales_inbox", { p_limit: 100 }).then(({ data, error }) => {
@@ -26,6 +28,10 @@ export function InboxList() {
     return () => { live = false; };
   }, [tick]);
   const urls = useSignedUrls((rows ?? []).map((r) => r.photo_path));
+  const needle = q.trim().toLowerCase();
+  const shown = (rows ?? []).filter((r) => (filter === "all" || r.kind === filter)
+    && (!needle || `${r.name} ${r.name_local ?? ""} ${r.body ?? ""}`.toLowerCase().includes(needle)));
+  const chips = [["all", "go.inbox.fAll"], ["comment", "go.inbox.fManager"], ["visit", "go.inbox.fVisits"], ["call", "go.inbox.fCalls"]] as const;
   return (
     <div className="flex flex-col gap-3 p-4">
       <h1 className="pt-2 text-2xl font-bold tracking-tight">{t("go.inbox.title")}</h1>
@@ -39,8 +45,22 @@ export function InboxList() {
         <EmptyState title={t("go.inbox.emptyTitle")} body={t("go.inbox.emptyBody")}
           action={<Link href="/customers"><Button variant="primary"><Users className="size-4" aria-hidden />{t("go.cust.title")}</Button></Link>} />
       ) : (
+        <>
+        <label className="relative block">
+          <span className="sr-only">{t("go.inbox.search")}</span>
+          <Search className="pointer-events-none absolute start-3 top-1/2 size-5 -translate-y-1/2 text-muted" aria-hidden />
+          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("go.inbox.search")}
+            className="h-12 w-full rounded-full border border-line-strong bg-surface ps-10 pe-4" />
+        </label>
+        <div role="radiogroup" aria-label={t("go.inbox.title")} className="flex flex-wrap gap-1.5">
+          {chips.map(([f, k]) => (
+            <button key={f} type="button" role="radio" aria-checked={filter === f} onClick={() => setFilter(f)}
+              className={`min-h-10 rounded-full px-3 text-sm ${filter === f ? "bg-primary font-semibold text-white" : "border border-line-strong"}`}>{t(k)}</button>
+          ))}
+        </div>
+        {shown.length === 0 ? <EmptyState title={t("go.inbox.title")} body={t("go.inbox.noMatch")} /> : (
         <ul className="flex flex-col gap-2">
-          {rows.map((r, i) => {
+          {shown.map((r, i) => {
             const name = shownName(r, locale);
             const who = (locale !== "en" && r.author_name_local) || r.author_name || "";
             const prefix = r.mine ? t("go.inbox.youPrefix") : r.kind === "comment" ? fill(t("go.inbox.managerPrefix"), { name: who }) : "";
@@ -67,6 +87,8 @@ export function InboxList() {
             );
           })}
         </ul>
+        )}
+        </>
       )}
     </div>
   );
